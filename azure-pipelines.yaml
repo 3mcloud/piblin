@@ -1,0 +1,107 @@
+trigger:
+  - main
+  - develop
+
+pr:
+  - main
+  - develop
+
+pool:
+  vmImage: 'windows-2019'
+
+jobs:
+  - job: RunTests
+    strategy:
+      matrix:
+        Python37-windows-2019:
+          vmimage: 'windows-2019'
+          python.version: '3.7'
+        Python37-windows-2022:
+          vmimage: 'windows-2022'
+          python.version: '3.7'
+        Python37-ubuntu-20.04:
+          vmimage: 'ubuntu-20.04'
+          python.version: '3.7'
+        Python37-ubuntu-22.04:
+          vmimage: 'ubuntu-22.04'
+          python.version: '3.7'
+        Python37-macOS-12:
+          vmimage: 'macOS-12'
+          python.version: '3.7'
+        Python38-windows-2019:
+          vmimage: 'windows-2019'
+          python.version: '3.8'
+        Python38-windows-2022:
+          vmimage: 'windows-2022'
+          python.version: '3.8'
+        Python38-ubuntu-20.04:
+          vmimage: 'ubuntu-20.04'
+          python.version: '3.8'
+        Python38-ubuntu-22.04:
+          vmimage: 'ubuntu-22.04'
+          python.version: '3.8'
+        Python38-macOS-12:
+          vmimage: 'macOS-12'
+          python.version: '3.8'
+        Python39-windows-2019:
+          vmimage: 'windows-2019'
+          python.version: '3.9'
+        Python39-windows-2022:
+          vmimage: 'windows-2022'
+          python.version: '3.9'
+        Python39-ubuntu-20.04:
+          vmimage: 'ubuntu-20.04'
+          python.version: '3.9'
+        Python39-ubuntu-22.04:
+          vmimage: 'ubuntu-22.04'
+          python.version: '3.9'
+        Python39-macOS-12:
+          vmimage: 'macOS-12'
+          python.version: '3.9'
+        Python310-windows-2019:
+          vmimage: 'windows-2019'
+          python.version: '3.10'
+        Python310-windows-2022:
+          vmimage: 'windows-2022'
+          python.version: '3.10'
+        Python310-ubuntu-20.04:
+          vmimage: 'ubuntu-20.04'
+          python.version: '3.10'
+        Python310-ubuntu-22.04:
+          vmimage: 'ubuntu-22.04'
+          python.version: '3.10'
+        Python310-macOS-12:
+          vmimage: 'macOS-12'
+          python.version: '3.10'
+        Python311-windows-2019:
+          vmimage: 'windows-2019'
+          python.version: '3.11'
+        Python311-windows-2022:
+          vmimage: 'windows-2022'
+          python.version: '3.11'
+        Python311-ubuntu-20.04:
+          vmimage: 'ubuntu-20.04'
+          python.version: '3.11'
+        Python311-ubuntu-22.04:
+          vmimage: 'ubuntu-22.04'
+          python.version: '3.11'
+        Python311-macOS-12:
+          vmimage: 'macOS-12'
+          python.version: '3.11'
+
+    pool:
+      vmImage: $(vmimage)
+
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '$(python.version)'
+
+    - script: |
+        python -m pip install --upgrade pip && pip install .[tests]
+      displayName: 'Install or upgrade packaging tools'
+
+    - script: |
+        python -m pytest ./tests
+      displayName: "Run pytest"
+
