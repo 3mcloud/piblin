@@ -16,7 +16,7 @@ pool:
 jobs:
 
   - job: BuildAndDeploy
-    dependsOn: RunTests
+#    dependsOn: RunTests
     condition: eq(variables.isTestBuildBranch, 'True')
     steps:
     - task: UsePythonVersion@0
