@@ -35,5 +35,5 @@ jobs:
       displayName: 'Build stable python wheel from package source.'
 
     - script: |
-        python -m twine upload --username "__token__" --password '$(TWINE_TOKEN)' --verbose --repository testpypi dist/*
+        python -m twine upload --username "__token__" --password $(TWINE_TOKEN) --verbose --repository testpypi dist/*
       displayName: 'Upload stable python wheel to test public pypi'
