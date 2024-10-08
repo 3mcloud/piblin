@@ -6,10 +6,14 @@ pr:
   - main
   - develop
 
+variables:
+  isMainBranch: $[eq(variables['Build.SourceBranchName'], 'main')]
+
 pool:
   vmImage: 'windows-2019'
 
 jobs:
+
   - job: RunTests
     strategy:
       matrix:
@@ -105,3 +109,25 @@ jobs:
         python -m pytest ./tests
       displayName: "Run pytest"
 
+  - job: BuildAndDeploy
+    dependsOn: RunTests
+    condition: eq(variables.isMainBranch, 'True')
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.11'
+
+    - script: |
+        python -m pip install --upgrade pip
+      displayName: 'Install or update pip.'
+
+    - script: |
+        python -m pip install build wheel twine
+      displayName: 'Install build, wheel and twine tools.'
+
+    - script: python -m build --wheel
+      displayName: 'Build stable python wheel from package source.'
+
+    - script: |
+        python -m twine upload --username "__token__" --password $(TWINE_TOKEN) --verbose --repository testpypi dist/*
+      displayName: 'Upload stable python wheel to test public pypi'
