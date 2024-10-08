@@ -8,7 +8,6 @@ pr:
 
 variables:
   isMainBranch: $[eq(variables['Build.SourceBranchName'], 'main')]
-  isTestBuildBranch: $[eq(variables['Build.SourceBranchName'], 'f-add_package_build_and_deploy')]
 
 pool:
   vmImage: 'windows-2019'
@@ -16,8 +15,8 @@ pool:
 jobs:
 
   - job: BuildAndDeploy
-#    dependsOn: RunTests
-    condition: eq(variables.isTestBuildBranch, 'True')
+    dependsOn: RunTests
+    condition: eq(variables.isMainBranch, 'True')
     steps:
     - task: UsePythonVersion@0
       inputs:
