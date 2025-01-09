@@ -1,3 +1,44 @@
+Metadata-Version: 2.1
+Name: piblin
+Version: 0.0.0a1
+Summary: Measurement data science functionality
+Author: Matthew John Mills <mmills2@mmm.com>,
+Douglas Elmore <dlelmore@mmm.com>,
+Alex Bourque <abourque@mmm.com>,
+Bryce Williams <not at 3M>,
+Joel Patrow <not at 3M>,
+Kyle Kalstabakken <not at 3M>,
+Mahsa Lotfollahi <not at 3M>,
+Alessandro Perego <aperego@mmm.com>,
+Maryam Pardakhti <mpardakhti@mmm.com>,
+Bjorn Melin <bmelin@mmm.com>,
+Bryan Cote <bcote@mmm.com>,
+License: Proprietary
+Project-URL: Source, https://github.com/3mcloud/piblin
+Classifier: Development Status :: 1 - Planning
+Classifier: Intended Audience :: Science/Research
+Classifier: Natural Language :: English
+Classifier: Operating System :: OS Independent
+Classifier: Topic :: Scientific/Engineering :: Chemistry
+Classifier: Topic :: Scientific/Engineering :: Physics
+Classifier: Topic :: Scientific/Engineering :: Information Analysis
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: License :: Other/Proprietary
+Requires-Python: <3.12,>=3.7
+License-File: LICENSE
+Requires-Dist: matplotlib<=3.9.2
+Requires-Dist: numpy>=1.21
+Requires-Dist: scipy
+Provides-Extra: tests
+Requires-Dist: pytest; extra == "tests"
+Requires-Dist: pytest-mpl; extra == "tests"
+Requires-Dist: pytest-cov; extra == "tests"
+Requires-Dist: pytest-html; extra == "tests"
+
 [pypi-image]: https://badge.fury.io/py/piblin.svg
 [pypi-url]: https://pypi.org/project/piblin/
 [pypi-download]: https://static.pepy.tech/badge/piblin?period=total&units=international_system&left_color=grey&right_color=brightgreen&left_text=downloads

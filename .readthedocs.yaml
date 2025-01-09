@@ -1,0 +1,18 @@
+# .readthedocs.yaml
+version: 2
+
+# Build environment
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3.10"
+
+# Sphinx configuration
+sphinx:
+  configuration: docs/source/conf.py  # Update the path to match your structure
+
+# Python dependency installation using setup.cfg
+python:
+  install:
+    - method: pip
+      path: .

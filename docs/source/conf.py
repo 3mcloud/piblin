@@ -17,8 +17,8 @@ print("*********")
 
 project = 'piblin'
 copyright = '2024, 3M'
-author = 'MMills, MPardakhti'
-release = '0.1'
+author = 'Matthew , MPardakhti'
+release = '0.0.0a1'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

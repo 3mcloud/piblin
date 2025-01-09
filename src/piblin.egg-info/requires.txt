@@ -1,0 +1,9 @@
+matplotlib<=3.9.2
+numpy>=1.21
+scipy
+
+[tests]
+pytest
+pytest-mpl
+pytest-cov
+pytest-html
