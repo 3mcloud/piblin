@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools==75.8.0", "setuptools-git-versioning >= 2"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools-git-versioning]
+enabled = true
+
+[project]
+name = "piblin"
+authors = [
+    { name = "Matthew John Mills", email = "mmills2@mmm.com" },
+    { name = "Douglas Elmore", email = "dlelmore@mmm.com" },
+    { name = "Alex Bourque", email = "abourque@mmm.com" },
+    { name = "Bryce Williams" },
+    { name = "Joel Patrow" },
+    { name = "Kyle Kalstabakken" },
+    { name = "Mahsa Lotfollahi" },
+    { name = "Alessandro Perego", email = "aperego@mmm.com" },
+    { name = "Maryam Pardakhti", email = "mpardakhti@mmm.com" },
+    { name = "Bjorn Melin", email = "bmelin@mmm.com" },
+    { name = "Bryan Cote", email = "bcote@mmm.com" },
+    { name = "Cole Stapleton", email = "cstapleton@mmm.com" },
+]
+description = "Measurement data science functionality"
+readme = "README.md"
+dynamic = ["version"]
+requires-python = ">=3.10, <3.13"
+
+license = { text = "Proprietary" }
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+]
+
+dependencies = [
+    "matplotlib ==3.10.0",
+    "numpy ==1.26.4",
+    "scipy ==1.15.1",
+    "pandas ==2.2.3",
+]
+
+[project.urls]
+Source = "https://github.com/3mcloud/piblin"
+Issues = "https://github.com/3mcloud/piblin/issues"
+Changelog = "https://github.com/3mcloud/piblin/blob/main/CHANGELOG.md"
+
+
+[project.optional-dependencies]
+tests = [
+    "pytest==8.3.4",
+    "pytest-mpl==0.17.0",
+    "pytest-cov==6.0.0",
+    "pytest-html==4.1.1",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
