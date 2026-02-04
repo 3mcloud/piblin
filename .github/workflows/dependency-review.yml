@@ -1,4 +1,4 @@
-name: Dependency Review
+name: Dependency Review Repo
 
 on:
   pull_request:
