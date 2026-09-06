@@ -2,7 +2,7 @@
 
 ### A Framework for Measurement Data Science
 
-[![PyPI Downloads](https://img.shields.io/pypi/dm/piblin.svg)](https://pypi.org/project/piblin/)
+[![PyPI Downloads](https://static.pepy.tech/badge/piblin)](https://pepy.tech/project/piblin)
 [![Python 3.10 | 3.11 | 3.12 | 3.13](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)](#)
 [![Tests: pytest](https://img.shields.io/badge/tests-pytest-brightgreen.svg)](https://docs.pytest.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
