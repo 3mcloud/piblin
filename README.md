@@ -59,7 +59,7 @@ $$y = f(\mathbf{x}).$$
 The set of points for a dataset of dimensionality $n$ can be given a
 more detailed definition,
 
-$$\mathcal{P} = \left\{\,(\mathbf{x}, y) \in \{(x_0, x_1, \ldots, x_n) \in \mathbb{R}^n\} \times \{y \in \mathbb{R}\}\,\right\},$$
+$$\mathcal{P} = \{\,(\mathbf{x}, y) \in \{(x_0, x_1, \ldots, x_n) \in \mathbb{R}^n\} \times \{y \in \mathbb{R}\}\,\},$$
 
 where the dimensionality $n$ is the number of independent variables
 for each point.  Datasets are essentially context-free objects: they
