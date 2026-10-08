@@ -850,7 +850,10 @@ class SplitDataset(dataset.Dataset):
         str_rep += f"dependent_variable_data={self.dependent_variable_data}, "
         str_rep += f"dependent_variable_names={self.dependent_variable_names}, "
         str_rep += f"dependent_variable_units={self.dependent_variable_units}, "
-        str_rep += f"independent_variable_data={self.independent_variable_data}, "
+        str_rep += f"independent_variable_data=["
+        for array in self.independent_variable_data:
+            str_rep += np.array2string(array, separator=',')
+        str_rep += "], "
         str_rep += f"independent_variable_names={self.independent_variable_names}, "
         str_rep += f"independent_variable_units={self.independent_variable_units}, "
         str_rep += f"source={self.source}"
