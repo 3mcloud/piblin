@@ -57,7 +57,7 @@ Changelog = "https://github.com/3mcloud/piblin/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 tests = [
-    "pytest==8.3.4",
+    "pytest==9.0.3",
     "pytest-mpl==0.17.0",
     "pytest-cov==6.0.0",
     "pytest-html==4.1.1",
