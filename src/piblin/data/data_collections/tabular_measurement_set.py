@@ -1,13 +1,14 @@
 import csv
-from typing import List
+
 import numpy as np
-import piblin.data.datasets.abc.split_datasets.zero_dimensional_dataset as zero_dimensional_dataset
+
+import piblin.data.data_collections.experiment_set
 import piblin.data.data_collections.measurement
 import piblin.data.data_collections.measurement_set
-import piblin.data.data_collections.experiment_set
+import piblin.data.datasets.abc.split_datasets.zero_dimensional_dataset as zero_dimensional_dataset
 
 
-class TabularMeasurementSet(object):
+class TabularMeasurementSet:
     """Tabular set of measurements.
 
     The data of a tabular dataset is stored in a list of lists.
@@ -33,6 +34,7 @@ class TabularMeasurementSet(object):
         type is provided, uses a 1D dataset.
         If multiple types are provided, should warn user.
     """
+
     @property
     def num_rows(self):
         return len(self.data)
@@ -56,12 +58,14 @@ class TabularMeasurementSet(object):
     def n_datasets(self):
         return len(self.dataset_types)
 
-    def __init__(self,
-                 data: List[List],
-                 n_metadata_columns: int = 0,
-                 column_headers: List[str] = None,
-                 dataset_types: List = None,
-                 dataset_end_indices: List[int] = None):
+    def __init__(
+        self,
+        data: list[list],
+        n_metadata_columns: int = 0,
+        column_headers: list[str] = None,
+        dataset_types: list = None,
+        dataset_end_indices: list[int] = None,
+    ):
 
         super().__init__()
 
@@ -79,16 +83,23 @@ class TabularMeasurementSet(object):
             self._n_data_columns = self.n_columns - self._n_metadata_columns
 
         if column_headers is None:
-            self._column_headers = self.__generate_column_headers(self._n_metadata_columns,
-                                                                  self._n_data_columns)
+            self._column_headers = self.__generate_column_headers(
+                self._n_metadata_columns, self._n_data_columns
+            )
         else:
             if len(column_headers) != self.n_columns:
-                raise ValueError("Number of column headers different to number of columns.", len(column_headers), self._n_columns)
+                raise ValueError(
+                    "Number of column headers different to number of columns.",
+                    len(column_headers),
+                    self._n_columns,
+                )
             else:
                 self._column_headers = column_headers
 
         if dataset_types is None:
-            self._dataset_types = [zero_dimensional_dataset.ZeroDimensionalDataset] * self._n_data_columns
+            self._dataset_types = [
+                zero_dimensional_dataset.ZeroDimensionalDataset
+            ] * self._n_data_columns
             self._dataset_end_indices = list(range(1, self.n_columns))
         else:
             self._dataset_types = dataset_types
@@ -98,8 +109,7 @@ class TabularMeasurementSet(object):
                 raise ValueError("dataset end indices required for multiple datasets")
 
     @staticmethod
-    def __generate_column_headers(n_metadata_columns,
-                                  n_data_columns):
+    def __generate_column_headers(n_metadata_columns, n_data_columns):
         """Generate default column headers if none are provided.
 
         Returns
@@ -170,22 +180,22 @@ class TabularMeasurementSet(object):
         MeasurementSet
         """
         measurements = []
-        for i, row in enumerate(self.data):  # over measurements
-
+        for _i, row in enumerate(self.data):  # over measurements
             conditions = {}
 
-            for j, variable_value in enumerate(row[0:self.n_metadata_columns]):
+            for j, variable_value in enumerate(row[0 : self.n_metadata_columns]):
                 conditions[self.column_headers[j]] = variable_value
 
             datasets = []
-            str_data_values = row[self.n_metadata_columns:]
+            str_data_values = row[self.n_metadata_columns :]
             data_values = []
             for value in str_data_values:
                 data_values.append(self.parse_string(value))
 
             dataset_start_index = 0
-            for dataset_end_index, dataset_type in zip(self._dataset_end_indices, self.dataset_types):
-
+            for dataset_end_index, dataset_type in zip(
+                self._dataset_end_indices, self.dataset_types
+            ):
                 column_start_index = dataset_start_index + self._n_metadata_columns
                 column_end_index = dataset_end_index + self.n_metadata_columns
                 # x_label, y_label, x_values = dataset_type.decode_column_labels(
@@ -198,19 +208,25 @@ class TabularMeasurementSet(object):
                 #                        independent_variable_names=x_label,
                 #                        dependent_variable_name=y_label)
 
-                dataset = dataset_type.unflatten(self.column_headers[column_start_index:column_end_index],
-                                                 np.array(data_values[dataset_start_index: dataset_end_index]))
+                dataset = dataset_type.unflatten(
+                    self.column_headers[column_start_index:column_end_index],
+                    np.array(data_values[dataset_start_index:dataset_end_index]),
+                )
 
                 datasets.append(dataset)
                 dataset_start_index = dataset_end_index
 
-            measurements.append(piblin.data.data_collections.measurement.Measurement(datasets,
-                                                                                          conditions=conditions,
-                                                                                          details={}))
+            measurements.append(
+                piblin.data.data_collections.measurement.Measurement(
+                    datasets, conditions=conditions, details={}
+                )
+            )
 
-        return piblin.data.data_collections.measurement_set.MeasurementSet(measurements, merge_redundant=merge_redundant)
+        return piblin.data.data_collections.measurement_set.MeasurementSet(
+            measurements, merge_redundant=merge_redundant
+        )
 
-    def _row_to_measurement(self, row: List[object]):
+    def _row_to_measurement(self, row: list[object]):
         """Convert a single row of flat data to a measurement.
 
         Parameters
@@ -223,12 +239,12 @@ class TabularMeasurementSet(object):
         Measurement
             The measurement corresponding to the given row.
         """
-        conditions = self._row_metadata_to_dict(row[0: self.n_metadata_columns])
+        conditions = self._row_metadata_to_dict(row[0 : self.n_metadata_columns])
         datasets = []
 
-        return piblin.data.data_collections.measurement.Measurement(datasets=datasets,
-                                                                         conditions=conditions,
-                                                                         details={})
+        return piblin.data.data_collections.measurement.Measurement(
+            datasets=datasets, conditions=conditions, details={}
+        )
 
     def _row_data_to_datasets(self):
         """Convert a single row of data to datasets."""
@@ -248,13 +264,15 @@ class TabularMeasurementSet(object):
             The dictionary corresponding to the given list.
         """
         metadata_dict = {}
-        for metadata_index, metadata_value in enumerate(row_metadata[0: self.n_metadata_columns]):
+        for metadata_index, metadata_value in enumerate(row_metadata[0 : self.n_metadata_columns]):
             metadata_dict[self.column_headers[metadata_index]] = metadata_value
         return metadata_dict
 
     def to_experiment_set(self):
         """Convert this tabular data to an experiment set."""
-        return piblin.data.data_collections.experiment_set.ExperimentSet.from_measurement_set(self.to_measurement_set())
+        return piblin.data.data_collections.experiment_set.ExperimentSet.from_measurement_set(
+            self.to_measurement_set()
+        )
 
     # some of these may be private variables - reassess
 
@@ -272,11 +290,11 @@ class TabularMeasurementSet(object):
 
     @property
     def metadata_columns(self):
-        return self.data[0:self.n_metadata_columns]
+        return self.data[0 : self.n_metadata_columns]
 
     @property
     def dataset_columns(self):
-        return np.array(self.data)[:, self.n_metadata_columns:]
+        return np.array(self.data)[:, self.n_metadata_columns :]
 
     @property
     def data(self):
@@ -314,7 +332,6 @@ class TabularMeasurementSet(object):
         str_rep += f", of which the first {self._n_metadata_columns} contain metadata\n"
 
         if self.n_rows != 0:
-
             header_str = "\n| "
             for column_header in self.column_headers:
                 header_str += f"{column_header} | "
@@ -331,9 +348,10 @@ class TabularMeasurementSet(object):
             str_rep += data_str[:-3]
 
         if self.n_datasets > 0:
-
             str_rep += "\n\nDataset Breakdown\n------------------\n"
-            for dataset_type, dataset_end_index in zip(self.dataset_types, self._dataset_end_indices):
+            for dataset_type, dataset_end_index in zip(
+                self.dataset_types, self._dataset_end_indices
+            ):
                 str_rep += f"{dataset_type.__name__} ({dataset_end_index})\n"
 
         return str_rep
@@ -341,9 +359,11 @@ class TabularMeasurementSet(object):
 
 class ConsistentTabularMeasurementSet(TabularMeasurementSet):
     """A tabular measurement set where each row contains the same number and type of datasets."""
+
     ...
 
 
 class TidyTabularMeasurementSet(ConsistentTabularMeasurementSet):
     """A consistent rabular measurement set where datasets have the same number of points."""
+
     ...

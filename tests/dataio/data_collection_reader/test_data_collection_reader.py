@@ -1,5 +1,7 @@
-import pytest
 import pathlib
+
+import pytest
+
 from piblin.dataio.data_collection_reader import DataCollectionReader
 from piblin.dataio.metadata_converter import MetadataConverter
 
@@ -16,8 +18,7 @@ def external_metadata_filename(datadir):
 
 def test_external_metadata_filename(external_metadata_filename):
     reader = DataCollectionReader()
-    measurements = reader.from_filepath(external_metadata_filename,
-                                        parse_filename_metadata=True)
+    measurements = reader.from_filepath(external_metadata_filename, parse_filename_metadata=True)
     assert measurements.details["key"] == "value"
 
 
@@ -28,8 +29,7 @@ def filename_with_support(datadir):
 
 def test_filename_with_support(filename_with_support):
     reader = DataCollectionReader()
-    measurements = reader.from_filepath(filename_with_support,
-                                        parse_filename_metadata=True)
+    measurements = reader.from_filepath(filename_with_support, parse_filename_metadata=True)
     assert measurements.details["key"] == "value"
     assert measurements.details["support_key"] == "support_value"
 
@@ -42,8 +42,9 @@ def filename_with_support_duplicate(datadir):
 def test_filename_with_support_duplicate(filename_with_support_duplicate):
     """Make sure file value is used when duplicate metadata in filename and supporting file."""
     reader = DataCollectionReader()
-    measurements = reader.from_filepath(filename_with_support_duplicate,
-                                        parse_filename_metadata=True)
+    measurements = reader.from_filepath(
+        filename_with_support_duplicate, parse_filename_metadata=True
+    )
     assert measurements.details["key"] == "json_value"
 
 
@@ -78,10 +79,9 @@ def custom_converter():
 def test_metadata_converters(metadata):
     reader = DataCollectionReader(metadata)
     metadata_converter = reader._DataCollectionReader__metadata_converter
-    assert isinstance(metadata_converter, MetadataConverter) \
-        or callable(metadata_converter)
+    assert isinstance(metadata_converter, MetadataConverter) or callable(metadata_converter)
 
 
 def test_bad_metadata_converter():
     with pytest.raises(TypeError):
-        reader = DataCollectionReader("d")
+        DataCollectionReader("d")

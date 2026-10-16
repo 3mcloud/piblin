@@ -16,11 +16,11 @@ read_float - Read a float (4 bytes) from a bytearray at an offset.
 read_double - Read a float (8 bytes) from a bytearray at an offset.
 read_byte - Read an unsigned char int (1 byte) from a bytearray at an offset.
 """
-from typing import List
+
 import struct
 
 
-def byte_to_bool_flags(value: int) -> List[bool]:
+def byte_to_bool_flags(value: int) -> list[bool]:
     """Convert a byte to a list of 8 boolean values.
 
     Parameters
@@ -41,7 +41,7 @@ def byte_to_bool_flags(value: int) -> List[bool]:
 
 
 def bytes_to_string(bytes_in: bytes) -> str:
-    """ Convert a bytearray to an ASCII string.
+    """Convert a bytearray to an ASCII string.
 
     Parameters
     ----------
@@ -77,9 +77,7 @@ def read_short(file_contents, offset: int, first_character="<") -> int:
     int
         The short value represented by an int.
     """
-    return struct.unpack_from(first_character + "h",
-                              file_contents,
-                              offset=offset)[0]
+    return struct.unpack_from(first_character + "h", file_contents, offset=offset)[0]
 
 
 def read_ushort(file_contents, offset: int, first_character="<") -> int:
@@ -99,9 +97,7 @@ def read_ushort(file_contents, offset: int, first_character="<") -> int:
     int
         The unsigned short value represented by an int.
     """
-    return struct.unpack_from(first_character + "H",
-                              file_contents,
-                              offset=offset)[0]
+    return struct.unpack_from(first_character + "H", file_contents, offset=offset)[0]
 
 
 def read_int(file_contents, offset: int, first_character="<") -> int:
@@ -121,9 +117,7 @@ def read_int(file_contents, offset: int, first_character="<") -> int:
     int
         The int value represented by an int.
     """
-    return struct.unpack_from(first_character + "i",
-                              file_contents,
-                              offset=offset)[0]
+    return struct.unpack_from(first_character + "i", file_contents, offset=offset)[0]
 
 
 def read_uint(file_contents, offset: int, first_character="<") -> int:
@@ -142,9 +136,7 @@ def read_uint(file_contents, offset: int, first_character="<") -> int:
     int
         The unsigned integer value represented by an int.
     """
-    return struct.unpack_from(first_character + "I",
-                              file_contents,
-                              offset=offset)[0]
+    return struct.unpack_from(first_character + "I", file_contents, offset=offset)[0]
 
 
 def read_long(file_contents, offset: int, first_character="<") -> int:
@@ -164,9 +156,7 @@ def read_long(file_contents, offset: int, first_character="<") -> int:
     int
         The long value represented by an int.
     """
-    return struct.unpack_from(first_character + "l",
-                              file_contents,
-                              offset=offset)[0]
+    return struct.unpack_from(first_character + "l", file_contents, offset=offset)[0]
 
 
 def read_ulong(file_contents, offset: int, first_character="<") -> int:
@@ -186,9 +176,7 @@ def read_ulong(file_contents, offset: int, first_character="<") -> int:
     int
         The unsigned long value represented by an int.
     """
-    return struct.unpack_from(first_character + "L",
-                              file_contents,
-                              offset=offset)[0]
+    return struct.unpack_from(first_character + "L", file_contents, offset=offset)[0]
 
 
 def read_long_long(file_contents, offset: int) -> int:
@@ -206,9 +194,7 @@ def read_long_long(file_contents, offset: int) -> int:
     int
         The long long value represented by an int.
     """
-    return struct.unpack_from("<q",
-                              file_contents,
-                              offset=offset)[0]
+    return struct.unpack_from("<q", file_contents, offset=offset)[0]
 
 
 def read_ulong_long(file_contents, offset: int) -> int:
@@ -226,9 +212,7 @@ def read_ulong_long(file_contents, offset: int) -> int:
     int
         The ulong long value represented by an int.
     """
-    return struct.unpack_from("<Q",
-                              file_contents,
-                              offset=offset)[0]
+    return struct.unpack_from("<Q", file_contents, offset=offset)[0]
 
 
 def read_float(file_contents, offset: int, first_character="<") -> float:
@@ -248,9 +232,7 @@ def read_float(file_contents, offset: int, first_character="<") -> float:
     float
         The float value represented by a float.
     """
-    return struct.unpack_from(first_character + "f",
-                              file_contents,
-                              offset=offset)[0]
+    return struct.unpack_from(first_character + "f", file_contents, offset=offset)[0]
 
 
 def read_float16(file_contents, offset: int, first_character="<") -> float:
@@ -270,9 +252,7 @@ def read_float16(file_contents, offset: int, first_character="<") -> float:
     float
         The float value represented by a float.
     """
-    return struct.unpack_from(first_character + "e",
-                              file_contents,
-                              offset=offset)[0]
+    return struct.unpack_from(first_character + "e", file_contents, offset=offset)[0]
 
 
 def read_double(file_contents, offset: int, first_character="<") -> float:
@@ -292,9 +272,7 @@ def read_double(file_contents, offset: int, first_character="<") -> float:
     float
         The double value represented by a float.
     """
-    return struct.unpack_from(first_character + "d",
-                              file_contents,
-                              offset=offset)[0]
+    return struct.unpack_from(first_character + "d", file_contents, offset=offset)[0]
 
 
 def read_byte(file_contents, offset: int) -> bytes:
@@ -312,6 +290,4 @@ def read_byte(file_contents, offset: int) -> bytes:
     int
         The byte value represented by an int.
     """
-    return struct.unpack_from("<B",
-                              file_contents,
-                              offset=offset)[0]
+    return struct.unpack_from("<B", file_contents, offset=offset)[0]

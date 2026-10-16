@@ -1,22 +1,28 @@
-from typing import List, Union
-import piblin.data.datasets.abc.dataset as dataset_
+from typing import Union
+
+import piblin.data.data_collections.consistent_measurement_set as consistent_measurement_set_
+import piblin.data.data_collections.experiment_set as experiment_set_
 import piblin.data.data_collections.measurement as measurement_
 import piblin.data.data_collections.measurement_set as measurement_set_
-import piblin.data.data_collections.consistent_measurement_set as consistent_measurement_set_
 import piblin.data.data_collections.tidy_measurement_set as tidy_measurement_set_
-import piblin.data.data_collections.experiment_set as experiment_set_
+import piblin.data.datasets.abc.dataset as dataset_
 
 
-class DataCollectionFactory(object):
+class DataCollectionFactory:
     """A class to create instances of measurement set subclasses."""
+
     @staticmethod
-    def from_measurements(measurements: List[measurement_.Measurement],
-                          to_experiments: bool = True,
-                          minimize_hierarchy: bool = False,
-                          merge_redundant: bool = True) -> Union[measurement_set_.MeasurementSet,
-                                                                 consistent_measurement_set_.ConsistentMeasurementSet,
-                                                                 tidy_measurement_set_.TidyMeasurementSet,
-                                                                 "experiment_set_.ExperimentSet"]:
+    def from_measurements(
+        measurements: list[measurement_.Measurement],
+        to_experiments: bool = True,
+        minimize_hierarchy: bool = False,
+        merge_redundant: bool = True,
+    ) -> Union[
+        measurement_set_.MeasurementSet,
+        consistent_measurement_set_.ConsistentMeasurementSet,
+        tidy_measurement_set_.TidyMeasurementSet,
+        "experiment_set_.ExperimentSet",
+    ]:
         """Create an appropriate measurement set subclass from given measurements.
 
         Given a set of measurements, creates an instance of the least structured data collection class (the measurement
@@ -42,29 +48,36 @@ class DataCollectionFactory(object):
         MeasurementSet or ConsistentMeasurementSet or TidyMeasurementSet or ExperimentSet
             The appropriate measurement set subclass.
         """
-        measurement_set = measurement_set_.MeasurementSet(measurements,
-                                                          merge_redundant=merge_redundant)
+        measurement_set = measurement_set_.MeasurementSet(
+            measurements, merge_redundant=merge_redundant
+        )
 
         if measurement_set.is_tidy and measurement_set.is_consistent:
             if not to_experiments:
-                measurement_set = tidy_measurement_set_.TidyMeasurementSet(measurements=measurements,
-                                                                           merge_redundant=merge_redundant)
+                measurement_set = tidy_measurement_set_.TidyMeasurementSet(
+                    measurements=measurements, merge_redundant=merge_redundant
+                )
             else:
-                measurement_set = experiment_set_.ExperimentSet(measurements=measurements,
-                                                                merge_redundant=merge_redundant)
+                measurement_set = experiment_set_.ExperimentSet(
+                    measurements=measurements, merge_redundant=merge_redundant
+                )
 
         elif measurement_set.is_consistent and not measurement_set.is_tidy:
             if not to_experiments:
-                measurement_set = consistent_measurement_set_.ConsistentMeasurementSet(measurements=measurements,
-                                                                                       merge_redundant=merge_redundant)
+                measurement_set = consistent_measurement_set_.ConsistentMeasurementSet(
+                    measurements=measurements, merge_redundant=merge_redundant
+                )
             else:
-                measurement_set = experiment_set_.ExperimentSet(measurements=measurements,
-                                                                merge_redundant=merge_redundant)
+                measurement_set = experiment_set_.ExperimentSet(
+                    measurements=measurements, merge_redundant=merge_redundant
+                )
 
         else:
             if to_experiments:
-                print(f"Warning: Measurements are not consistent so could not be converted to experiments. "
-                      f"A measurement set has been created.")
+                print(
+                    "Warning: Measurements are not consistent so could not be converted to experiments. "
+                    "A measurement set has been created."
+                )
                 print(measurement_set.consistency_str)
         if minimize_hierarchy:
             return DataCollectionFactory.__minimize_hierarchy(measurement_set)
@@ -72,16 +85,21 @@ class DataCollectionFactory(object):
             return measurement_set
 
     @staticmethod
-    def __minimize_hierarchy(data_collection: Union[measurement_set_.MeasurementSet,
-                                                    consistent_measurement_set_.ConsistentMeasurementSet,
-                                                    tidy_measurement_set_.TidyMeasurementSet,
-                                                    "experiment_set_.ExperimentSet"]) -> \
-            Union[dataset_.Dataset,
-                  measurement_.Measurement,
-                  measurement_set_.MeasurementSet,
-                  consistent_measurement_set_.ConsistentMeasurementSet,
-                  tidy_measurement_set_.TidyMeasurementSet,
-                  "experiment_set_.ExperimentSet"]:
+    def __minimize_hierarchy(
+        data_collection: Union[
+            measurement_set_.MeasurementSet,
+            consistent_measurement_set_.ConsistentMeasurementSet,
+            tidy_measurement_set_.TidyMeasurementSet,
+            "experiment_set_.ExperimentSet",
+        ],
+    ) -> Union[
+        dataset_.Dataset,
+        measurement_.Measurement,
+        measurement_set_.MeasurementSet,
+        consistent_measurement_set_.ConsistentMeasurementSet,
+        tidy_measurement_set_.TidyMeasurementSet,
+        "experiment_set_.ExperimentSet",
+    ]:
 
         if len(data_collection) == 1:
             experiment = data_collection[0]

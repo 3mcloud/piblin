@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Callable
+from collections.abc import Callable
 
 from piblin.transform.abc import transform as transform
 
@@ -18,11 +18,8 @@ class LambdaTransform(transform.Transform, ABC):
     transform_function : Callable
         The custom transform function
     """
-    def __init__(self,
-                 transform_function: Callable,
-                 *args,
-                 **kwargs
-                 ):
+
+    def __init__(self, transform_function: Callable, *args, **kwargs):
 
         self._transform_function = transform_function
 

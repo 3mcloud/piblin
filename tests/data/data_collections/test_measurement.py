@@ -20,19 +20,22 @@ functionality of dunder methods:
 checking for replicate measurements
 visualization produces consistent output
 """
+
 import pytest
-from piblin.data.datasets.abc.dataset import Dataset  # not unused - do not delete
 from numpy import array, array_equal  # not unused - do not delete
-from piblin.data.data_collections.tabular_measurement_set import TabularMeasurementSet
-from piblin.data.datasets.abc.split_datasets.zero_dimensional_dataset import ZeroDimensionalDataset
-from piblin.data.datasets.abc.split_datasets.one_dimensional_dataset import OneDimensionalDataset
+
 # from cralds.data import DatasetFactory
-from piblin.data.data_collections.measurement import Measurement
-from piblin.data.data_collections.measurement import ExistingMetadataError
-from piblin.data.data_collections.measurement import MissingMetadataError
-from piblin.data.data_collections.measurement import DuplicateMetadataError
-from piblin.data.data_collections.measurement import DifferingConditionError
-from piblin.data.data_collections.measurement import IncompatibleListError
+from piblin.data.data_collections.measurement import (
+    DuplicateMetadataError,
+    ExistingMetadataError,
+    IncompatibleListError,
+    Measurement,
+    MissingMetadataError,
+)
+from piblin.data.data_collections.tabular_measurement_set import TabularMeasurementSet
+from piblin.data.datasets.abc.split_datasets.one_dimensional_dataset import OneDimensionalDataset
+from piblin.data.datasets.abc.split_datasets.two_dimensional_dataset import TwoDimensionalDataset
+from piblin.data.datasets.abc.split_datasets.zero_dimensional_dataset import ZeroDimensionalDataset
 
 
 def test_initialization_default(measurement_empty):
@@ -48,22 +51,32 @@ def test_initialization_default(measurement_empty):
     assert measurement_empty.detail_names == set()
 
 
-def test_initialization_single_true_scalar_dataset(measurement_zerod_dataset_true_default_name_and_unit_no_metadata,
-                                                   zerod_dataset_true_default_name_and_unit):
+def test_initialization_single_true_scalar_dataset(
+    measurement_zerod_dataset_true_default_name_and_unit_no_metadata,
+    zerod_dataset_true_default_name_and_unit,
+):
     """Ensure that a measurement with a single scalar has the correct properties."""
-    assert measurement_zerod_dataset_true_default_name_and_unit_no_metadata.datasets == [zerod_dataset_true_default_name_and_unit]
+    assert measurement_zerod_dataset_true_default_name_and_unit_no_metadata.datasets == [
+        zerod_dataset_true_default_name_and_unit
+    ]
     assert measurement_zerod_dataset_true_default_name_and_unit_no_metadata.num_datasets == 1
-    assert measurement_zerod_dataset_true_default_name_and_unit_no_metadata.dataset_types == [ZeroDimensionalDataset]
+    assert measurement_zerod_dataset_true_default_name_and_unit_no_metadata.dataset_types == [
+        ZeroDimensionalDataset
+    ]
     assert measurement_zerod_dataset_true_default_name_and_unit_no_metadata.dataset_lengths == [1]
-    assert array_equal(measurement_zerod_dataset_true_default_name_and_unit_no_metadata.dataset_independent_variable_data, [array([])])
+    assert array_equal(
+        measurement_zerod_dataset_true_default_name_and_unit_no_metadata.dataset_independent_variable_data,
+        [array([])],
+    )
     assert measurement_zerod_dataset_true_default_name_and_unit_no_metadata.conditions == {}
     assert measurement_zerod_dataset_true_default_name_and_unit_no_metadata.condition_names == set()
     assert measurement_zerod_dataset_true_default_name_and_unit_no_metadata.details == {}
     assert measurement_zerod_dataset_true_default_name_and_unit_no_metadata.detail_names == set()
 
 
-def test_initialization_single_true_oned_dataset(measurement_single_oned_dataset_single_point,
-                                                 oned_dataset_single_point):
+def test_initialization_single_true_oned_dataset(
+    measurement_single_oned_dataset_single_point, oned_dataset_single_point
+):
     """Ensure that a measurement with a single one-d dataset has the correct properties."""
     assert measurement_single_oned_dataset_single_point.datasets == [oned_dataset_single_point]
     assert measurement_single_oned_dataset_single_point.num_datasets == 1
@@ -75,13 +88,21 @@ def test_initialization_single_true_oned_dataset(measurement_single_oned_dataset
     assert measurement_single_oned_dataset_single_point.detail_names == set()
 
 
-def test_initialization_two_datasets(measurement_two_differing_zerod_datasets,
-                                     zerod_dataset_true_default_name_and_unit,
-                                     zerod_dataset_false_default_name_and_unit):
+def test_initialization_two_datasets(
+    measurement_two_differing_zerod_datasets,
+    zerod_dataset_true_default_name_and_unit,
+    zerod_dataset_false_default_name_and_unit,
+):
     """Ensure that a measurement with two scalars has the correct properties."""
-    assert measurement_two_differing_zerod_datasets.datasets == [zerod_dataset_true_default_name_and_unit, zerod_dataset_false_default_name_and_unit]
+    assert measurement_two_differing_zerod_datasets.datasets == [
+        zerod_dataset_true_default_name_and_unit,
+        zerod_dataset_false_default_name_and_unit,
+    ]
     assert measurement_two_differing_zerod_datasets.num_datasets == 2
-    assert measurement_two_differing_zerod_datasets.dataset_types == [ZeroDimensionalDataset, ZeroDimensionalDataset]
+    assert measurement_two_differing_zerod_datasets.dataset_types == [
+        ZeroDimensionalDataset,
+        ZeroDimensionalDataset,
+    ]
     assert measurement_two_differing_zerod_datasets.dataset_lengths == [1, 1]
     assert measurement_two_differing_zerod_datasets.conditions == {}
     assert measurement_two_differing_zerod_datasets.condition_names == set()
@@ -113,9 +134,16 @@ def test_initialization_single_detail(measurement_single_true_detail, true_detai
     assert measurement_single_true_detail.detail_names == {"detail"}
 
 
-def test_initialization(measurement_single_dataset_condition_detail, zerod_dataset_true_default_name_and_unit, true_condition, true_detail):
+def test_initialization(
+    measurement_single_dataset_condition_detail,
+    zerod_dataset_true_default_name_and_unit,
+    true_condition,
+    true_detail,
+):
     """Ensure that a measurement with a single scalar, condition and detail has the correct properties."""
-    assert measurement_single_dataset_condition_detail.datasets == [zerod_dataset_true_default_name_and_unit]
+    assert measurement_single_dataset_condition_detail.datasets == [
+        zerod_dataset_true_default_name_and_unit
+    ]
     assert measurement_single_dataset_condition_detail.num_datasets == 1
     assert measurement_single_dataset_condition_detail.dataset_types == [ZeroDimensionalDataset]
     assert measurement_single_dataset_condition_detail.dataset_lengths == [1]
@@ -125,9 +153,15 @@ def test_initialization(measurement_single_dataset_condition_detail, zerod_datas
     assert measurement_single_dataset_condition_detail.detail_names == {"detail"}
 
 
-def test_from_single_dataset(measurement_zerod_dataset_true_default_name_and_unit_no_metadata, zerod_dataset_true_default_name_and_unit):
+def test_from_single_dataset(
+    measurement_zerod_dataset_true_default_name_and_unit_no_metadata,
+    zerod_dataset_true_default_name_and_unit,
+):
     """Test the creational method which takes a single dataset argument."""
-    assert measurement_zerod_dataset_true_default_name_and_unit_no_metadata == Measurement.from_single_dataset(zerod_dataset_true_default_name_and_unit)
+    assert (
+        measurement_zerod_dataset_true_default_name_and_unit_no_metadata
+        == Measurement.from_single_dataset(zerod_dataset_true_default_name_and_unit)
+    )
 
 
 def test_from_single_dataset_no_arg(measurement_empty):
@@ -140,45 +174,55 @@ def test_datasets_setter(measurement_empty, zerod_dataset_true_default_name_and_
     assert measurement_empty.datasets == [zerod_dataset_true_default_name_and_unit]
 
 
-def test_equality(zerod_dataset_true_default_name_and_unit, zerod_dataset_false_default_name_and_unit,
-                  true_condition, false_condition,
-                  true_detail, false_detail):
+def test_equality(
+    zerod_dataset_true_default_name_and_unit,
+    zerod_dataset_false_default_name_and_unit,
+    true_condition,
+    false_condition,
+    true_detail,
+    false_detail,
+):
     """Ensure equality between measurements is implemented correctly."""
 
     # a measurement instance is equal to itself
     measurement = Measurement([zerod_dataset_true_default_name_and_unit])
     assert measurement == measurement
     # measurements with different data are not equal
-    assert Measurement([zerod_dataset_true_default_name_and_unit]) != Measurement([zerod_dataset_false_default_name_and_unit])
-    assert Measurement([zerod_dataset_true_default_name_and_unit]) != Measurement([zerod_dataset_true_default_name_and_unit, zerod_dataset_false_default_name_and_unit])
+    assert Measurement([zerod_dataset_true_default_name_and_unit]) != Measurement(
+        [zerod_dataset_false_default_name_and_unit]
+    )
+    assert Measurement([zerod_dataset_true_default_name_and_unit]) != Measurement(
+        [zerod_dataset_true_default_name_and_unit, zerod_dataset_false_default_name_and_unit]
+    )
     # measurements with the same data under different conditions with no
     # details are not equal
-    assert Measurement([zerod_dataset_true_default_name_and_unit], true_condition) != \
-           Measurement([zerod_dataset_true_default_name_and_unit], false_condition)
+    assert Measurement([zerod_dataset_true_default_name_and_unit], true_condition) != Measurement(
+        [zerod_dataset_true_default_name_and_unit], false_condition
+    )
     # measurements with the same data and no conditions with different details
     # are not equal
-    assert Measurement([zerod_dataset_true_default_name_and_unit], details=true_detail) != \
-           Measurement([zerod_dataset_true_default_name_and_unit], details=false_detail)
+    assert Measurement(
+        [zerod_dataset_true_default_name_and_unit], details=true_detail
+    ) != Measurement([zerod_dataset_true_default_name_and_unit], details=false_detail)
     # measurements with the same data under the same conditions with different
     # details are not equal
-    assert Measurement([zerod_dataset_true_default_name_and_unit],
-                       conditions=true_condition,
-                       details=true_detail) != \
-           Measurement([zerod_dataset_true_default_name_and_unit],
-                       conditions=true_condition,
-                       details=false_detail)
+    assert Measurement(
+        [zerod_dataset_true_default_name_and_unit], conditions=true_condition, details=true_detail
+    ) != Measurement(
+        [zerod_dataset_true_default_name_and_unit], conditions=true_condition, details=false_detail
+    )
     # measurements with the same data under different conditions with the same
     # details are not equal
-    assert Measurement([zerod_dataset_true_default_name_and_unit],
-                       conditions=true_condition,
-                       details=true_detail) != \
-           Measurement([zerod_dataset_true_default_name_and_unit],
-                       conditions=false_condition,
-                       details=false_detail)
+    assert Measurement(
+        [zerod_dataset_true_default_name_and_unit], conditions=true_condition, details=true_detail
+    ) != Measurement(
+        [zerod_dataset_true_default_name_and_unit], conditions=false_condition, details=false_detail
+    )
     # measurements with the same data under the same conditions with the same
     # details are equal.
-    assert Measurement([zerod_dataset_true_default_name_and_unit], true_condition, true_detail) == \
-           Measurement([zerod_dataset_true_default_name_and_unit], true_condition, true_detail)
+    assert Measurement(
+        [zerod_dataset_true_default_name_and_unit], true_condition, true_detail
+    ) == Measurement([zerod_dataset_true_default_name_and_unit], true_condition, true_detail)
 
 
 def test_comparison_not_implemented(measurement_empty):
@@ -186,109 +230,150 @@ def test_comparison_not_implemented(measurement_empty):
     assert measurement_empty.__cmp__() is NotImplemented
 
 
-def test_comparisons(measurement_zerod_dataset_true_default_name_and_unit_no_metadata,
-                     measurement_zerod_dataset_false_default_name_and_unit):
+def test_comparisons(
+    measurement_zerod_dataset_true_default_name_and_unit_no_metadata,
+    measurement_zerod_dataset_false_default_name_and_unit,
+):
     """Ensure comparison operators other than eq, neq are not implemented."""
     with pytest.raises(TypeError):
-        _ = measurement_zerod_dataset_true_default_name_and_unit_no_metadata < measurement_zerod_dataset_false_default_name_and_unit
+        _ = (
+            measurement_zerod_dataset_true_default_name_and_unit_no_metadata
+            < measurement_zerod_dataset_false_default_name_and_unit
+        )
 
     with pytest.raises(TypeError):
-        _ = measurement_zerod_dataset_true_default_name_and_unit_no_metadata > measurement_zerod_dataset_false_default_name_and_unit
+        _ = (
+            measurement_zerod_dataset_true_default_name_and_unit_no_metadata
+            > measurement_zerod_dataset_false_default_name_and_unit
+        )
 
     with pytest.raises(TypeError):
-        _ = measurement_zerod_dataset_true_default_name_and_unit_no_metadata <= measurement_zerod_dataset_false_default_name_and_unit
+        _ = (
+            measurement_zerod_dataset_true_default_name_and_unit_no_metadata
+            <= measurement_zerod_dataset_false_default_name_and_unit
+        )
 
     with pytest.raises(TypeError):
-        _ = measurement_zerod_dataset_true_default_name_and_unit_no_metadata >= measurement_zerod_dataset_false_default_name_and_unit
+        _ = (
+            measurement_zerod_dataset_true_default_name_and_unit_no_metadata
+            >= measurement_zerod_dataset_false_default_name_and_unit
+        )
 
 
-def test_replicate(zerod_dataset_true_default_name_and_unit, zerod_dataset_false_default_name_and_unit, oned_dataset_single_point,
-                   true_condition, false_condition,
-                   true_detail, false_detail):
+def test_replicate(
+    zerod_dataset_true_default_name_and_unit,
+    zerod_dataset_false_default_name_and_unit,
+    oned_dataset_single_point,
+    true_condition,
+    false_condition,
+    true_detail,
+    false_detail,
+):
     """Ensure replicate relationship is implemented correctly."""
 
     # two measurements with data only are replicates
     assert Measurement([zerod_dataset_true_default_name_and_unit]).is_replicate_of(
-        Measurement([zerod_dataset_false_default_name_and_unit]))
+        Measurement([zerod_dataset_false_default_name_and_unit])
+    )
     # same data, same conditions are replicates
     assert Measurement([zerod_dataset_true_default_name_and_unit], true_condition).is_replicate_of(
-        Measurement([zerod_dataset_true_default_name_and_unit], true_condition))
+        Measurement([zerod_dataset_true_default_name_and_unit], true_condition)
+    )
     # same data, different conditions are not replicates
-    assert Measurement([zerod_dataset_true_default_name_and_unit], true_condition).is_not_replicate_of(
-        Measurement([zerod_dataset_true_default_name_and_unit], false_condition))
+    assert Measurement(
+        [zerod_dataset_true_default_name_and_unit], true_condition
+    ).is_not_replicate_of(Measurement([zerod_dataset_true_default_name_and_unit], false_condition))
     # different data, same conditions are replicates
     assert Measurement([zerod_dataset_true_default_name_and_unit], true_condition).is_replicate_of(
-        Measurement([zerod_dataset_false_default_name_and_unit], true_condition))
+        Measurement([zerod_dataset_false_default_name_and_unit], true_condition)
+    )
     # different data, different conditions are not replicates
-    assert Measurement([zerod_dataset_true_default_name_and_unit], true_condition).is_not_replicate_of(
-        Measurement([zerod_dataset_false_default_name_and_unit], false_condition))
+    assert Measurement(
+        [zerod_dataset_true_default_name_and_unit], true_condition
+    ).is_not_replicate_of(Measurement([zerod_dataset_false_default_name_and_unit], false_condition))
     # different data and details, same conditions are replicates
-    assert Measurement([zerod_dataset_true_default_name_and_unit], true_condition, true_detail).\
-        is_replicate_of(
-        Measurement([zerod_dataset_false_default_name_and_unit], true_condition, false_detail))
+    assert Measurement(
+        [zerod_dataset_true_default_name_and_unit], true_condition, true_detail
+    ).is_replicate_of(
+        Measurement([zerod_dataset_false_default_name_and_unit], true_condition, false_detail)
+    )
     # same data and details, different conditions are not replicates
-    assert Measurement([zerod_dataset_true_default_name_and_unit], true_condition, true_detail).\
-        is_not_replicate_of(
-           Measurement([zerod_dataset_true_default_name_and_unit], false_condition, false_detail))
+    assert Measurement(
+        [zerod_dataset_true_default_name_and_unit], true_condition, true_detail
+    ).is_not_replicate_of(
+        Measurement([zerod_dataset_true_default_name_and_unit], false_condition, false_detail)
+    )
     # measurements with different number of datasets are not replicates
-    assert not Measurement([zerod_dataset_true_default_name_and_unit, zerod_dataset_false_default_name_and_unit]).\
-        is_replicate_of(
-           Measurement([zerod_dataset_true_default_name_and_unit]))
+    assert not Measurement(
+        [zerod_dataset_true_default_name_and_unit, zerod_dataset_false_default_name_and_unit]
+    ).is_replicate_of(Measurement([zerod_dataset_true_default_name_and_unit]))
     # measurements with datasets of different types are not replicates
-    assert not Measurement([zerod_dataset_true_default_name_and_unit]).\
-        is_replicate_of(
-           Measurement([oned_dataset_single_point]))
+    assert not Measurement([zerod_dataset_true_default_name_and_unit]).is_replicate_of(
+        Measurement([oned_dataset_single_point])
+    )
 
 
 def test_equal_shared_conditions():
     """Ensure equal shared conditions relationship is implemented correctly."""
-    assert Measurement(conditions={"condition": True}).\
-        _has_equal_shared_conditions_to(
-           Measurement(conditions={"condition": True}))
+    assert Measurement(conditions={"condition": True})._has_equal_shared_conditions_to(
+        Measurement(conditions={"condition": True})
+    )
 
-    assert not Measurement(conditions={"condition": True}).\
-        _has_equal_shared_conditions_to(
-           Measurement(conditions={"condition": False}))
+    assert not Measurement(conditions={"condition": True})._has_equal_shared_conditions_to(
+        Measurement(conditions={"condition": False})
+    )
 
-    assert not Measurement(conditions={"condition": True}).\
-        _has_equal_shared_conditions_to(
-           Measurement(conditions={"condition": False}))
+    assert not Measurement(conditions={"condition": True})._has_equal_shared_conditions_to(
+        Measurement(conditions={"condition": False})
+    )
 
 
 def test_replicate_sets(zerod_dataset_true_default_name_and_unit, true_condition):
     """Ensure 3 measurements with same conditions are replicates."""
 
-    measurements = [Measurement([zerod_dataset_true_default_name_and_unit], true_condition),
-                    Measurement([zerod_dataset_true_default_name_and_unit], true_condition),
-                    Measurement([zerod_dataset_true_default_name_and_unit], true_condition)]
+    measurements = [
+        Measurement([zerod_dataset_true_default_name_and_unit], true_condition),
+        Measurement([zerod_dataset_true_default_name_and_unit], true_condition),
+        Measurement([zerod_dataset_true_default_name_and_unit], true_condition),
+    ]
     assert Measurement.are_repetitions(measurements)
 
 
-def test_non_replicate_sets(zerod_dataset_true_default_name_and_unit, true_condition, false_condition):
+def test_non_replicate_sets(
+    zerod_dataset_true_default_name_and_unit, true_condition, false_condition
+):
     """Ensure 3 measurements with differing conditions are not replicates."""
-    measurements = [Measurement([zerod_dataset_true_default_name_and_unit], true_condition),
-                    Measurement([zerod_dataset_true_default_name_and_unit], true_condition),
-                    Measurement([zerod_dataset_true_default_name_and_unit], false_condition)]
+    measurements = [
+        Measurement([zerod_dataset_true_default_name_and_unit], true_condition),
+        Measurement([zerod_dataset_true_default_name_and_unit], true_condition),
+        Measurement([zerod_dataset_true_default_name_and_unit], false_condition),
+    ]
     assert Measurement.are_not_repetitions(measurements)
 
 
 def test_repr_no_metadata(measurement_single_dataset_condition_detail):
     """Ensure that a measurement with a single dataset, condition and detail's rept can be eval'd."""
-    assert eval(repr(measurement_single_dataset_condition_detail)) == \
-           measurement_single_dataset_condition_detail
+    assert (
+        eval(repr(measurement_single_dataset_condition_detail))
+        == measurement_single_dataset_condition_detail
+    )
 
 
 def test_repr_single_metadata(measurement_single_dataset_condition_detail):
     """"""
-    assert eval(repr(measurement_single_dataset_condition_detail)) == \
-           measurement_single_dataset_condition_detail
+    assert (
+        eval(repr(measurement_single_dataset_condition_detail))
+        == measurement_single_dataset_condition_detail
+    )
 
 
-def test_repr_multiple_metadata(zerod_dataset_false_default_name_and_unit,
-                                true_condition,
-                                other_true_condition,
-                                true_detail,
-                                other_true_detail):
+def test_repr_multiple_metadata(
+    zerod_dataset_false_default_name_and_unit,
+    true_condition,
+    other_true_condition,
+    true_detail,
+    other_true_detail,
+):
     """Test that the repr can be eval'ed for a measurement with multiple metadata."""
     conditions = true_condition
     conditions.update(other_true_condition)
@@ -296,9 +381,9 @@ def test_repr_multiple_metadata(zerod_dataset_false_default_name_and_unit,
     details = true_detail
     details.update(other_true_detail)
 
-    measurement = Measurement(datasets=[zerod_dataset_false_default_name_and_unit],
-                              conditions=conditions,
-                              details=details)
+    measurement = Measurement(
+        datasets=[zerod_dataset_false_default_name_and_unit], conditions=conditions, details=details
+    )
     assert eval(repr(measurement)) == measurement
 
 
@@ -306,21 +391,34 @@ def test_default_one_line_str(measurement_empty):
     assert measurement_empty.one_line_str() == "conditions={}, details={}, datasets=[]"
 
 
-def test_one_line_str_single_scalar(measurement_zerod_dataset_true_default_name_and_unit_no_metadata):
-    assert measurement_zerod_dataset_true_default_name_and_unit_no_metadata.one_line_str() == "conditions={}, details={}, datasets=[0: variable = 1.0 None]"
+def test_one_line_str_single_scalar(
+    measurement_zerod_dataset_true_default_name_and_unit_no_metadata,
+):
+    assert (
+        measurement_zerod_dataset_true_default_name_and_unit_no_metadata.one_line_str()
+        == "conditions={}, details={}, datasets=[0: variable = 1.0 None]"
+    )
 
 
 def test_one_line_str_single_true_condition(measurement_single_true_condition):
-    assert measurement_single_true_condition.one_line_str() == "conditions={condition:True}, details={}, datasets=[]"
+    assert (
+        measurement_single_true_condition.one_line_str()
+        == "conditions={condition:True}, details={}, datasets=[]"
+    )
 
 
 def test_one_line_str_single_true_detail(measurement_single_true_detail):
-    assert measurement_single_true_detail.one_line_str() == "conditions={}, details={detail:True}, datasets=[]"
+    assert (
+        measurement_single_true_detail.one_line_str()
+        == "conditions={}, details={detail:True}, datasets=[]"
+    )
 
 
 def test_one_line_str_single_dataset_condition_detail(measurement_single_dataset_condition_detail):
-    assert measurement_single_dataset_condition_detail.one_line_str() == \
-           "conditions={condition:True}, details={detail:True}, datasets=[0: variable = 1.0 None]"
+    assert (
+        measurement_single_dataset_condition_detail.one_line_str()
+        == "conditions={condition:True}, details={detail:True}, datasets=[0: variable = 1.0 None]"
+    )
 
 
 def test_str_default(measurement_empty):
@@ -333,22 +431,22 @@ def test_str(measurement_single_dataset_condition_detail):
 
 def test_is_replicate():
     """Test that the replicate relationship holds for measurements with no metadata."""
-    measurement_i = Measurement(datasets=None,
-                                conditions={"condition": True},
-                                details=None)
+    measurement_i = Measurement(datasets=None, conditions={"condition": True}, details=None)
 
-    measurement_j = Measurement(datasets=None,
-                                conditions={"condition": True},
-                                details=None)
+    measurement_j = Measurement(datasets=None, conditions={"condition": True}, details=None)
 
     assert measurement_i.is_replicate_of(measurement_j)
 
 
-def test_compute_matplotlib_figure_size(measurement_empty,
-                                        measurement_zerod_dataset_true_default_name_and_unit_no_metadata):
+def test_compute_matplotlib_figure_size(
+    measurement_empty, measurement_zerod_dataset_true_default_name_and_unit_no_metadata
+):
 
     assert measurement_empty.compute_matplotlib_figure_size() == (0, 0)
-    assert measurement_zerod_dataset_true_default_name_and_unit_no_metadata.compute_matplotlib_figure_size() == (5, 5)
+    assert (
+        measurement_zerod_dataset_true_default_name_and_unit_no_metadata.compute_matplotlib_figure_size()
+        == (5, 5)
+    )
 
 
 def test_condition_to_detail(measurement_single_true_condition):
@@ -361,8 +459,7 @@ def test_condition_to_detail(measurement_single_true_condition):
 
 def test_conditions_to_details(measurement_two_true_conditions):
     measurement_two_true_conditions.conditions_to_details(["condition", "other_condition"])
-    assert measurement_two_true_conditions.details == {"condition": True,
-                                                       "other_condition": True}
+    assert measurement_two_true_conditions.details == {"condition": True, "other_condition": True}
 
 
 def test_detail_to_condition(measurement_single_true_detail):
@@ -376,8 +473,7 @@ def test_detail_to_condition(measurement_single_true_detail):
 def test_details_to_condition(measurement_two_true_details):
     measurement_two_true_details.details_to_conditions(["detail", "other_detail"])
 
-    assert measurement_two_true_details.conditions == {"detail": True,
-                                                       "other_detail": True}
+    assert measurement_two_true_details.conditions == {"detail": True, "other_detail": True}
 
 
 def test_add_condition(measurement_empty):
@@ -388,14 +484,12 @@ def test_add_condition(measurement_empty):
 
 def test_add_conditions(measurement_empty):
     measurement_empty.add_conditions(["condition", "other_condition"], [True, True])
-    assert measurement_empty.conditions == {"condition": True,
-                                              "other_condition": True}
+    assert measurement_empty.conditions == {"condition": True, "other_condition": True}
 
 
 def test_add_details(measurement_empty):
     measurement_empty.add_details(["detail", "other_detail"], [True, True])
-    assert measurement_empty.details == {"detail": True,
-                                           "other_detail": True}
+    assert measurement_empty.details == {"detail": True, "other_detail": True}
 
 
 def test_add_details_incompatible_list(measurement_empty):
@@ -416,8 +510,7 @@ def test_update_conditions_incompatible_list(measurement_empty):
 
 def test_update_conditions(measurement_empty):
     measurement_empty.update_conditions(["condition", "other_condition"], [True, True])
-    assert measurement_empty.conditions == {"condition": True,
-                                              "other_condition": True}
+    assert measurement_empty.conditions == {"condition": True, "other_condition": True}
 
 
 def test_update_details_incompatible_list(measurement_empty):
@@ -427,8 +520,7 @@ def test_update_details_incompatible_list(measurement_empty):
 
 def test_update_details(measurement_empty):
     measurement_empty.update_details(["detail", "other_detail"], [True, True])
-    assert measurement_empty.details == {"detail": True,
-                                           "other_detail": True}
+    assert measurement_empty.details == {"detail": True, "other_detail": True}
 
 
 def test_add_detail(measurement_empty):
@@ -467,9 +559,7 @@ def test_rename_metadata(measurement_single_true_condition):
 def test_duplicate_metadata_name_error():
     """Ensure a measurement cannot be created with detail and condition metadata with equal names."""
     with pytest.raises(DuplicateMetadataError):
-        Measurement(None,
-                    details={"a": False},
-                    conditions={"a": True})
+        Measurement(None, details={"a": False}, conditions={"a": True})
 
 
 def test_add_condition_existing_condition_error():
@@ -567,7 +657,9 @@ def test_has_condition_name(measurement_single_true_condition):
 
 def test_has_condition_names(measurement_two_true_conditions):
     assert measurement_two_true_conditions.has_condition_names(["condition", "other_condition"])
-    assert not measurement_two_true_conditions.has_condition_names(["condition", "missing_condition"])
+    assert not measurement_two_true_conditions.has_condition_names(
+        ["condition", "missing_condition"]
+    )
 
 
 def test_has_detail_name(measurement_single_true_detail):
@@ -668,11 +760,13 @@ def test_has_detail_names(measurement_two_true_details):
 
 
 def test_from_tabular():
-    tabular_measurement_set = TabularMeasurementSet(data=[[0]],
-                                                    n_metadata_columns=0,
-                                                    column_headers=["scalar(None)=f()"],
-                                                    dataset_types=[ZeroDimensionalDataset],
-                                                    dataset_end_indices=[1])
+    tabular_measurement_set = TabularMeasurementSet(
+        data=[[0]],
+        n_metadata_columns=0,
+        column_headers=["scalar(None)=f()"],
+        dataset_types=[ZeroDimensionalDataset],
+        dataset_end_indices=[1],
+    )
 
     measurement = Measurement(datasets=[ZeroDimensionalDataset.create(value=[0], label="scalar")])
     other_measurement = Measurement.from_tabular_measurement_set(tabular_measurement_set)
@@ -698,7 +792,9 @@ def test_flatten_metadata_default(measurement_empty):
 
 
 def test_flatten_metadata(measurement_zerod_dataset_true_default_name_and_unit_no_metadata):
-    names, metadata = measurement_zerod_dataset_true_default_name_and_unit_no_metadata.flatten_metadata()
+    names, metadata = (
+        measurement_zerod_dataset_true_default_name_and_unit_no_metadata.flatten_metadata()
+    )
     assert not names
     assert not metadata
 
@@ -708,15 +804,20 @@ def test_flatten_metadata_single_condition(measurement_single_true_condition):
     assert names == ["condition"]
     assert metadata == [True]
 
-    assert measurement_single_true_condition.flatten_metadata() == \
-           measurement_single_true_condition.flatten_metadata(condition_names=["condition"])
+    assert (
+        measurement_single_true_condition.flatten_metadata()
+        == measurement_single_true_condition.flatten_metadata(condition_names=["condition"])
+    )
 
-    names, metadata = measurement_single_true_condition.flatten_metadata(condition_names=["other_condition"])
+    names, metadata = measurement_single_true_condition.flatten_metadata(
+        condition_names=["other_condition"]
+    )
     assert names == ["other_condition"]
     assert metadata == [None]
 
-    names, metadata = measurement_single_true_condition.flatten_metadata(condition_names=["other_condition"],
-                                                                         default_value=True)
+    names, metadata = measurement_single_true_condition.flatten_metadata(
+        condition_names=["other_condition"], default_value=True
+    )
     assert names == ["other_condition"]
     assert metadata == [True]
 
@@ -727,8 +828,9 @@ def test_flatten_metadata_single_detail(measurement_single_true_detail):
     assert names == ["detail"]
     assert metadata == [True]
 
-    names, metadata = measurement_single_true_detail.flatten_metadata(condition_names=["other_condition"],
-                                                                      detail_names=["detail"])
+    names, metadata = measurement_single_true_detail.flatten_metadata(
+        condition_names=["other_condition"], detail_names=["detail"]
+    )
     assert names == ["other_condition", "detail"]
     assert metadata == [None, True]
 
@@ -748,23 +850,36 @@ def test_flatten_metadata_two_conditions(measurement_two_true_conditions):
     assert names == ["condition", "other_condition"] or names == ["other_condition", "condition"]
     assert metadata == [True, True]
 
-    names, metadata = measurement_two_true_conditions.flatten_metadata(condition_names=["condition"])
+    names, metadata = measurement_two_true_conditions.flatten_metadata(
+        condition_names=["condition"]
+    )
     assert names == ["condition"]
     assert metadata == [True]
 
-    names, metadata = measurement_two_true_conditions.flatten_metadata(condition_names=["other_condition"])
+    names, metadata = measurement_two_true_conditions.flatten_metadata(
+        condition_names=["other_condition"]
+    )
     assert names == ["other_condition"]
     assert metadata == [True]
 
-    names, metadata = measurement_two_true_conditions.flatten_metadata(detail_names=["other_detail"])
-    assert names == ["condition", "other_condition", "other_detail"] or \
-           names == ["other_condition", "condition", "other_detail"]
+    names, metadata = measurement_two_true_conditions.flatten_metadata(
+        detail_names=["other_detail"]
+    )
+    assert names == ["condition", "other_condition", "other_detail"] or names == [
+        "other_condition",
+        "condition",
+        "other_detail",
+    ]
     assert metadata == [True, True, None]
 
-    names, metadata = measurement_two_true_conditions.flatten_metadata(detail_names=["other_detail"],
-                                                                       default_value=False)
-    assert names == ["condition", "other_condition", "other_detail"] or \
-           names == ["other_condition", "condition", "other_detail"]
+    names, metadata = measurement_two_true_conditions.flatten_metadata(
+        detail_names=["other_detail"], default_value=False
+    )
+    assert names == ["condition", "other_condition", "other_detail"] or names == [
+        "other_condition",
+        "condition",
+        "other_detail",
+    ]
     assert metadata == [True, True, False]
 
 
@@ -773,7 +888,10 @@ def test_flatten_datasets(measurement_empty):
 
 
 def test_flatten_scalar(measurement_zerod_dataset_true_default_name_and_unit_no_metadata):
-    assert measurement_zerod_dataset_true_default_name_and_unit_no_metadata.flatten_datasets() == (["variable(None)"], [True])
+    assert measurement_zerod_dataset_true_default_name_and_unit_no_metadata.flatten_datasets() == (
+        ["variable(None)"],
+        [True],
+    )
 
 
 # def test_visualize_measurement_two_differing_scalar_datasets(measurement_two_differing_scalar_datasets, tmp_path):
@@ -818,109 +936,109 @@ def test_flatten_scalar(measurement_zerod_dataset_true_default_name_and_unit_no_
 #     measurement.visualize(expand_datasets=True)
 #     plt.savefig(r"C:\Users\A835CZZ\AppData\Roaming\JetBrains\PyCharmCE2021.1\scratches\m-collapse.png")
 
-from piblin.data.data_collections.measurement import Measurement
-from piblin.data.datasets.abc.split_datasets.one_dimensional_dataset import OneDimensionalDataset
-from piblin.data.datasets.abc.split_datasets.two_dimensional_dataset import TwoDimensionalDataset
 
 @pytest.fixture()
 def measurement_single_oned():
-    dataset = OneDimensionalDataset.create(x_values=[0.0], x_name="x",
-                                           y_values=[1.0])
+    dataset = OneDimensionalDataset.create(x_values=[0.0], x_name="x", y_values=[1.0])
     return Measurement(datasets=[dataset])
 
 
 @pytest.fixture()
 def measurement_single_twod():
-    dataset = TwoDimensionalDataset.create(x_values=[0.0], x_name="x",
-                                           y_values=[0.0], y_name="y",
-                                           z_values=[[1.0]])
+    dataset = TwoDimensionalDataset.create(
+        x_values=[0.0], x_name="x", y_values=[0.0], y_name="y", z_values=[[1.0]]
+    )
     return Measurement(datasets=[dataset])
 
 
 @pytest.fixture()
 def measurement_two_oned_same_name():
-    dataset_a = OneDimensionalDataset.create(x_values=[0.0], x_name="x",
-                                             y_values=[1.0])
+    dataset_a = OneDimensionalDataset.create(x_values=[0.0], x_name="x", y_values=[1.0])
 
-    dataset_b = OneDimensionalDataset.create(x_values=[0.0], x_name="x",
-                                             y_values=[1.0])
+    dataset_b = OneDimensionalDataset.create(x_values=[0.0], x_name="x", y_values=[1.0])
 
     return Measurement(datasets=[dataset_a, dataset_b])
 
 
 @pytest.fixture()
 def measurement_two_oned_different_names():
-    dataset_a = OneDimensionalDataset.create(x_values=[0.0], x_name="x",
-                                             y_values=[1.0])
+    dataset_a = OneDimensionalDataset.create(x_values=[0.0], x_name="x", y_values=[1.0])
 
-    dataset_b = OneDimensionalDataset.create(x_values=[0.0], x_name="not_x",
-                                             y_values=[1.0])
+    dataset_b = OneDimensionalDataset.create(x_values=[0.0], x_name="not_x", y_values=[1.0])
 
     return Measurement(datasets=[dataset_a, dataset_b])
 
 
 @pytest.fixture()
 def measurement_two_twod_same_name():
-    dataset_a = TwoDimensionalDataset.create(x_values=[0.0], x_name="x",
-                                             y_values=[0.0], y_name="y",
-                                             z_values=[[1.0]])
+    dataset_a = TwoDimensionalDataset.create(
+        x_values=[0.0], x_name="x", y_values=[0.0], y_name="y", z_values=[[1.0]]
+    )
 
-    dataset_b = TwoDimensionalDataset.create(x_values=[0.0], x_name="x",
-                                             y_values=[0.0], y_name="y",
-                                             z_values=[[1.0]])
+    dataset_b = TwoDimensionalDataset.create(
+        x_values=[0.0], x_name="x", y_values=[0.0], y_name="y", z_values=[[1.0]]
+    )
 
     return Measurement(datasets=[dataset_a, dataset_b])
 
 
 @pytest.fixture()
 def measurement_two_twod_different_names():
-    dataset_a = TwoDimensionalDataset.create(x_values=[0.0], x_name="x",
-                                             y_values=[0.0], y_name="y",
-                                             z_values=[[1.0]])
+    dataset_a = TwoDimensionalDataset.create(
+        x_values=[0.0], x_name="x", y_values=[0.0], y_name="y", z_values=[[1.0]]
+    )
 
-    dataset_b = TwoDimensionalDataset.create(x_values=[0.0], x_name="not_x",
-                                             y_values=[0.0], y_name="y",
-                                             z_values=[[1.0]])
+    dataset_b = TwoDimensionalDataset.create(
+        x_values=[0.0], x_name="not_x", y_values=[0.0], y_name="y", z_values=[[1.0]]
+    )
 
     return Measurement(datasets=[dataset_a, dataset_b])
 
 
-def test_split_same_name(measurement_single_oned,
-                         measurement_single_twod,
-                         measurement_two_oned_same_name,
-                         measurement_two_twod_same_name):
+def test_split_same_name(
+    measurement_single_oned,
+    measurement_single_twod,
+    measurement_two_oned_same_name,
+    measurement_two_twod_same_name,
+):
 
-    with_name, without_name = \
-        measurement_single_oned.split_by_dataset_independent_variable_name("x")
+    with_name, without_name = measurement_single_oned.split_by_dataset_independent_variable_name(
+        "x"
+    )
 
     assert not without_name.datasets
     assert with_name == measurement_single_oned
 
-    with_name, without_name = \
-        measurement_single_twod.split_by_dataset_independent_variable_name("x")
+    with_name, without_name = measurement_single_twod.split_by_dataset_independent_variable_name(
+        "x"
+    )
 
     assert not without_name.datasets
     assert with_name == measurement_single_twod
 
-    with_name, without_name = \
+    with_name, without_name = (
         measurement_two_oned_same_name.split_by_dataset_independent_variable_name("x")
+    )
 
     assert not without_name.datasets
     assert with_name == measurement_two_oned_same_name
 
-    with_name, without_name = \
+    with_name, without_name = (
         measurement_two_twod_same_name.split_by_dataset_independent_variable_name("x")
+    )
 
     assert not without_name.datasets
     assert with_name == measurement_two_twod_same_name
     assert with_name.num_datasets == 2
 
 
-def test_split_different_names(measurement_two_oned_different_names,
-                               measurement_two_twod_different_names):
+def test_split_different_names(
+    measurement_two_oned_different_names, measurement_two_twod_different_names
+):
 
-    with_name, without_name = \
+    with_name, without_name = (
         measurement_two_oned_different_names.split_by_dataset_independent_variable_name("x")
+    )
 
     assert with_name.datasets
     assert without_name.datasets
@@ -928,8 +1046,9 @@ def test_split_different_names(measurement_two_oned_different_names,
     assert with_name.num_datasets == 1
     assert without_name.num_datasets == 1
 
-    with_name, without_name = \
+    with_name, without_name = (
         measurement_two_twod_different_names.split_by_dataset_independent_variable_name("x")
+    )
 
     assert with_name.datasets
     assert without_name.datasets
@@ -953,8 +1072,7 @@ def test_split_by_independent_variable_value(measurement_to_split):
 
     assert len(measurements) == 2
     assert {measurements[0].num_datasets, measurements[1].num_datasets} == {2, 1}
-    assert {measurements[0].conditions["x"],
-            measurements[1].conditions["x"]} == {0.0, 1.0}
+    assert {measurements[0].conditions["x"], measurements[1].conditions["x"]} == {0.0, 1.0}
 
 
 def test_split_by_ind_var_two_oned(measurement_two_oned_same_name):
@@ -967,23 +1085,17 @@ def test_split_by_ind_var_two_oned(measurement_two_oned_same_name):
 
 @pytest.fixture()
 def twod_measurement_to_split():
-    dataset_a = TwoDimensionalDataset.create(x_values=[0.0],
-                                             x_name="x",
-                                             y_values=[1.0],
-                                             y_name="y",
-                                             z_values=[[1.0]])
+    dataset_a = TwoDimensionalDataset.create(
+        x_values=[0.0], x_name="x", y_values=[1.0], y_name="y", z_values=[[1.0]]
+    )
 
-    dataset_b = TwoDimensionalDataset.create(x_values=[0.0],
-                                             x_name="x",
-                                             y_values=[1.0],
-                                             y_name="y",
-                                             z_values=[[1.0]])
+    dataset_b = TwoDimensionalDataset.create(
+        x_values=[0.0], x_name="x", y_values=[1.0], y_name="y", z_values=[[1.0]]
+    )
 
-    dataset_c = TwoDimensionalDataset.create(x_values=[1.0],
-                                             x_name="x",
-                                             y_values=[1.0],
-                                             y_name="y",
-                                             z_values=[[1.0]])
+    dataset_c = TwoDimensionalDataset.create(
+        x_values=[1.0], x_name="x", y_values=[1.0], y_name="y", z_values=[[1.0]]
+    )
 
     return Measurement(datasets=[dataset_a, dataset_b, dataset_c])
 
@@ -994,8 +1106,8 @@ def test_split_by_ind_var_two_twod(twod_measurement_to_split):
 
     assert len(measurements) == 2
     assert {measurements[0].num_datasets, measurements[1].num_datasets} == {2, 1}
-    assert {measurements[0].conditions["x"],
-            measurements[1].conditions["x"]} == {0.0, 1.0}
+    assert {measurements[0].conditions["x"], measurements[1].conditions["x"]} == {0.0, 1.0}
+
 
 @pytest.mark.skip
 @pytest.mark.mpl_image_compare(hash_library="../../matplotlib_test_hashes.json")
@@ -1003,31 +1115,46 @@ def test_visualize_measurement_empty(measurement_empty):
     figure, axes = measurement_empty.visualize()
     return figure
 
+
 @pytest.mark.skip
 @pytest.mark.mpl_image_compare(hash_library="../../matplotlib_test_hashes.json")
 def test_visualize_measurement_single_true_dataset_collapsed(
-        measurement_zerod_dataset_true_default_name_and_unit_no_metadata, datadir):
-    figure, axes = measurement_zerod_dataset_true_default_name_and_unit_no_metadata.visualize(expand_datasets=False)
+    measurement_zerod_dataset_true_default_name_and_unit_no_metadata, datadir
+):
+    figure, axes = measurement_zerod_dataset_true_default_name_and_unit_no_metadata.visualize(
+        expand_datasets=False
+    )
     return figure
+
 
 @pytest.mark.skip
 @pytest.mark.mpl_image_compare(hash_library="../../matplotlib_test_hashes.json")
 def test_visualize_measurement_single_true_dataset_expanded(
-        measurement_zerod_dataset_true_default_name_and_unit_no_metadata, datadir):
-    figure, axes = measurement_zerod_dataset_true_default_name_and_unit_no_metadata.visualize(expand_datasets=True)
+    measurement_zerod_dataset_true_default_name_and_unit_no_metadata, datadir
+):
+    figure, axes = measurement_zerod_dataset_true_default_name_and_unit_no_metadata.visualize(
+        expand_datasets=True
+    )
     return figure
+
 
 @pytest.mark.skip
 @pytest.mark.mpl_image_compare(hash_library="../../matplotlib_test_hashes.json")
-def test_visualize_measurement_single_one_dimensional_dataset_single_point(measurement_single_oned_dataset_single_point):
+def test_visualize_measurement_single_one_dimensional_dataset_single_point(
+    measurement_single_oned_dataset_single_point,
+):
     figure, axes = measurement_single_oned_dataset_single_point.visualize(include_text=False)
     return figure
 
+
 @pytest.mark.skip
 @pytest.mark.mpl_image_compare(hash_library="../../matplotlib_test_hashes.json")
-def test_visualize_measurement_two_differing_scalar_datasets(measurement_two_differing_zerod_datasets, datadir):
+def test_visualize_measurement_two_differing_scalar_datasets(
+    measurement_two_differing_zerod_datasets, datadir
+):
     figure, axes = measurement_two_differing_zerod_datasets.visualize()
     return figure
+
 
 @pytest.mark.skip
 @pytest.mark.mpl_image_compare(hash_library="../../matplotlib_test_hashes.json")
@@ -1035,8 +1162,11 @@ def test_visualize_true_measurement_with_true_condition(true_measurement_with_tr
     figure, axes = true_measurement_with_true_condition.visualize()
     return figure
 
+
 @pytest.mark.skip
 @pytest.mark.mpl_image_compare(hash_library="../../matplotlib_test_hashes.json")
-def test_visualize_true_measurement_with_true_condition(true_measurement_with_true_condition):
+def test_visualize_true_measurement_with_true_condition_no_text(
+    true_measurement_with_true_condition,
+):
     figure, axes = true_measurement_with_true_condition.visualize(include_text=False)
     return figure

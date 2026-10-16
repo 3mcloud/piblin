@@ -11,18 +11,20 @@ MultipleMeasurementError - Raised when creating from a multi-measurement tabular
 InvalidDatasetIndexError - Raised when a dataset index is not valid
 Measurement - A scientific measurement made on a sample under controlled conditions.
 """
+
 import copy
 import importlib
 import itertools
-from typing import Set, List, Tuple, Dict, Union
-import matplotlib.pyplot as plt
+
 import matplotlib.axes
 import matplotlib.figure
+import matplotlib.pyplot as plt
 import numpy as np
-import piblin.data.datasets.abc.dataset as dataset_
-import piblin.data.datasets.abc.split_datasets.zero_dimensional_dataset as zero_dimensional_dataset_
-import piblin.data.datasets.abc.split_datasets.one_dimensional_dataset as one_dimensional_dataset_
+
 import piblin.data
+import piblin.data.datasets.abc.dataset as dataset_
+import piblin.data.datasets.abc.split_datasets.one_dimensional_dataset as one_dimensional_dataset_
+import piblin.data.datasets.abc.split_datasets.zero_dimensional_dataset as zero_dimensional_dataset_
 from piblin.data.data_collections import dict_repr, dict_str
 
 
@@ -54,7 +56,7 @@ class InvalidDatasetIndexError(Exception):
     """Raised when a dataset index is not valid."""
 
 
-class Measurement(object):
+class Measurement:
     """A scientific measurement made on a sample under specific conditions.
 
     A measurement is a process performed on a sample under a set of
@@ -187,10 +189,12 @@ class Measurement(object):
     __INDENT = "    "
     __DATASET_PRINT_MAX = 0
 
-    def __init__(self,
-                 datasets: List[dataset_.Dataset] = None,
-                 conditions: Dict[str, object] = None,
-                 details: Dict[str, object] = None):
+    def __init__(
+        self,
+        datasets: list[dataset_.Dataset] = None,
+        conditions: dict[str, object] = None,
+        details: dict[str, object] = None,
+    ):
 
         self.__validate_metadata(conditions, details)
 
@@ -210,8 +214,7 @@ class Measurement(object):
             self._details = details
 
     @staticmethod
-    def __validate_metadata(conditions: Dict[str, object],
-                            details: Dict[str, object]) -> None:
+    def __validate_metadata(conditions: dict[str, object], details: dict[str, object]) -> None:
         """Validate the metadata provided to the initializer.
 
         Both conditions and details are provided to the initializer,
@@ -240,16 +243,16 @@ class Measurement(object):
         for condition_name in conditions.keys():
             if condition_name in details.keys():
                 raise DuplicateMetadataError(
-                    f"Duplicate key present in conditions and details: "
-                    f"{condition_name}"
+                    f"Duplicate key present in conditions and details: {condition_name}"
                 )
 
     @classmethod
     def from_single_dataset(
-            cls,
-            dataset: dataset_.Dataset = None,
-            conditions: Dict[str, object] = None,
-            details: Dict[str, object] = None) -> "Measurement":
+        cls,
+        dataset: dataset_.Dataset = None,
+        conditions: dict[str, object] = None,
+        details: dict[str, object] = None,
+    ) -> "Measurement":
         """Create a measurement from a single dataset.
 
         Parameters
@@ -275,21 +278,19 @@ class Measurement(object):
 
     @staticmethod
     def from_tabular_measurement_set(
-            tabular_measurement_set: "piblin.data.TabularMeasurementSet"
+        tabular_measurement_set: "piblin.data.TabularMeasurementSet",
     ) -> "Measurement":
         """Create a measurement from a tabular measurement set."""
         if tabular_measurement_set.num_rows > 1:
-            raise MultipleMeasurementError(
-                "Cannot convert multi-row table to single measurement."
-            )
+            raise MultipleMeasurementError("Cannot convert multi-row table to single measurement.")
 
         return tabular_measurement_set.to_measurement_set()[0]
 
     def to_tabular_measurement_set(
-            self,
-            condition_names: List[str] = None,
-            detail_names: List[str] = None,
-            default_value: object = None
+        self,
+        condition_names: list[str] = None,
+        detail_names: list[str] = None,
+        default_value: object = None,
     ) -> "piblin.data.TabularMeasurementSet":
         """Convert this measurement to a single-row table.
 
@@ -310,10 +311,9 @@ class Measurement(object):
             A single-row tabular measurement set with this measurement's
             metadata and datasets.
         """
-        column_headers, \
-            data = self.flatten(condition_names=condition_names,
-                                detail_names=detail_names,
-                                default_value=default_value)
+        column_headers, data = self.flatten(
+            condition_names=condition_names, detail_names=detail_names, default_value=default_value
+        )
 
         if condition_names is None:
             n_metadata_columns = len(self.condition_names)
@@ -330,10 +330,10 @@ class Measurement(object):
             n_metadata_columns=n_metadata_columns,
             column_headers=column_headers,
             dataset_types=self.dataset_types,
-            dataset_end_indices=self.dataset_lengths
+            dataset_end_indices=self.dataset_lengths,
         )
 
-    def combine_datasets(self, dataset_indices: List[int] = None) -> None:
+    def combine_datasets(self, dataset_indices: list[int] = None) -> None:
         """Combine some of this measurement's datasets into single dataset.
 
         The driving use-case for this functionality is from X-Ray
@@ -349,12 +349,11 @@ class Measurement(object):
         if dataset_indices is None:
             dataset_indices = set(range(self.num_datasets + 1))
 
-        datasets_to_combine = [dataset
-                               for i, dataset in enumerate(self.datasets)
-                               if i in dataset_indices]
+        datasets_to_combine = [
+            dataset for i, dataset in enumerate(self.datasets) if i in dataset_indices
+        ]
 
-        new_dataset = \
-            datasets_to_combine[0].from_datasets(datasets_to_combine)
+        new_dataset = datasets_to_combine[0].from_datasets(datasets_to_combine)
 
         new_datasets = []
         for dataset_index, dataset in enumerate(self.datasets):
@@ -379,10 +378,13 @@ class Measurement(object):
         y_name : str
             The name of the dependent variable.
         """
-        combination_datasets = [dataset for dataset in self.datasets if
-                                isinstance(dataset, one_dimensional_dataset_.OneDimensionalDataset) and
-                                dataset.x_name == x_name and
-                                dataset.y_name == y_name]
+        combination_datasets = [
+            dataset
+            for dataset in self.datasets
+            if isinstance(dataset, one_dimensional_dataset_.OneDimensionalDataset)
+            and dataset.x_name == x_name
+            and dataset.y_name == y_name
+        ]
 
         # TODO - assert units match across all x and y
 
@@ -390,15 +392,13 @@ class Measurement(object):
             self.datasets.remove(combination_dataset)
 
         self.datasets.append(
-            one_dimensional_dataset_.OneDimensionalDataset.from_datasets(
-                combination_datasets
-            )
+            one_dimensional_dataset_.OneDimensionalDataset.from_datasets(combination_datasets)
         )
 
     def combine_multiple_zerod_datasets(
-            self,
-            x_name: List[str],
-            y_names: List[str],
+        self,
+        x_name: list[str],
+        y_names: list[str],
     ) -> None:
         """Combine zero-dimensional datasets with the provided names.
 
@@ -424,7 +424,7 @@ class Measurement(object):
             Whether to merge the resulting single-point datasets to
             a single multipoint dataset.
         """
-        x_dataset_indices: List[int]
+        x_dataset_indices: list[int]
         try:
             x_dataset_indices = self.index_of(x_name)
             if isinstance(x_dataset_indices, int):
@@ -432,7 +432,7 @@ class Measurement(object):
         except ValueError as value_error:
             raise value_error
 
-        y_dataset_indices: List[int]
+        y_dataset_indices: list[int]
         try:
             y_dataset_indices = self.index_of(y_name)
             if isinstance(y_dataset_indices, int):
@@ -441,26 +441,26 @@ class Measurement(object):
             raise value_error
 
         if len(x_dataset_indices) != len(y_dataset_indices):
-            raise ValueError(f"Cannot create 1D datasets from two sets of 0D datasets of different size: "
-                             f"{x_name}: {len(x_dataset_indices)} datasets, "
-                             f"{y_name}: {len(y_dataset_indices)} datasets")
+            raise ValueError(
+                f"Cannot create 1D datasets from two sets of 0D datasets of different size: "
+                f"{x_name}: {len(x_dataset_indices)} datasets, "
+                f"{y_name}: {len(y_dataset_indices)} datasets"
+            )
         elif len(x_dataset_indices) > 1:
-            print(f"Warning: pairing of {len(x_dataset_indices)} x- and y-values in "
-                  f"{y_name}=f({x_name}) performed based on dataset order only.")
+            print(
+                f"Warning: pairing of {len(x_dataset_indices)} x- and y-values in "
+                f"{y_name}=f({x_name}) performed based on dataset order only."
+            )
 
-        x_datasets = [self.datasets[x_dataset_index]
-                      for x_dataset_index in x_dataset_indices]
+        x_datasets = [self.datasets[x_dataset_index] for x_dataset_index in x_dataset_indices]
 
-        y_datasets = [self.datasets[y_dataset_index]
-                      for y_dataset_index in y_dataset_indices]
+        y_datasets = [self.datasets[y_dataset_index] for y_dataset_index in y_dataset_indices]
 
         self.remove_datasets_at_indices(x_dataset_indices + y_dataset_indices)
 
         combined_datasets = (
             one_dimensional_dataset_.OneDimensionalDataset.from_multiple_zerod_datasets(
-                x_datasets=x_datasets,
-                y_datasets=y_datasets,
-                merge_datasets=merge_datasets
+                x_datasets=x_datasets, y_datasets=y_datasets, merge_datasets=merge_datasets
             )
         )
 
@@ -469,10 +469,9 @@ class Measurement(object):
         else:
             self.datasets.append(combined_datasets)
 
-    def combine_multi_zerod_datasets(self,
-                                     x_name: str,
-                                     y_names: List[str] = None,
-                                     merge_datasets: bool = True) -> None:
+    def combine_multi_zerod_datasets(
+        self, x_name: str, y_names: list[str] = None, merge_datasets: bool = True
+    ) -> None:
         """Perform combination of 0D datasets on a per-measurement basis.
 
         Parameters
@@ -485,7 +484,7 @@ class Measurement(object):
             Whether to merge the resulting single-point datasets to
             a single multipoint dataset.
         """
-        x_dataset_indices: List[int]
+        x_dataset_indices: list[int]
         try:
             x_dataset_indices = self.index_of(x_name)
             if isinstance(x_dataset_indices, int):
@@ -493,17 +492,20 @@ class Measurement(object):
         except ValueError as value_error:
             raise value_error
 
-        x_datasets = [self.datasets[x_dataset_index]
-                      for x_dataset_index in x_dataset_indices]
+        x_datasets = [self.datasets[x_dataset_index] for x_dataset_index in x_dataset_indices]
 
         if y_names is None:
-            y_names = set([dataset.dependent_variable_name
-                           for dataset in self.datasets
-                           if dataset.dependent_variable_name != x_name])
+            y_names = set(
+                [
+                    dataset.dependent_variable_name
+                    for dataset in self.datasets
+                    if dataset.dependent_variable_name != x_name
+                ]
+            )
 
         all_y_dataset_indices = []
         for y_name in y_names:
-            y_dataset_indices: List[int]
+            y_dataset_indices: list[int]
             try:
                 y_dataset_indices = self.index_of(y_name)
                 if isinstance(y_dataset_indices, int):
@@ -513,14 +515,11 @@ class Measurement(object):
 
             all_y_dataset_indices.extend(y_dataset_indices)
 
-            y_datasets = [self.datasets[y_dataset_index]
-                          for y_dataset_index in y_dataset_indices]
+            y_datasets = [self.datasets[y_dataset_index] for y_dataset_index in y_dataset_indices]
 
             combined_datasets = (
                 one_dimensional_dataset_.OneDimensionalDataset.from_multiple_zerod_datasets(
-                    x_datasets=x_datasets,
-                    y_datasets=y_datasets,
-                    merge_datasets=merge_datasets
+                    x_datasets=x_datasets, y_datasets=y_datasets, merge_datasets=merge_datasets
                 )
             )
 
@@ -533,10 +532,10 @@ class Measurement(object):
 
     @classmethod
     def from_measurements(
-            cls,
-            measurements: List["Measurement"],
-            allow_missing_conditions: bool = False,
-            keep_partial_conditions: bool = False
+        cls,
+        measurements: list["Measurement"],
+        allow_missing_conditions: bool = False,
+        keep_partial_conditions: bool = False,
     ) -> "Measurement":
         """Create a measurement from multiple measurements.
 
@@ -588,8 +587,8 @@ class Measurement(object):
         Measurement
             A single measurement combining all given measurements.
         """
-        def validate(measurements_: List["Measurement"],
-                     allow_missing_conditions_: bool) -> bool:
+
+        def validate(measurements_: list["Measurement"], allow_missing_conditions_: bool) -> bool:
             """Check validity of input arguments.
 
             first need to determine that no condition whose name is
@@ -613,21 +612,16 @@ class Measurement(object):
                 Whether the measurements are valid for combination.
             """
             if allow_missing_conditions_:
-                for measurement_, other_measurement in zip(measurements_,
-                                                           measurements_):
+                for measurement_, other_measurement in zip(measurements_, measurements_):
                     if measurement_ is other_measurement:
                         continue
                     else:
-                        if not measurement_._has_equal_shared_conditions_to(
-                                other_measurement
-                        ):
+                        if not measurement_._has_equal_shared_conditions_to(other_measurement):
                             return False
 
             else:
-                for i in range(len(measurements_)-1):
-                    if not measurements_[i]._has_equal_conditions_to(
-                            measurements_[i+1]
-                    ):
+                for i in range(len(measurements_) - 1):
+                    if not measurements_[i]._has_equal_conditions_to(measurements_[i + 1]):
                         return False
 
             return True
@@ -636,9 +630,7 @@ class Measurement(object):
             return Measurement([], {}, {})
 
         if not validate(measurements, allow_missing_conditions):
-            raise DifferingConditionError(
-                "Cannot combine measurements with unequal conditions."
-            )
+            raise DifferingConditionError("Cannot combine measurements with unequal conditions.")
 
         if allow_missing_conditions:
             combined_conditions = {}
@@ -655,13 +647,13 @@ class Measurement(object):
                 for condition_name in all_condition_names:
                     use_condition = True
                     for measurement in measurements:
-                        if condition_name not in \
-                                measurement.condition_names:
+                        if condition_name not in measurement.condition_names:
                             use_condition = False
                             break
                     if use_condition:
-                        combined_conditions[condition_name] = \
-                            measurements[0].conditions[condition_name]
+                        combined_conditions[condition_name] = measurements[0].conditions[
+                            condition_name
+                        ]
         else:
             combined_conditions = measurements[0].conditions
 
@@ -672,11 +664,12 @@ class Measurement(object):
         return cls(datasets, combined_conditions, {})
 
     def to_measurements(
-            self,
-            dataset_indices: List[Set[int]] = None,
-            conditions_to_remove: List[Set[str]] = None,
-            conditions_to_add: List[dict] = None,
-            allow_empty_measurements: bool = True) -> List["Measurement"]:
+        self,
+        dataset_indices: list[set[int]] = None,
+        conditions_to_remove: list[set[str]] = None,
+        conditions_to_add: list[dict] = None,
+        allow_empty_measurements: bool = True,
+    ) -> list["Measurement"]:
         """Split this measurement into multiple measurements.
 
         Because this procedure starts with a single measurement, all
@@ -713,9 +706,7 @@ class Measurement(object):
             conditions_to_add = [{}] * len(dataset_indices)
 
         measurements = []
-        for measurement_index, \
-                measurement_dataset_indices in enumerate(dataset_indices):
-
+        for measurement_index, measurement_dataset_indices in enumerate(dataset_indices):
             if not allow_empty_measurements:
                 for index in measurement_dataset_indices:
                     if index >= self.num_datasets or index < 0:
@@ -735,9 +726,9 @@ class Measurement(object):
             if conditions_to_add[measurement_index]:
                 conditions.update(conditions_to_add[measurement_index])
 
-            measurements.append(Measurement(datasets=datasets,
-                                            conditions=conditions,
-                                            details=self.details))
+            measurements.append(
+                Measurement(datasets=datasets, conditions=conditions, details=self.details)
+            )
 
         return measurements
 
@@ -756,8 +747,10 @@ class Measurement(object):
             Dataset containing all measurement data. Conditions and
             details contained in Dataset attrs.
         """
-        import xarray as xr
         from copy import deepcopy
+
+        import xarray as xr
+
         attrs = {}
         attrs["conditions"] = deepcopy(self.conditions)
         attrs["details"] = deepcopy(self.details)
@@ -768,13 +761,11 @@ class Measurement(object):
                 data_arrays = {}
                 for n, dataset in enumerate(datasets):
                     da = dataset.to_xarray()
-                    da.attrs["dependent_variable_name"] = \
-                        dataset.dependent_variable_name
+                    da.attrs["dependent_variable_name"] = dataset.dependent_variable_name
                     da = da.assign_coords(dataset=n)
                     dep_name = dataset.dependent_variable_name
                     if dep_name in data_arrays:
-                        da = xr.concat([data_arrays[dep_name], da],
-                                       "dataset")
+                        da = xr.concat([data_arrays[dep_name], da], "dataset")
                         da.name = dep_name
                         data_arrays[dep_name] = da
                     else:
@@ -788,8 +779,7 @@ class Measurement(object):
                 data_arrays = {}
                 for n, dataset in enumerate(datasets):
                     da = dataset.to_xarray()
-                    da.attrs["dependent_variable_name"] = \
-                        dataset.dependent_variable_name
+                    da.attrs["dependent_variable_name"] = dataset.dependent_variable_name
                     org_dep_name = dataset.dependent_variable_name
                     dep_name = org_dep_name
                     n = 2
@@ -826,22 +816,16 @@ class Measurement(object):
             dep_data = xr_data[data_variable]
             if "dataset" in xr_data.coords:
                 data_arrays = [
-                    dep_data.sel(dataset=n).drop("dataset")
-                    for n in dep_data.coords["dataset"]
+                    dep_data.sel(dataset=n).drop("dataset") for n in dep_data.coords["dataset"]
                 ]
             else:
                 data_arrays = [dep_data]
             for da in data_arrays:
-                cralds_module_str, _, cralds_class_str = \
-                    da.attrs["cralds_cls"].rpartition('.')
-                cralds_class = \
-                    getattr(importlib.import_module(cralds_module_str),
-                            cralds_class_str)
+                cralds_module_str, _, cralds_class_str = da.attrs["cralds_cls"].rpartition(".")
+                cralds_class = getattr(importlib.import_module(cralds_module_str), cralds_class_str)
                 cralds_datasets.append(cralds_class.from_xarray(da))
 
-        return cls(datasets=cralds_datasets,
-                   conditions=conditions,
-                   details=details)
+        return cls(datasets=cralds_datasets, conditions=conditions, details=details)
 
     def split(self, classifier: callable):
         """Split this measurement using a callable.
@@ -852,25 +836,24 @@ class Measurement(object):
             A callable that takes a measurement and returns a set of
             measurements.
         """
-        raise NotImplementedError(
-            "Generic split by callable is to be implemented."
-        )
+        raise NotImplementedError("Generic split by callable is to be implemented.")
 
     def split_by_dataset_indices(
-            self,
-            dataset_indices: List[Set[int]] = None,
-            conditions_to_remove: List[Set[str]] = None,
-            conditions_to_add: List[dict] = None,
-            allow_empty_measurements: bool = True) -> List["Measurement"]:
+        self,
+        dataset_indices: list[set[int]] = None,
+        conditions_to_remove: list[set[str]] = None,
+        conditions_to_add: list[dict] = None,
+        allow_empty_measurements: bool = True,
+    ) -> list["Measurement"]:
         """Alias for to_measurements."""
         return self.to_measurements(
             dataset_indices=dataset_indices,
             conditions_to_remove=conditions_to_remove,
             conditions_to_add=conditions_to_add,
-            allow_empty_measurements=allow_empty_measurements
+            allow_empty_measurements=allow_empty_measurements,
         )
 
-    def split_datasets_by_callable(self, classifier: callable) -> List[dataset_.Dataset]:
+    def split_datasets_by_callable(self, classifier: callable) -> list[dataset_.Dataset]:
         """Split all datasets of this measurement set with a classifier.
 
         Parameters
@@ -882,12 +865,11 @@ class Measurement(object):
         -------
         List of Dataset
         """
-        return list(itertools.chain([dataset.split_by_callable(classifier)
-                                    for dataset in self.datasets]))
+        return list(
+            itertools.chain([dataset.split_by_callable(classifier) for dataset in self.datasets])
+        )
 
-    def split_by_condition_names(self,
-                                 condition_name_groups: Set[Set[str]]) -> \
-            List["Measurement"]:
+    def split_by_condition_names(self, condition_name_groups: set[set[str]]) -> list["Measurement"]:
         """Split this measurement by subsets of condition names.
 
         I cannot imagine a use case for this, so it is not tested or
@@ -905,21 +887,19 @@ class Measurement(object):
         """
         measurements = []
         for condition_name_group in condition_name_groups:
-            conditions = {key: value
-                          for key, value in self.conditions.items()
-                          if key in condition_name_group}
+            conditions = {
+                key: value for key, value in self.conditions.items() if key in condition_name_group
+            }
 
-            measurements.append(Measurement(datasets=self.datasets,
-                                            conditions=conditions,
-                                            details=self.details))
+            measurements.append(
+                Measurement(datasets=self.datasets, conditions=conditions, details=self.details)
+            )
 
         return measurements
 
     def split_by_dataset_independent_variable_name(
-            self,
-            independent_variable_name: str,
-            allow_empty_measurements: bool = True
-    ) -> Tuple["Measurement", "Measurement"]:
+        self, independent_variable_name: str, allow_empty_measurements: bool = True
+    ) -> tuple["Measurement", "Measurement"]:
         """Split this measurement by dataset independent variable name.
 
         This split is achieved by taking the set of datasets in this
@@ -957,45 +937,41 @@ class Measurement(object):
             The pair of measurements whose datasets have or do not have
             the specified independent variable name.
         """
-        datasets_with_name: List[dataset_.Dataset] = []
-        datasets_without_name: List[dataset_.Dataset] = []
+        datasets_with_name: list[dataset_.Dataset] = []
+        datasets_without_name: list[dataset_.Dataset] = []
         for dataset in self.datasets:
-            if independent_variable_name in \
-                    dataset.independent_variable_names:
+            if independent_variable_name in dataset.independent_variable_names:
                 datasets_with_name.append(dataset)
             else:
                 datasets_without_name.append(dataset)
 
-        measurement_with_name = Measurement(datasets=datasets_with_name,
-                                            conditions=self.conditions,
-                                            details=self.details)
-
-        if not measurement_with_name.datasets \
-                and not allow_empty_measurements:
-            raise ValueError(
-                f"Splitting measurement by independent_variable_name "
-                f"{independent_variable_name} "
-                f"will result in an empty measurement.")
-
-        measurement_without_name = Measurement(
-            datasets=datasets_without_name,
-            conditions=self.conditions,
-            details=self.details
+        measurement_with_name = Measurement(
+            datasets=datasets_with_name, conditions=self.conditions, details=self.details
         )
 
-        if not measurement_without_name.datasets and \
-                not allow_empty_measurements:
+        if not measurement_with_name.datasets and not allow_empty_measurements:
             raise ValueError(
                 f"Splitting measurement by independent_variable_name "
                 f"{independent_variable_name} "
-                f"will result in an empty measurement.")
+                f"will result in an empty measurement."
+            )
+
+        measurement_without_name = Measurement(
+            datasets=datasets_without_name, conditions=self.conditions, details=self.details
+        )
+
+        if not measurement_without_name.datasets and not allow_empty_measurements:
+            raise ValueError(
+                f"Splitting measurement by independent_variable_name "
+                f"{independent_variable_name} "
+                f"will result in an empty measurement."
+            )
 
         return measurement_with_name, measurement_without_name
 
     def split_by_dataset_independent_variable_names(
-            self,
-            independent_variable_names: List[str]
-    ) -> Tuple["Measurement", "Measurement"]:
+        self, independent_variable_names: list[str]
+    ) -> tuple["Measurement", "Measurement"]:
         """Split this measurement by dataset independent variable names.
 
         This split is achieved by taking the set of datasets in this
@@ -1016,31 +992,30 @@ class Measurement(object):
             The pair of measurements whose datasets have or do not have
             the specified independent variable name.
         """
-        datasets_with_names: List[dataset_.Dataset] = []
-        datasets_without_names: List[dataset_.Dataset] = []
+        datasets_with_names: list[dataset_.Dataset] = []
+        datasets_without_names: list[dataset_.Dataset] = []
 
         for dataset in self.datasets:
-
-            if np.all([name in dataset.independent_variable_names
-                       for name in independent_variable_names]):
+            if np.all(
+                [name in dataset.independent_variable_names for name in independent_variable_names]
+            ):
                 datasets_with_names.append(dataset)
             else:
                 datasets_without_names.append(dataset)
 
-        measurement_with_names = \
-            Measurement(datasets=datasets_with_names,
-                        conditions=self.conditions,
-                        details=self.details)
+        measurement_with_names = Measurement(
+            datasets=datasets_with_names, conditions=self.conditions, details=self.details
+        )
 
-        measurement_without_names = \
-            Measurement(datasets=datasets_without_names,
-                        conditions=self.conditions,
-                        details=self.details)
+        measurement_without_names = Measurement(
+            datasets=datasets_without_names, conditions=self.conditions, details=self.details
+        )
 
         return measurement_with_names, measurement_without_names
 
     def split_by_dataset_dependent_variable_name(
-            self, dependent_variable_name: str) -> Tuple["Measurement", "Measurement"]:
+        self, dependent_variable_name: str
+    ) -> tuple["Measurement", "Measurement"]:
         """Split this measurement by dataset dependent variable names.
 
         Parameters
@@ -1062,18 +1037,16 @@ class Measurement(object):
                 non_matching_datasets.append(dataset)
 
         return (
-            Measurement(conditions=self.conditions,
-                        details=self.details,
-                        datasets=matching_datasets),
-            Measurement(conditions=self.conditions,
-                        details=self.details,
-                        datasets=non_matching_datasets)
+            Measurement(
+                conditions=self.conditions, details=self.details, datasets=matching_datasets
+            ),
+            Measurement(
+                conditions=self.conditions, details=self.details, datasets=non_matching_datasets
+            ),
         )
 
     def split_by_dataset_independent_variable_value(
-            self,
-            dataset_independent_variable_name: str,
-            return_measurement_without_name: bool = False
+        self, dataset_independent_variable_name: str, return_measurement_without_name: bool = False
     ):
         """Split this measurement by independent variable value.
 
@@ -1099,31 +1072,26 @@ class Measurement(object):
             have the independent variable or not. Default is to not
             return this measurement.
         """
-        measurement_with_name, \
-            measurement_without_name = \
+        measurement_with_name, measurement_without_name = (
             self.split_by_dataset_independent_variable_name(
                 independent_variable_name=dataset_independent_variable_name
             )
+        )
 
         all_values = []
         for dataset in measurement_with_name.datasets:
-
-            independent_variable_index = \
-                dataset.independent_variable_index(
-                    dataset_independent_variable_name
-                )
+            independent_variable_index = dataset.independent_variable_index(
+                dataset_independent_variable_name
+            )
 
             if not np.all(
-                dataset.independent_variable_data[independent_variable_index] == dataset.independent_variable_data[independent_variable_index][0]
+                dataset.independent_variable_data[independent_variable_index]
+                == dataset.independent_variable_data[independent_variable_index][0]
             ):
-                raise ValueError(
-                    "more than one unique value for ind var in a dataset"
-                )
+                raise ValueError("more than one unique value for ind var in a dataset")
 
             all_values.append(
-                (dataset,
-                 dataset.independent_variable_data[independent_variable_index][0]
-                 )
+                (dataset, dataset.independent_variable_data[independent_variable_index][0])
             )
 
         # there will be one measurement per unique value potentially with multiple datasets
@@ -1138,9 +1106,9 @@ class Measurement(object):
             new_conditions = {dataset_independent_variable_name: unique_value}
             new_conditions.update(self.conditions)
 
-            measurements.append(Measurement(datasets=datasets,
-                                            conditions=new_conditions,
-                                            details=self.details))
+            measurements.append(
+                Measurement(datasets=datasets, conditions=new_conditions, details=self.details)
+            )
 
         if return_measurement_without_name:
             return measurement_without_name, measurements
@@ -1148,9 +1116,7 @@ class Measurement(object):
             return measurements
 
     def split_by_dataset_independent_variable_values(
-            self,
-            independent_variable_names: List[str],
-            return_measurement_without_names: bool = False
+        self, independent_variable_names: list[str], return_measurement_without_names: bool = False
     ):
         """Split this measurement by independent variable values.
 
@@ -1179,28 +1145,39 @@ class Measurement(object):
             have the independent variable or not. Default is to not
             return this measurement.
         """
-        measurement_with_names, measurement_without_names = \
+        measurement_with_names, measurement_without_names = (
             self.split_by_dataset_independent_variable_names(
                 independent_variable_names=independent_variable_names
             )
+        )
 
         # only care about those datasets that have the right independent
         # variable names
         all_independent_variable_values = []  # per dataset, what independent variable values are there?
         for dataset in measurement_with_names.datasets:
-
             measurement_values = []
             # for x, then for y
-            independent_variable_indices = [dataset.independent_variable_index(name) for name in
-                                            independent_variable_names]
+            independent_variable_indices = [
+                dataset.independent_variable_index(name) for name in independent_variable_names
+            ]
 
-            measurement_values = tuple([dataset.independent_variable_data[index][0] for index in independent_variable_indices])
+            measurement_values = tuple(
+                [
+                    dataset.independent_variable_data[index][0]
+                    for index in independent_variable_indices
+                ]
+            )
 
             all_independent_variable_values.append((dataset, measurement_values))
 
         # there will be one measurement per unique value potentially with multiple datasets in each
         measurements = []
-        unique_values = set([independent_variable_value[1] for independent_variable_value in all_independent_variable_values])
+        unique_values = set(
+            [
+                independent_variable_value[1]
+                for independent_variable_value in all_independent_variable_values
+            ]
+        )
         for unique_value in unique_values:
             datasets = []
             for pair in all_independent_variable_values:
@@ -1217,9 +1194,9 @@ class Measurement(object):
             # new_conditions = {independent_variable_names: unique_value}
             new_conditions.update(self.conditions)
 
-            measurements.append(Measurement(datasets=datasets,
-                                            conditions=new_conditions,
-                                            details=self.details))
+            measurements.append(
+                Measurement(datasets=datasets, conditions=new_conditions, details=self.details)
+            )
 
         if return_measurement_without_names:
             return measurement_without_names, measurements
@@ -1227,15 +1204,17 @@ class Measurement(object):
             return measurements
 
     @classmethod
-    def combine(cls,
-                measurements: List["Measurement"],
-                allow_missing_conditions: bool = False,
-                keep_partial_conditions: bool = False) -> "Measurement":
+    def combine(
+        cls,
+        measurements: list["Measurement"],
+        allow_missing_conditions: bool = False,
+        keep_partial_conditions: bool = False,
+    ) -> "Measurement":
         """Alias for from_measurements."""
         return cls.from_measurements(
             measurements=measurements,
             allow_missing_conditions=allow_missing_conditions,
-            keep_partial_conditions=keep_partial_conditions
+            keep_partial_conditions=keep_partial_conditions,
         )
 
     def remove_dataset_at_index(self, index: int) -> None:
@@ -1248,18 +1227,17 @@ class Measurement(object):
         """
         try:
             del self.datasets[index]
-        except IndexError:
+        except IndexError as err:
             if self.num_datasets > 0:
                 indices_str = f"Valid indices: 0, {self.num_datasets - 1}"
             else:
                 indices_str = ""
 
             raise IndexError(
-                f"Measurement has no dataset at index {index}.\n" +
-                indices_str
-            )
+                f"Measurement has no dataset at index {index}.\n" + indices_str
+            ) from err
 
-    def remove_datasets_at_indices(self, indices: List[int]) -> None:
+    def remove_datasets_at_indices(self, indices: list[int]) -> None:
         """Remove datasets at specified indices.
 
         Parameters
@@ -1280,9 +1258,8 @@ class Measurement(object):
         """
         try:
             self.datasets.remove(dataset)
-        except ValueError:
-            raise ValueError(f"Measurement does not contain specified "
-                             f"dataset: {dataset}")
+        except ValueError as err:
+            raise ValueError(f"Measurement does not contain specified dataset: {dataset}") from err
 
     def remove_datasets_with_name(self, dependent_variable_name: str) -> None:
         """Remove datasets with a specified dependent variable name.
@@ -1299,18 +1276,17 @@ class Measurement(object):
         else:
             self.remove_dataset_at_index(indices_of_datasets_to_remove)
 
-
     @property
-    def datasets(self) -> List[dataset_.Dataset]:
+    def datasets(self) -> list[dataset_.Dataset]:
         """The datasets collected as a result of the measurement."""
         return self._datasets
 
     @datasets.setter
-    def datasets(self, datasets: List[dataset_.Dataset]) -> None:
+    def datasets(self, datasets: list[dataset_.Dataset]) -> None:
         """Set the datasets collected as a result of this measurement."""
         self._datasets = datasets
 
-    def index_of(self, dependent_variable_name: str) -> Union[int, List[int]]:
+    def index_of(self, dependent_variable_name: str) -> int | list[int]:
         """Return index of a dataset in this measurement with given name.
 
         This method allows retrieval of datasets from a measurement by
@@ -1340,11 +1316,11 @@ class Measurement(object):
         elif len(indices) > 0:
             return indices
         else:
-
-            valid_values = [dataset.dependent_variable_name
-                            for dataset in self.datasets]
-            raise ValueError(f"No dataset with name {dependent_variable_name} "
-                             f"in measurement.\nValid values: {valid_values}")
+            valid_values = [dataset.dependent_variable_name for dataset in self.datasets]
+            raise ValueError(
+                f"No dataset with name {dependent_variable_name} "
+                f"in measurement.\nValid values: {valid_values}"
+            )
 
     @property
     def num_datasets(self) -> int:
@@ -1352,56 +1328,49 @@ class Measurement(object):
         return len(self.datasets)
 
     @property
-    def dataset_types(self) -> List[type]:
+    def dataset_types(self) -> list[type]:
         """Types of dataset collected as a result of the measurement."""
         return [type(dataset) for dataset in self.datasets]
 
     @property
-    def dataset_lengths(self) -> List[int]:
+    def dataset_lengths(self) -> list[int]:
         """Lengths of datasets collected as a result of the measurement."""
         lengths = []
-        lengths.extend([len(dataset.flatten_dependent_variables())
-                        for dataset in self.datasets])
+        lengths.extend([len(dataset.flatten_dependent_variables()) for dataset in self.datasets])
         return lengths
 
     @property
-    def dataset_dependent_variable_names(self) -> List[List[str]]:
-        return [dataset.dependent_variable_names
-                for dataset in self.datasets]
+    def dataset_dependent_variable_names(self) -> list[list[str]]:
+        return [dataset.dependent_variable_names for dataset in self.datasets]
 
     @property
-    def dataset_dependent_variable_units(self) -> List[List[str]]:
-        return [dataset.dependent_variable_units
-                for dataset in self.datasets]
+    def dataset_dependent_variable_units(self) -> list[list[str]]:
+        return [dataset.dependent_variable_units for dataset in self.datasets]
 
     @property
-    def dataset_independent_variable_data(self) -> List[np.ndarray]:
-        return [dataset.independent_variable_data
-                for dataset in self.datasets]
+    def dataset_independent_variable_data(self) -> list[np.ndarray]:
+        return [dataset.independent_variable_data for dataset in self.datasets]
 
     @property
-    def dataset_independent_variable_names(self) -> List[List[str]]:
-        return [dataset.independent_variable_names
-                for dataset in self.datasets]
+    def dataset_independent_variable_names(self) -> list[list[str]]:
+        return [dataset.independent_variable_names for dataset in self.datasets]
 
     @property
-    def dataset_independent_variable_units(self) -> List[List[str]]:
-        return [dataset.independent_variable_units
-                for dataset in self.datasets]
+    def dataset_independent_variable_units(self) -> list[list[str]]:
+        return [dataset.independent_variable_units for dataset in self.datasets]
 
     @property
-    def dataset_dimensionalities(self) -> List[int]:
+    def dataset_dimensionalities(self) -> list[int]:
         """The number of independent variables of each dataset."""
-        return [dataset.number_of_independent_dimensions
-                for dataset in self.datasets]
+        return [dataset.number_of_independent_dimensions for dataset in self.datasets]
 
     @property
-    def conditions(self) -> Dict[str, object]:
+    def conditions(self) -> dict[str, object]:
         """Experimental conditions under which the measurement was made."""
         return copy.deepcopy(self._conditions)
 
     @property
-    def condition_names(self) -> Set[str]:
+    def condition_names(self) -> set[str]:
         """Names of the conditions recorded for this measurement."""
         return set(self.conditions.keys())
 
@@ -1420,7 +1389,7 @@ class Measurement(object):
         """
         return condition_name in self.condition_names
 
-    def has_condition_names(self, condition_names: List[str]) -> bool:
+    def has_condition_names(self, condition_names: list[str]) -> bool:
         """Determine whether this measurement has the given conditions.
 
         Parameters
@@ -1450,21 +1419,17 @@ class Measurement(object):
             The value of the condition.
         """
         if name in self.detail_names:
-            raise ExistingMetadataError(
-                "Detail already exists with same name as new detail.",
-                name
-            )
+            raise ExistingMetadataError("Detail already exists with same name as new detail.", name)
 
         if name in self.condition_names or name in self.detail_names:
             if self._conditions[name] != value:
                 raise ExistingMetadataError(
-                    "Condition with requested name and different value "
-                    "already exists."
+                    "Condition with requested name and different value already exists."
                 )
 
         self._conditions[name] = value
 
-    def add_conditions(self, names: List[str], values: List[object]) -> None:
+    def add_conditions(self, names: list[str], values: list[object]) -> None:
         """Add conditions to this measurement.
 
         Parameters
@@ -1475,9 +1440,7 @@ class Measurement(object):
             The values of the conditions.
         """
         if len(names) != len(values):
-            raise IncompatibleListError(
-                "Incompatible lengths of metadata name, value lists."
-            )
+            raise IncompatibleListError("Incompatible lengths of metadata name, value lists.")
 
         for name, value in zip(names, values):
             self.add_condition(name, value)
@@ -1493,7 +1456,7 @@ class Measurement(object):
         if name in self.condition_names:
             del self._conditions[name]
 
-    def remove_conditions(self, names: List[str]) -> None:
+    def remove_conditions(self, names: list[str]) -> None:
         """Remove conditions from this measurement.
 
         Parameters
@@ -1535,14 +1498,11 @@ class Measurement(object):
             self.remove_detail(old_name)
 
         else:
-            raise MissingMetadataError(
-                "Cannot rename non-existent metadata."
-            )
+            raise MissingMetadataError("Cannot rename non-existent metadata.")
 
-    def update_condition(self,
-                         name: str,
-                         value: object = None,
-                         name_must_exist: bool = False) -> None:
+    def update_condition(
+        self, name: str, value: object = None, name_must_exist: bool = False
+    ) -> None:
         """Update a condition of this measurement.
 
         Parameters
@@ -1562,20 +1522,15 @@ class Measurement(object):
             If the name is already in use for a detail.
         """
         if name_must_exist and name not in self.condition_names:
-            raise MissingMetadataError(
-                "Cannot update value for missing name."
-            )
+            raise MissingMetadataError("Cannot update value for missing name.")
         elif name in self.detail_names:
-            raise ExistingMetadataError(
-                "Condition name is already a detail."
-            )
+            raise ExistingMetadataError("Condition name is already a detail.")
 
         self._conditions[name] = value
 
-    def update_conditions(self,
-                          names: List[str],
-                          values: List[object],
-                          name_must_exist: bool = False) -> None:
+    def update_conditions(
+        self, names: list[str], values: list[object], name_must_exist: bool = False
+    ) -> None:
         """Update conditions of this measurement.
 
         Parameters
@@ -1594,20 +1549,18 @@ class Measurement(object):
 
         """
         if len(names) != len(values):
-            raise IncompatibleListError(
-                "Incompatible lengths of metadata name, value lists."
-            )
+            raise IncompatibleListError("Incompatible lengths of metadata name, value lists.")
 
         for name, value in zip(names, values):
             self.update_condition(name, value, name_must_exist)
 
     @property
-    def details(self) -> Dict[str, object]:
+    def details(self) -> dict[str, object]:
         """Details that are not considered experimental conditions."""
         return copy.deepcopy(self._details)
 
     @property
-    def detail_names(self) -> Set[str]:
+    def detail_names(self) -> set[str]:
         """Names of the details recorded for this measurement."""
         return set(self.details.keys())
 
@@ -1626,7 +1579,7 @@ class Measurement(object):
         """
         return name in self.details.keys()
 
-    def has_detail_names(self, names: List[str]) -> bool:
+    def has_detail_names(self, names: list[str]) -> bool:
         """Determine whether this measurement has the given details.
 
         Parameters
@@ -1655,19 +1608,15 @@ class Measurement(object):
             The value of the detail.
         """
         if name in self.condition_names:
-            raise ExistingMetadataError(
-                "Condition already exists with same name as new detail."
-            )
+            raise ExistingMetadataError("Condition already exists with same name as new detail.")
 
         if name in self.detail_names:
             if self._details[name] != value:
-                raise ExistingMetadataError(
-                    "Detail with requested name already exists."
-                )
+                raise ExistingMetadataError("Detail with requested name already exists.")
 
         self._details[name] = value
 
-    def add_details(self, names: List[str], values: List[object]) -> None:
+    def add_details(self, names: list[str], values: list[object]) -> None:
         """Add details to this measurement.
 
         Parameters
@@ -1678,9 +1627,7 @@ class Measurement(object):
             The values of the details.
         """
         if len(names) != len(values):
-            raise IncompatibleListError(
-                "Incompatible lengths of metadata name, value lists."
-            )
+            raise IncompatibleListError("Incompatible lengths of metadata name, value lists.")
 
         for name, value in zip(names, values):
             self.add_detail(name, value)
@@ -1695,7 +1642,7 @@ class Measurement(object):
         """
         del self._details[name]
 
-    def remove_details(self, names: List[str]) -> None:
+    def remove_details(self, names: list[str]) -> None:
         """Remove details from this measurement.
 
         Parameters
@@ -1718,10 +1665,7 @@ class Measurement(object):
             if existing_value == value:
                 self.remove_detail(name)
 
-    def update_detail(self,
-                      name: str,
-                      value: object,
-                      name_must_exist: bool = False) -> None:
+    def update_detail(self, name: str, value: object, name_must_exist: bool = False) -> None:
         """Update a detail of this measurement.
 
         Parameters
@@ -1741,20 +1685,15 @@ class Measurement(object):
             If the name is already in use for a condition.
         """
         if name_must_exist and name not in self.detail_names:
-            raise MissingMetadataError(
-                "Cannot update value for missing name."
-            )
+            raise MissingMetadataError("Cannot update value for missing name.")
         elif name in self.condition_names:
-            raise ExistingMetadataError(
-                "Detail name is already a condition."
-            )
+            raise ExistingMetadataError("Detail name is already a condition.")
 
         self._details[name] = value
 
-    def update_details(self,
-                       names: List[str],
-                       values: List[object],
-                       name_must_exist: bool = False) -> None:
+    def update_details(
+        self, names: list[str], values: list[object], name_must_exist: bool = False
+    ) -> None:
         """Update details of this measurement,
 
         Parameters
@@ -1811,9 +1750,8 @@ class Measurement(object):
         if len(self.datasets) != len(other.datasets):
             return False
 
-        for my_dataset, \
-                other_dataset in zip(self.datasets, other.datasets):
-            if type(my_dataset) != type(other_dataset):
+        for my_dataset, other_dataset in zip(self.datasets, other.datasets):
+            if type(my_dataset) is not type(other_dataset):
                 return False
 
         return True
@@ -1869,14 +1807,12 @@ class Measurement(object):
         """
         shared_condition_names = self.__shared_condition_names_with(other)
         for shared_condition_name in shared_condition_names:
-            if self.conditions[shared_condition_name] != \
-                    other.conditions[shared_condition_name]:
+            if self.conditions[shared_condition_name] != other.conditions[shared_condition_name]:
                 return False
 
         return True
 
-    def __shared_condition_names_with(self,
-                                      other: "Measurement") -> Set[str]:
+    def __shared_condition_names_with(self, other: "Measurement") -> set[str]:
         """Determine condition names shared between this and another.
 
         Parameters
@@ -1900,11 +1836,9 @@ class Measurement(object):
         condition_name : str
             The name of the condition to convert to a detail.
         """
-        self.__move_metadata(condition_name,
-                             self._conditions,
-                             self._details)
+        self.__move_metadata(condition_name, self._conditions, self._details)
 
-    def conditions_to_details(self, condition_names: List[str]) -> None:
+    def conditions_to_details(self, condition_names: list[str]) -> None:
         """Change a list of conditions to details by providing their names.
 
         Parameters
@@ -1925,7 +1859,7 @@ class Measurement(object):
         """
         self.__move_metadata(detail_name, self._details, self._conditions)
 
-    def details_to_conditions(self, detail_names: List[str]) -> None:
+    def details_to_conditions(self, detail_names: list[str]) -> None:
         """Change a list of details fo conditions by providing their names.
 
         Parameters
@@ -1937,9 +1871,9 @@ class Measurement(object):
             self.detail_to_condition(detail_name)
 
     @staticmethod
-    def __move_metadata(condition_name: str,
-                        from_: Dict[str, object],
-                        to: Dict[str, object]) -> None:
+    def __move_metadata(
+        condition_name: str, from_: dict[str, object], to: dict[str, object]
+    ) -> None:
         """Move a piece of metadata from one dict to another.
 
         Parameters
@@ -1959,7 +1893,7 @@ class Measurement(object):
             from_.pop(condition_name)
 
     @staticmethod
-    def are_repetitions(measurements: List["Measurement"]) -> bool:
+    def are_repetitions(measurements: list["Measurement"]) -> bool:
         """Determine if a list of measurements are repetitions.
 
         Two measurements are repetitions iff their conditions are equal.
@@ -1984,14 +1918,14 @@ class Measurement(object):
         relationships between successive measurements.
         """
         n = len(measurements)
-        for i in range(n-1):
-            if not measurements[i].is_replicate_of(measurements[i+1]):
+        for i in range(n - 1):
+            if not measurements[i].is_replicate_of(measurements[i + 1]):
                 return False
 
         return True
 
     @staticmethod
-    def are_not_repetitions(measurements: List["Measurement"]) -> bool:
+    def are_not_repetitions(measurements: list["Measurement"]) -> bool:
         """Determine if a list of measurements are not repetitions.
 
         Parameters
@@ -2006,11 +1940,12 @@ class Measurement(object):
         """
         return not Measurement.are_repetitions(measurements)
 
-    def flatten(self,
-                condition_names: List[str] = None,
-                detail_names: List[str] = None,
-                default_value: object = None) -> \
-            Tuple[List[str], List[object]]:
+    def flatten(
+        self,
+        condition_names: list[str] = None,
+        detail_names: list[str] = None,
+        default_value: object = None,
+    ) -> tuple[list[str], list[object]]:
         """Turn this measurement into a single column/row.
 
         The measurement condition metadata keys act as headers for the
@@ -2041,11 +1976,9 @@ class Measurement(object):
             As the metadata values can be any object, the return type must
             be a python list.
         """
-        headers: List[str]
-        data: List[object]
-        headers, data = self.flatten_metadata(condition_names,
-                                              detail_names,
-                                              default_value)
+        headers: list[str]
+        data: list[object]
+        headers, data = self.flatten_metadata(condition_names, detail_names, default_value)
 
         dataset_headers, flat_datasets = self.flatten_datasets()
 
@@ -2054,11 +1987,12 @@ class Measurement(object):
 
         return headers, data
 
-    def flatten_metadata(self,
-                         condition_names: List[str] = None,
-                         detail_names: List[str] = None,
-                         default_value: object = None) -> \
-            Tuple[List[str], List[object]]:
+    def flatten_metadata(
+        self,
+        condition_names: list[str] = None,
+        detail_names: list[str] = None,
+        default_value: object = None,
+    ) -> tuple[list[str], list[object]]:
         """Turn the specified condition_values into a single column/row.
 
         If condition names are provided, must only include the
@@ -2090,19 +2024,18 @@ class Measurement(object):
         else:
             flat_condition_names = list(condition_names)
 
-        condition_values: List[object] = \
-            [self.conditions.get(name, default_value)
-             for name in flat_condition_names]
+        condition_values: list[object] = [
+            self.conditions.get(name, default_value) for name in flat_condition_names
+        ]
 
         if detail_names:
             for name in detail_names:
-                condition_values.append(self.details.get(name,
-                                                         default_value))
+                condition_values.append(self.details.get(name, default_value))
                 flat_condition_names.append(name)
 
         return flat_condition_names, condition_values
 
-    def flatten_datasets(self) -> Tuple[List[str], List[object]]:
+    def flatten_datasets(self) -> tuple[list[str], list[object]]:
         """Turn this measurement's datasets into a single column/row.
 
         This method relies on the implementation of the flatten method
@@ -2139,11 +2072,12 @@ class Measurement(object):
             Whether this measurement has collapsible datasets.
         """
         for dataset in self.datasets[1:]:
-            if dataset.number_of_independent_dimensions != \
-                    self.datasets[0].number_of_independent_dimensions:
+            if (
+                dataset.number_of_independent_dimensions
+                != self.datasets[0].number_of_independent_dimensions
+            ):
                 return False
-            if dataset.independent_variable_units != \
-                    self.datasets[0].independent_variable_units:
+            if dataset.independent_variable_units != self.datasets[0].independent_variable_units:
                 return False
 
         return True
@@ -2180,10 +2114,8 @@ class Measurement(object):
         return condition_label[:-2]
 
     def __validate_visualize_flags(
-            self,
-            expand_datasets: bool,
-            allow_multiple_y_axes: bool
-    ) -> Tuple[bool, bool]:
+        self, expand_datasets: bool, allow_multiple_y_axes: bool
+    ) -> tuple[bool, bool]:
         """Validate the flags provided to the visualize method.
 
         Certain combinations of flags are not possible depending on the
@@ -2216,48 +2148,51 @@ class Measurement(object):
         """
         if self.num_datasets == 1:
             if not expand_datasets or not allow_multiple_y_axes:
-                print("Warning: expand_datasets and allow_multiple_y_axes "
-                      "are ignored for single-dataset measurements.")
+                print(
+                    "Warning: expand_datasets and allow_multiple_y_axes "
+                    "are ignored for single-dataset measurements."
+                )
                 expand_datasets = True
                 allow_multiple_y_axes = True
 
         if not expand_datasets:
-
             if not self.has_collapsible_datasets():
                 expand_datasets = True
                 allow_multiple_y_axes = False
                 type_str = ""
                 for dataset_type in self.dataset_types:
                     type_str += f"{dataset_type.__name__}, "
-                print(f"Warning: Must expand datasets: {type_str[:-2]} "
-                      f"due to mismatch in dimensionality. "
-                      f"Ignoring expand_datasets argument")
+                print(
+                    f"Warning: Must expand datasets: {type_str[:-2]} "
+                    f"due to mismatch in dimensionality. "
+                    f"Ignoring expand_datasets argument"
+                )
 
             if not allow_multiple_y_axes and not self._has_common_dependent_variable_unit():
                 allow_multiple_y_axes = True
-                print(f"Warning: Different dependent variable units "
-                      f"require multiple axes. "
-                      f"Ignoring allow_multiple_y_axes")
+                print(
+                    "Warning: Different dependent variable units "
+                    "require multiple axes. "
+                    "Ignoring allow_multiple_y_axes"
+                )
 
         elif expand_datasets:
             if not allow_multiple_y_axes:
-                print(f"Warning: allow_multiple_y_axes=False is ignored "
-                      f"when datasets are expanded")
+                print("Warning: allow_multiple_y_axes=False is ignored when datasets are expanded")
 
         return expand_datasets, allow_multiple_y_axes
 
-
-    def visualize(self,
-                  axes: Union[matplotlib.axes.Axes, List[matplotlib.axes.Axes]] = None,
-                  expand_datasets: bool = True,
-                  allow_multiple_y_axes: bool = True,
-                  include_text: bool = True,
-                  figure_title: str = None,
-                  total_figsize: Tuple[int] = None,
-                  dataset_colors: List[np.ndarray] = None,
-                  **axes_plotting_kwargs) -> Tuple[matplotlib.figure.Figure,
-                                                   Union[matplotlib.axes.Axes,
-                                                         List[matplotlib.axes.Axes]]]:
+    def visualize(
+        self,
+        axes: matplotlib.axes.Axes | list[matplotlib.axes.Axes] = None,
+        expand_datasets: bool = True,
+        allow_multiple_y_axes: bool = True,
+        include_text: bool = True,
+        figure_title: str = None,
+        total_figsize: tuple[int] = None,
+        dataset_colors: list[np.ndarray] = None,
+        **axes_plotting_kwargs,
+    ) -> tuple[matplotlib.figure.Figure, matplotlib.axes.Axes | list[matplotlib.axes.Axes]]:
         """Visualize this measurement's datasets.
 
         Create a textual representation of the conditions and details of
@@ -2296,34 +2231,32 @@ class Measurement(object):
         if include_text:
             print(str(self))
 
-        expand_datasets, allow_multiple_y_axes = \
-            self.__validate_visualize_flags(
-                expand_datasets=expand_datasets,
-                allow_multiple_y_axes=allow_multiple_y_axes
-            )
+        expand_datasets, allow_multiple_y_axes = self.__validate_visualize_flags(
+            expand_datasets=expand_datasets, allow_multiple_y_axes=allow_multiple_y_axes
+        )
 
         fig: matplotlib.figure.Figure
-        axes: Union[matplotlib.axes.Axes, List[matplotlib.axes.Axes]]
+        axes: matplotlib.axes.Axes | list[matplotlib.axes.Axes]
 
         fig, axes = self._setup_fig_and_axes(
             axes=axes,
             expand_datasets=expand_datasets,
             total_figsize=total_figsize,
-            figure_title=figure_title
+            figure_title=figure_title,
         )
 
-        if expand_datasets:  # plot each dataset on its own axes object using default aesthetics for each dataset
-
+        if (
+            expand_datasets
+        ):  # plot each dataset on its own axes object using default aesthetics for each dataset
             if self.num_datasets == 1 and isinstance(axes, matplotlib.axes.Axes):
                 axes = [axes]
 
             for dataset, axis in zip(self.datasets, axes):
-                dataset.visualize(axes=axis,
-                                  include_text=False,
-                                  **axes_plotting_kwargs)
+                dataset.visualize(axes=axis, include_text=False, **axes_plotting_kwargs)
 
-        elif not expand_datasets:  # plot all datasets on a single axes object, either sharing or not sharing a y-axis
-
+        elif (
+            not expand_datasets
+        ):  # plot all datasets on a single axes object, either sharing or not sharing a y-axis
             # because datasets are sharing a plot, we need to differentiate them aesthetically
             # here we have num_datasets things to distinguish
             # we want to respect defaults if they are sufficient to distinguish the datasets visually
@@ -2350,16 +2283,11 @@ class Measurement(object):
                 # axes.tick_params(axis='y', colors=color)
 
             # the first dataset goes on the normal axes
-            self.datasets[0].visualize(axes=axes,
-                                       include_text=False,
-                                       **axes_plotting_kwargs)
+            self.datasets[0].visualize(axes=axes, include_text=False, **axes_plotting_kwargs)
 
             if not allow_multiple_y_axes:
-
                 for dataset in self.datasets[1:]:
-                    dataset.visualize(axes=axes,
-                                      include_text=False,
-                                      **axes_plotting_kwargs)
+                    dataset.visualize(axes=axes, include_text=False, **axes_plotting_kwargs)
 
             elif allow_multiple_y_axes:
                 # if we have multiple y-axes, the color of the axis and marks can be matched up, then the y-axis labels
@@ -2367,31 +2295,29 @@ class Measurement(object):
                 # viz and the axis if the datasets have different default colors, use those. If they don't, need to generate.
 
                 twin_axes = []
-                for i in range(self.num_datasets - 1):
+                for _ in range(self.num_datasets - 1):
                     t = axes.twinx()
                     twin_axes.append(t)
 
                 i = 1
                 for dataset in self.datasets[1:]:
-
                     if "color" not in axes_plotting_kwargs.keys():
                         if dataset_colors is not None:
                             axes_plotting_kwargs["color"] = dataset_colors[i]
 
-                    dataset.visualize(axes=twin_axes[i - 1],
-                                      include_text=False,
-                                      **axes_plotting_kwargs)
+                    dataset.visualize(
+                        axes=twin_axes[i - 1], include_text=False, **axes_plotting_kwargs
+                    )
 
                     shift = 1 + ((i - 1) * 0.25)
                     twin_axes[i - 1].spines.right.set_position(("axes", shift))
-                    twin_axes[i - 1].spines['right'].set_visible(True)
-                    twin_axes[i - 1].spines['right'].set_color("k")
+                    twin_axes[i - 1].spines["right"].set_visible(True)
+                    twin_axes[i - 1].spines["right"].set_color("k")
 
                     min_val = np.amin(dataset.dependent_variable_data)
                     max_val = np.amax(dataset.dependent_variable_data)
 
-                    twin_axes[i - 1].set_ylim(min_val - min_val * 0.1,
-                                              max_val + max_val * 0.1)
+                    twin_axes[i - 1].set_ylim(min_val - min_val * 0.1, max_val + max_val * 0.1)
 
                     i += 1
 
@@ -2410,24 +2336,24 @@ class Measurement(object):
         if not isinstance(axes, list):
             axes = [axes]
 
-        if self.num_datasets == 1 and isinstance(self.datasets[0],
-                                                 zero_dimensional_dataset_.ZeroDimensionalDataset):
+        if self.num_datasets == 1 and isinstance(
+            self.datasets[0], zero_dimensional_dataset_.ZeroDimensionalDataset
+        ):
             axes[0].set_xticks([])
-            axes[0].spines['bottom'].set_visible(False)
+            axes[0].spines["bottom"].set_visible(False)
 
         return fig, axes
 
     def _default_figure_title(self) -> str:
         return f"{self.__class__.__name__}: {self.condition_label()}"
 
-    def _setup_fig_and_axes(self,
-                            axes: Union[matplotlib.axes.Axes, List[matplotlib.axes.Axes]] = None,
-                            expand_datasets: bool = True,
-                            total_figsize: Tuple[int] = None,
-                            figure_title: str = None) -> Tuple[matplotlib.figure.Figure,
-                                                               Union[matplotlib.axes.Axes,
-                                                                     List[matplotlib.axes.Axes]]]:
-
+    def _setup_fig_and_axes(
+        self,
+        axes: matplotlib.axes.Axes | list[matplotlib.axes.Axes] = None,
+        expand_datasets: bool = True,
+        total_figsize: tuple[int] = None,
+        figure_title: str = None,
+    ) -> tuple[matplotlib.figure.Figure, matplotlib.axes.Axes | list[matplotlib.axes.Axes]]:
         """Setup a matplotlib figure and axes for plotting a measurement.
 
         Parameters
@@ -2461,21 +2387,14 @@ class Measurement(object):
         fig: matplotlib.figure.Figure
 
         if axes is None:  # the axes or list of axes must be created
-
             if total_figsize is None:
-                total_figsize = \
-                    self.compute_matplotlib_figure_size(expand_datasets=
-                                                        expand_datasets)
+                total_figsize = self.compute_matplotlib_figure_size(expand_datasets=expand_datasets)
 
             if not expand_datasets:
-                fig, axes = plt.subplots(1,
-                                         1,
-                                         figsize=total_figsize)
+                fig, axes = plt.subplots(1, 1, figsize=total_figsize)
             else:
                 if self.num_datasets > 0:
-                    fig, axes = plt.subplots(1,
-                                             self.num_datasets,
-                                             figsize=total_figsize)
+                    fig, axes = plt.subplots(1, self.num_datasets, figsize=total_figsize)
                 else:
                     fig = plt.figure()
                     axes = []
@@ -2486,7 +2405,6 @@ class Measurement(object):
                 fig.suptitle(self._default_figure_title())
 
         else:  # the axes or list of axes already exists
-
             # if len(self.datasets) != 1 and expand_datasets:
             #     if len(axes) <= len(self.datasets):
             #         raise ValueError("Incorrect number of axes for plotting measurement datasets: ", len(axes))
@@ -2500,9 +2418,7 @@ class Measurement(object):
 
         return fig, axes
 
-    def compute_matplotlib_figure_size(self,
-                                       expand_datasets: bool = True) -> \
-            Tuple[int]:
+    def compute_matplotlib_figure_size(self, expand_datasets: bool = True) -> tuple[int]:
         """Compute an ideal figure size for this measurement.
 
         Returns
@@ -2522,10 +2438,9 @@ class Measurement(object):
         An additional horizontal spacer is added to make room for the
         figure title above the individual axes titles.
         """
-        prepare_figsize: List[int] = [0, 0]
+        prepare_figsize: list[int] = [0, 0]
 
         if expand_datasets:
-
             for dataset in self.datasets:
                 prepare_figsize[0] += dataset.DEFAULT_FIGURE_SIZE[0]
                 if dataset.DEFAULT_FIGURE_SIZE[1] > prepare_figsize[1]:
@@ -2583,7 +2498,7 @@ class Measurement(object):
         if self.num_datasets == 0:
             return str_rep + "]"
         else:
-            for i, dataset in enumerate(self.datasets):
+            for _i, dataset in enumerate(self.datasets):
                 str_rep += f"{dataset.one_line_description}, "
 
             return str_rep[:-2] + "]"
@@ -2591,7 +2506,7 @@ class Measurement(object):
     def __str__(self) -> str:
         """Return a human-readable representation of this instance."""
 
-        def metadata_dict_str(dict_: Dict[str, object], title: str) -> str:
+        def metadata_dict_str(dict_: dict[str, object], title: str) -> str:
             """Return human-readable representation of a metadata dict.
 
             Parameters
@@ -2608,9 +2523,7 @@ class Measurement(object):
             """
             dict_str_rep = ""
             if dict_:
-                dict_str_rep += dict_str(dict_=dict_,
-                                         title=title,
-                                         whitespace=self.__INDENT)
+                dict_str_rep += dict_str(dict_=dict_, title=title, whitespace=self.__INDENT)
             else:
                 dict_str_rep += title + ": None defined"
             return dict_str_rep + "\n"
@@ -2624,8 +2537,7 @@ class Measurement(object):
             dataset_str = ""
             for dataset in self.datasets:
                 if self.num_datasets > self.__DATASET_PRINT_MAX:
-                    dataset_str += self.__INDENT + \
-                                   dataset.one_line_description
+                    dataset_str += self.__INDENT + dataset.one_line_description
                 else:
                     dataset_str += self.__INDENT + str(dataset)
 

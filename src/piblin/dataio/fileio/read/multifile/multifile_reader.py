@@ -1,5 +1,5 @@
-from typing import Dict
 from abc import ABC, abstractmethod
+
 import piblin.dataio.fileio.read.file_reader as file_reader
 
 
@@ -14,7 +14,7 @@ class MultifileReader(file_reader.FileReader, ABC):
         """
         raise NotImplementedError
 
-    def supports_pattern(self, pattern: Dict):
+    def supports_pattern(self, pattern: dict):
         """Determine whether this multifile reader supports the given pattern.
         To support a given pattern this reader must have the same set of file
         extensions in its supported pattern and require fewer of each kind of

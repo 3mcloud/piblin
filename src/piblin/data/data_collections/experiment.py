@@ -9,20 +9,20 @@ all have the same corresponding condition value.
 In practice these are usually created by an experiment set which handles the change in
 replicate relationships as metadata is edited.
 """
-from typing import Tuple
-import copy
 
-import matplotlib.pyplot as plt
-import numpy as np
-import numpy.typing
+from typing import Union
+
 import matplotlib
 import matplotlib.axes
 import matplotlib.figure
-import piblin.data.datasets.abc.split_datasets.histogram as histogram
+import matplotlib.pyplot as plt
+import numpy as np
+import numpy.typing
+
+import piblin.data.data_collections.consistent_measurement_set as consistent_measurement_set
 import piblin.data.data_collections.measurement as measurement
 import piblin.data.data_collections.summary as summary
-import piblin.data.data_collections.consistent_measurement_set as consistent_measurement_set
-from typing import List, Dict, Set, Union
+import piblin.data.datasets.abc.split_datasets.histogram as histogram
 
 
 class ReplicateError(Exception):
@@ -221,29 +221,30 @@ class Experiment(consistent_measurement_set.ConsistentMeasurementSet):
     visualize_on_multiple_plots()
         Visualize the measurement datasets on individual plots.
     """
-    def __init__(self,
-                 measurements: List[measurement.Measurement] = None,
-                 merge_redundant: bool = True):
 
-        super().__init__(measurements=measurements,
-                         merge_redundant=merge_redundant)
+    def __init__(
+        self, measurements: list[measurement.Measurement] = None, merge_redundant: bool = True
+    ):
+
+        super().__init__(measurements=measurements, merge_redundant=merge_redundant)
 
         if self.are_not_repetitions():
             raise ReplicateError("Cannot create experiment: measurements are not repetitions.")
 
-    def to_measurement_set(self,
-                           dataset_indices_to_retain: List[int] = None,
-                           make_copy=True):
+    def to_measurement_set(self, dataset_indices_to_retain: list[int] = None, make_copy=True):
         """Cast this experiment to a measurement set."""
-        return self.to_consistent_measurement_set(dataset_indices_to_retain=dataset_indices_to_retain,
-                                                  make_copy=make_copy)
+        return self.to_consistent_measurement_set(
+            dataset_indices_to_retain=dataset_indices_to_retain, make_copy=make_copy
+        )
 
-    def datasets_to_histogram(self,
-                              dataset_indices: List[int] = None,
-                              bins: Union[int, list, str] = 'auto',
-                              histogram_range: Tuple[float, float] = None,
-                              weights: np.typing.ArrayLike = None,
-                              density: bool = None) -> None:
+    def datasets_to_histogram(
+        self,
+        dataset_indices: list[int] = None,
+        bins: int | list | str = "auto",
+        histogram_range: tuple[float, float] = None,
+        weights: np.typing.ArrayLike = None,
+        density: bool = None,
+    ) -> None:
         """Convert this experiment to a histogram.
 
         An experiment contains multiple replicate measurements, each of which can have multiple datasets.
@@ -269,43 +270,50 @@ class Experiment(consistent_measurement_set.ConsistentMeasurementSet):
 
         histograms = []
         for dataset_index in dataset_indices:
-            dependent_variables = [measurement_.datasets[dataset_index].dependent_variable_data for measurement_ in
-                                   self.measurements]
+            dependent_variables = [
+                measurement_.datasets[dataset_index].dependent_variable_data
+                for measurement_ in self.measurements
+            ]
 
-            counts, bins = np.histogram(dependent_variables,
-                                        bins=bins,
-                                        range=histogram_range,
-                                        weights=weights,
-                                        density=density)
+            counts, bins = np.histogram(
+                dependent_variables,
+                bins=bins,
+                range=histogram_range,
+                weights=weights,
+                density=density,
+            )
 
-            centers = [bin_a + ((bin_b - bin_a) / 2) for i, (bin_a, bin_b) in enumerate(zip(bins[1:], bins[:-1]))]
+            centers = [
+                bin_a + ((bin_b - bin_a) / 2)
+                for i, (bin_a, bin_b) in enumerate(zip(bins[1:], bins[:-1]))
+            ]
 
-            histogram_ = histogram.Histogram.create(x_values=centers,
-                                                    y_values=counts,
-                                                    x_name=f"Bin Center")
+            histogram_ = histogram.Histogram.create(
+                x_values=centers, y_values=counts, x_name="Bin Center"
+            )
 
             histograms.append(measurement.Measurement(datasets=[histogram_]))
 
         self.repetitions = histograms
 
     @property
-    def repetitions(self) -> List[measurement.Measurement]:
+    def repetitions(self) -> list[measurement.Measurement]:
         """The replicate measurements of this experiment."""
         return self.measurements
 
     @repetitions.setter
-    def repetitions(self, repetitions: List[measurement.Measurement]) -> None:
+    def repetitions(self, repetitions: list[measurement.Measurement]) -> None:
         self.measurements = repetitions
         if self.are_not_repetitions():
             raise ReplicateError("Cannot update experiment: measurements are not repetitions.")
 
     @property
-    def conditions(self) -> Dict[str, object]:  # alias
+    def conditions(self) -> dict[str, object]:  # alias
         """The conditions under which this experiment was carried out."""
         return self.equal_shared_conditions
 
     @property
-    def condition_names(self) -> Set[str]:
+    def condition_names(self) -> set[str]:
         """The names of conditions under which this experiment was carried out."""
         return self.equal_shared_condition_names
 
@@ -323,7 +331,7 @@ class Experiment(consistent_measurement_set.ConsistentMeasurementSet):
         """
         self.add_equal_shared_condition(name, value)
 
-    def add_conditions(self, names: List[str], values: List[str]) -> None:
+    def add_conditions(self, names: list[str], values: list[str]) -> None:
         """Add conditions to the repetitions of this experiment.
 
         This method is just an alias for add_equal_shared_conditions.
@@ -359,14 +367,18 @@ class Experiment(consistent_measurement_set.ConsistentMeasurementSet):
         if detail_name in self.equal_shared_detail_names:
             self.detail_to_condition(detail_name)
         else:
-            MetadataEditingError("Cannot change shared, varying detail to a shared, varying condition in experiment.")
+            MetadataEditingError(
+                "Cannot change shared, varying detail to a shared, varying condition in experiment."
+            )
 
-    def flatten(self,
-                force_tidiness: bool = False,
-                include_unshared_conditions: bool = False,
-                include_equal_conditions: bool = True,
-                default_value: object = None,
-                expand_replicates: bool = True) -> Tuple[List[str], List[List[object]]]:
+    def flatten(
+        self,
+        force_tidiness: bool = False,
+        include_unshared_conditions: bool = False,
+        include_equal_conditions: bool = True,
+        default_value: object = None,
+        expand_replicates: bool = True,
+    ) -> tuple[list[str], list[list[object]]]:
         """Turn the experiment into a set of columns/rows.
 
         The tabular form of an experiment has a row for each repetition and a column for each
@@ -398,24 +410,26 @@ class Experiment(consistent_measurement_set.ConsistentMeasurementSet):
             The experiment as a rectangular set of data.
         """
         if expand_replicates:
-
-            return super().flatten(force_tidiness=force_tidiness,
-                                   include_unshared_conditions=include_unshared_conditions,
-                                   include_equal_conditions=include_equal_conditions,
-                                   default_value=default_value)
+            return super().flatten(
+                force_tidiness=force_tidiness,
+                include_unshared_conditions=include_unshared_conditions,
+                include_equal_conditions=include_equal_conditions,
+                default_value=default_value,
+            )
 
         else:
             experiment = Experiment(measurements=[self.average_measurement])
-            return experiment.flatten(force_tidiness=force_tidiness,
-                                      include_unshared_conditions=include_unshared_conditions,
-                                      include_equal_conditions=include_equal_conditions,
-                                      default_value=default_value,
-                                      expand_replicates=False)
+            return experiment.flatten(
+                force_tidiness=force_tidiness,
+                include_unshared_conditions=include_unshared_conditions,
+                include_equal_conditions=include_equal_conditions,
+                default_value=default_value,
+                expand_replicates=False,
+            )
 
-    def flatten_datasets(self,
-                         force_tidiness=True,
-                         expand_replicates=True) -> Tuple[List[numpy.typing.NDArray],
-                                                       List[List[object]]]:
+    def flatten_datasets(
+        self, force_tidiness=True, expand_replicates=True
+    ) -> tuple[list[numpy.typing.NDArray], list[list[object]]]:
         """Flatten the datasets of this experiment into headers and data.
 
         Parameters
@@ -454,16 +468,16 @@ class Experiment(consistent_measurement_set.ConsistentMeasurementSet):
             output += str(key) + "=" + str(self.conditions[key]) + sep
         return output[:-1]
 
-    def visualize(self,
-                  axes: matplotlib.axes.Axes or List[matplotlib.axes.Axes] = None,
-                  expand_datasets: bool = True,
-                  expand_replicates: bool = True,
-                  include_text: bool = True,
-                  figure_title: str = None,
-                  total_figsize: Tuple[int] = None,
-                  **plot_kwargs) -> Tuple[matplotlib.figure.Figure,
-                                          Union[matplotlib.axes.Axes,
-                                                List[matplotlib.axes.Axes]]]:
+    def visualize(
+        self,
+        axes: matplotlib.axes.Axes or list[matplotlib.axes.Axes] = None,
+        expand_datasets: bool = True,
+        expand_replicates: bool = True,
+        include_text: bool = True,
+        figure_title: str = None,
+        total_figsize: tuple[int] = None,
+        **plot_kwargs,
+    ) -> tuple[matplotlib.figure.Figure, matplotlib.axes.Axes | list[matplotlib.axes.Axes]]:
         """Create a visual representation of this experiment.
 
         Parameters
@@ -505,28 +519,33 @@ class Experiment(consistent_measurement_set.ConsistentMeasurementSet):
                 print("Warning: Datasets are not collapsible.")
                 expand_datasets = True
 
-        fig, axes = self._setup_fig_and_axes(axes=axes,
-                                             expand_datasets=expand_datasets,
-                                             expand_replicates=expand_replicates,
-                                             total_figsize=total_figsize,
-                                             title=figure_title)
+        fig, axes = self._setup_fig_and_axes(
+            axes=axes,
+            expand_datasets=expand_datasets,
+            expand_replicates=expand_replicates,
+            total_figsize=total_figsize,
+            title=figure_title,
+        )
 
-        self.visualize_on_plots(fig=fig,
-                                axes=axes,
-                                expand_datasets=expand_datasets,
-                                expand_replicates=expand_replicates,
-                                **plot_kwargs)
+        self.visualize_on_plots(
+            fig=fig,
+            axes=axes,
+            expand_datasets=expand_datasets,
+            expand_replicates=expand_replicates,
+            **plot_kwargs,
+        )
         plt.tight_layout()
 
         return fig, axes
 
-    def _setup_fig_and_axes(self,
-                            axes: Union[matplotlib.axes.Axes, List[matplotlib.axes.Axes]] = None,
-                            expand_datasets: bool = True,
-                            expand_replicates: bool = True,
-                            total_figsize: tuple = None,
-                            title: str = None) -> Tuple[matplotlib.figure.Figure,
-                                                        Union[matplotlib.axes.Axes, List[matplotlib.axes.Axes]]]:
+    def _setup_fig_and_axes(
+        self,
+        axes: matplotlib.axes.Axes | list[matplotlib.axes.Axes] = None,
+        expand_datasets: bool = True,
+        expand_replicates: bool = True,
+        total_figsize: tuple = None,
+        title: str = None,
+    ) -> tuple[matplotlib.figure.Figure, matplotlib.axes.Axes | list[matplotlib.axes.Axes]]:
         """Validate/prepare a figure and axes for plotting this experiment.
 
         Parameters
@@ -552,14 +571,14 @@ class Experiment(consistent_measurement_set.ConsistentMeasurementSet):
             Matplotlib axes containing the plotted experiment set.
         """
         if axes is None:  # create them
-            total_figsize = self._validate_figsize(figsize=total_figsize,
-                                                   expand_datasets=expand_datasets,
-                                                   expand_replicates=expand_replicates)
+            total_figsize = self._validate_figsize(
+                figsize=total_figsize,
+                expand_datasets=expand_datasets,
+                expand_replicates=expand_replicates,
+            )
 
             if expand_datasets:
-                fig, axes = plt.subplots(1,
-                                         self.num_datasets,
-                                         figsize=total_figsize)
+                fig, axes = plt.subplots(1, self.num_datasets, figsize=total_figsize)
             else:
                 fig, axes = plt.subplots(1, 1, figsize=total_figsize)
 
@@ -571,12 +590,14 @@ class Experiment(consistent_measurement_set.ConsistentMeasurementSet):
 
         return fig, axes
 
-    def visualize_on_plots(self,
-                           fig: matplotlib.figure.Figure,
-                           axes: Union[matplotlib.axes.Axes, List[matplotlib.axes.Axes]],
-                           expand_datasets: bool = True,
-                           expand_replicates: bool = True,
-                           **plot_kwargs) -> None:
+    def visualize_on_plots(
+        self,
+        fig: matplotlib.figure.Figure,
+        axes: matplotlib.axes.Axes | list[matplotlib.axes.Axes],
+        expand_datasets: bool = True,
+        expand_replicates: bool = True,
+        **plot_kwargs,
+    ) -> None:
         """
 
         Parameters
@@ -592,32 +613,30 @@ class Experiment(consistent_measurement_set.ConsistentMeasurementSet):
         """
         if expand_replicates:
             # plot all of the measurements on the axes
-            for i, measurement_ in enumerate(self.measurements):
-                measurement_.visualize(axes,
-                                       expand_datasets=expand_datasets,
-                                       include_text=False,
-                                       **plot_kwargs)
+            for _i, measurement_ in enumerate(self.measurements):
+                measurement_.visualize(
+                    axes, expand_datasets=expand_datasets, include_text=False, **plot_kwargs
+                )
 
         elif not expand_replicates:
-            self.summary_measurement.visualize(axes=axes,
-                                               expand_datasets=expand_datasets,
-                                               include_text=False,
-                                               **plot_kwargs)
+            self.summary_measurement.visualize(
+                axes=axes, expand_datasets=expand_datasets, include_text=False, **plot_kwargs
+            )
 
-    def _validate_figsize(self,
-                          figsize: Tuple[int],
-                          expand_datasets: bool,
-                          expand_replicates: bool) -> Tuple[int]:
+    def _validate_figsize(
+        self, figsize: tuple[int], expand_datasets: bool, expand_replicates: bool
+    ) -> tuple[int]:
         """Assess and potentially create a size for the complete figure."""
         if figsize is None:
-            figsize = self.compute_figure_size(expand_datasets=expand_datasets,
-                                               expand_replicates=expand_replicates)
+            figsize = self.compute_figure_size(
+                expand_datasets=expand_datasets, expand_replicates=expand_replicates
+            )
 
         return figsize
 
-    def compute_figure_size(self,
-                            expand_replicates: bool,
-                            expand_datasets: bool) -> Tuple[int, int]:
+    def compute_figure_size(
+        self, expand_replicates: bool, expand_datasets: bool
+    ) -> tuple[int, int]:
         """Determine an overall size for the figure based on its components.
 
         Parameters
@@ -631,9 +650,13 @@ class Experiment(consistent_measurement_set.ConsistentMeasurementSet):
         height = max([dataset_type.DEFAULT_FIGURE_SIZE[1] for dataset_type in self.dataset_types])
 
         if expand_datasets:
-            width = sum([dataset_type.DEFAULT_FIGURE_SIZE[0] for dataset_type in self.dataset_types])
+            width = sum(
+                [dataset_type.DEFAULT_FIGURE_SIZE[0] for dataset_type in self.dataset_types]
+            )
         else:
-            width = max([dataset_type.DEFAULT_FIGURE_SIZE[1] for dataset_type in self.dataset_types])
+            width = max(
+                [dataset_type.DEFAULT_FIGURE_SIZE[1] for dataset_type in self.dataset_types]
+            )
 
         return int(width), int(height)
 
@@ -642,10 +665,12 @@ class Experiment(consistent_measurement_set.ConsistentMeasurementSet):
         return self._compute_summary()
 
     def _compute_summary(self):
-        return summary.SummaryMeasurement(self.average_measurement.datasets,
-                                          self.variation_measurement.datasets,
-                                          self.equal_shared_conditions,
-                                          self.equal_shared_details)
+        return summary.SummaryMeasurement(
+            self.average_measurement.datasets,
+            self.variation_measurement.datasets,
+            self.equal_shared_conditions,
+            self.equal_shared_details,
+        )
 
     @property
     def average_measurement(self) -> measurement.Measurement:
@@ -690,15 +715,16 @@ class Experiment(consistent_measurement_set.ConsistentMeasurementSet):
         else:
             average_datasets = []
             for dataset_index in range(self.num_datasets):
-
                 dataset_type = self.dataset_types[dataset_index]
 
-                datasets = [measurement_.datasets[dataset_index] for measurement_ in self.measurements]
+                datasets = [
+                    measurement_.datasets[dataset_index] for measurement_ in self.measurements
+                ]
                 average_datasets.append(dataset_type.compute_average(datasets))
 
-        return measurement.Measurement(datasets=average_datasets,
-                                       conditions=conditions,
-                                       details=details)
+        return measurement.Measurement(
+            datasets=average_datasets, conditions=conditions, details=details
+        )
 
     @property
     def variation_measurement(self) -> measurement.Measurement:
@@ -712,18 +738,24 @@ class Experiment(consistent_measurement_set.ConsistentMeasurementSet):
         else:
             average_datasets = []
             for dataset_index in range(self.num_datasets):
-                datasets = [measurement_.datasets[dataset_index] for measurement_ in self.measurements]
-                average_datasets.append(self.dataset_types[dataset_index].compute_variation(datasets))
+                datasets = [
+                    measurement_.datasets[dataset_index] for measurement_ in self.measurements
+                ]
+                average_datasets.append(
+                    self.dataset_types[dataset_index].compute_variation(datasets)
+                )
 
-        return measurement.Measurement(datasets=average_datasets,
-                                       conditions=self.equal_shared_conditions,
-                                       details=self.equal_shared_details)
+        return measurement.Measurement(
+            datasets=average_datasets,
+            conditions=self.equal_shared_conditions,
+            details=self.equal_shared_details,
+        )
 
     def detect_outliers(self):
         """Return a set of outlier measurements based on a derived property."""
         return NotImplemented
 
-    def __getitem__(self, position: Union[int, slice]) -> Union[measurement.Measurement, "Experiment"]:
+    def __getitem__(self, position: int | slice) -> Union[measurement.Measurement, "Experiment"]:
         if isinstance(position, slice):
             return Experiment(self.measurements[position])
 
@@ -754,8 +786,7 @@ class Experiment(consistent_measurement_set.ConsistentMeasurementSet):
 
         str_rep += "Repetitions\n-----------\n"
         for i, replicate in enumerate(self.measurements):
-            str_rep += "Replicate " + str(i) + ": " + \
-                       replicate.one_line_dataset_string() + "\n"
+            str_rep += "Replicate " + str(i) + ": " + replicate.one_line_dataset_string() + "\n"
 
         return str_rep + "\n"
 

@@ -1,4 +1,5 @@
 import pytest
+
 from piblin.data.datasets.abc.split_datasets.two_dimensional_dataset import TwoDimensionalDataset
 
 
@@ -24,14 +25,14 @@ def dependent_variable_value():
 @pytest.fixture()
 def twod_dataset(dependent_variable_value):
 
-    return TwoDimensionalDataset.create(x_values=[0],
-                                        y_values=[0],
-                                        z_values=[[dependent_variable_value]])
+    return TwoDimensionalDataset.create(
+        x_values=[0], y_values=[0], z_values=[[dependent_variable_value]]
+    )
 
 
-def test_remove_independent_variable_by_name_2d(independent_variable_name,
-                                                dependent_variable_value,
-                                                twod_dataset):
+def test_remove_independent_variable_by_name_2d(
+    independent_variable_name, dependent_variable_value, twod_dataset
+):
 
     dataset = twod_dataset.remove_independent_variable_by_name(independent_variable_name)
 

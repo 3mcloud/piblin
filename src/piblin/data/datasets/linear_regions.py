@@ -1,26 +1,20 @@
-from collections import namedtuple, UserList
-from typing import List, Tuple, Union
+from collections import UserList, namedtuple
 
 
-class LinearRegion(object):
+class LinearRegion:
     """A region bounded by minimum and maximum values.
 
     Parameters
     ----------
     region
     """
-    Edge = namedtuple(typename="Edge",
-                      field_names=["min", "max"],
-                      defaults=[0, 0])
 
-    def __init__(self,
-                 region: List[Tuple[Union[int, float],
-                                    Union[int, float]]],
-                 name: str = None):
+    Edge = namedtuple(typename="Edge", field_names=["min", "max"], defaults=[0, 0])
+
+    def __init__(self, region: list[tuple[int | float, int | float]], name: str = None):
 
         self._num_dimensions = len(region)
-        self._region = tuple([self.Edge(values[0], values[1])
-                              for values in region])
+        self._region = tuple([self.Edge(values[0], values[1]) for values in region])
 
     @property
     def num_dimensions(self):
@@ -42,7 +36,7 @@ class LinearRegion(object):
     def name(self, name):
         self._name = name
 
-    def contains(self, point: List) -> bool:
+    def contains(self, point: list) -> bool:
         """Determine whether this region contains the given point."""
 
         if len(point) != self.num_dimensions:
@@ -71,8 +65,7 @@ class LinearRegion(object):
         str_rep = self.__class__.__name__
         if self.name is not None:
             str_rep += f" ({self.name}) "
-        str_rep += (f"between {self.region_min:.3f} "
-                    f"and {self.region_max:.3f}")
+        str_rep += f"between {self.region_min:.3f} and {self.region_max:.3f}"
         return str_rep
 
     def __repr__(self):
@@ -80,28 +73,22 @@ class LinearRegion(object):
         str_rep = self.__class__.__name__ + "("
         str_rep += str(self.region)
         if self.name is not None:
-            str_rep += ", name=\"" + self.name + "\""
+            str_rep += ', name="' + self.name + '"'
         return str_rep + ")"
 
 
 class OneDLinearRegion(LinearRegion):
+    def __init__(self, region: tuple[int | float, int | float], name: str = None):
 
-    def __init__(self,
-                 region: Tuple[Union[int, float],
-                               Union[int, float]],
-                 name: str = None):
-
-        super().__init__(region=[region],
-                         name=name)
+        super().__init__(region=[region], name=name)
 
     @property
-    def region(self) -> Tuple[Union[int, float],
-                              Union[int, float]]:
+    def region(self) -> tuple[int | float, int | float]:
         """"""
         return self._region[0]
 
     @region.setter
-    def region(self, region: "Edge") -> None:
+    def region(self, region: "LinearRegion.Edge") -> None:
         self._region = region
 
     @property
@@ -131,32 +118,28 @@ class OneDLinearRegion(LinearRegion):
         self.__validate_region()
 
 
-class TwoDLinearRegion(LinearRegion):
-    ...
+class TwoDLinearRegion(LinearRegion): ...
 
 
-class ThreeDLinearRegion(LinearRegion):
-    ...
+class ThreeDLinearRegion(LinearRegion): ...
 
 
 class CompoundRegion(UserList):
     """A collection of linear regions comprising a compound region."""
-    def __init__(self, linear_regions: List[LinearRegion] = None):
+
+    def __init__(self, linear_regions: list[LinearRegion] = None):
 
         super().__init__(linear_regions)
 
-        if not all(linear_region.num_dimensions ==
-                   linear_regions[0].num_dimensions
-                   for linear_region in linear_regions[1:]):
-
-            raise ValueError(
-                "Number of dimensions must match for all linear regions."
-            )
+        if not all(
+            linear_region.num_dimensions == linear_regions[0].num_dimensions
+            for linear_region in linear_regions[1:]
+        ):
+            raise ValueError("Number of dimensions must match for all linear regions.")
 
         self._linear_regions = linear_regions
 
-    def from_data(self):
-        ...
+    def from_data(self): ...
 
     def contains(self, point) -> bool:
         """Determine whether this compound region contains a point.

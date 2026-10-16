@@ -83,13 +83,12 @@ Packages
 read - Modules for reading experimental measurements from files.
 write - Modules for writing experiment measurements to files.
 """
+
 import os
-from typing import List, Set
 from os.path import isfile, join
 
 
-def list_all_files_in_directory(directory: str,
-                                recursive: bool = False) -> List[str]:
+def list_all_files_in_directory(directory: str, recursive: bool = False) -> list[str]:
     """Create a list of the paths to all files in a given directory.
 
     Parameters
@@ -115,10 +114,9 @@ def list_all_files_in_directory(directory: str,
         return filepaths
 
 
-def list_files_in_directory(directory: str,
-                            extension: str = None,
-                            case_sensitive: bool = False,
-                            recursive: bool = False) -> List[str]:
+def list_files_in_directory(
+    directory: str, extension: str = None, case_sensitive: bool = False, recursive: bool = False
+) -> list[str]:
     """Create a list of paths to files with a given extension in directory.
 
     Parameters
@@ -144,7 +142,6 @@ def list_files_in_directory(directory: str,
 
     filepaths = []
     for filepath in all_files:
-
         if case_sensitive:
             if filepath.endswith(extension):
                 filepaths.append(filepath)
@@ -155,8 +152,7 @@ def list_files_in_directory(directory: str,
     return filepaths
 
 
-def count_files_in_directory_with_extensions(directory: str,
-                                             extensions: Set[str]) -> int:
+def count_files_in_directory_with_extensions(directory: str, extensions: set[str]) -> int:
     """Count the files present in a directory with any of the given extensions.
 
     Parameters
@@ -181,7 +177,7 @@ def count_files_in_directory_with_extensions(directory: str,
     return count
 
 
-def find_image_in_directory_with_extensions(directory: str, extensions: Set[str]) -> str:
+def find_image_in_directory_with_extensions(directory: str, extensions: set[str]) -> str:
     """Find the first image present in a given directory.
 
     Parameters

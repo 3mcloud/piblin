@@ -15,10 +15,9 @@ Classes
 -------
 MetadataConverter - Convert between string and dictionary forms of metadata.
 """
-from typing import Union
 
 
-class MetadataConverter(object):
+class MetadataConverter:
     """Convert between string and dictionary forms of metadata.
 
     Parameters
@@ -38,9 +37,8 @@ class MetadataConverter(object):
     string representations (usually from filenames) of metadata to be converted
     to dictionary representations (useful in programs).
     """
-    def __init__(self,
-                 separator: str = "_",
-                 assignment: str = "="):
+
+    def __init__(self, separator: str = "_", assignment: str = "="):
 
         super().__init__()
         self.__separator = separator
@@ -62,7 +60,7 @@ class MetadataConverter(object):
         str_ = ""
         for key, value in metadata.items():
             str_ += key + self.__assignment + str(value) + self.__separator
-        return str_[:-len(self.__separator)]
+        return str_[: -len(self.__separator)]
 
     def string_to_dict(self, metadata: str) -> dict:
         """Convert metadata string representation to dictionary.
@@ -87,7 +85,7 @@ class MetadataConverter(object):
         return dict_
 
     @staticmethod
-    def parse_string(str_: str) -> Union[bool, int, float, str]:
+    def parse_string(str_: str) -> bool | int | float | str:
         """Convert a string to a bool, int, double or just return the string.
 
         Metadata strings by definition only contain str parts, however these

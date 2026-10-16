@@ -1,11 +1,13 @@
-from typing import List, Set, Tuple, Iterator, Union
 from abc import ABC, abstractmethod
-import numpy as np
-import matplotlib.figure
+from collections.abc import Iterator
+
 import matplotlib.axes
-import matplotlib.colors
 import matplotlib.cm
+import matplotlib.colors
+import matplotlib.figure
 import matplotlib.pyplot as plt
+import numpy as np
+
 import piblin.data
 
 
@@ -83,17 +85,17 @@ class Dataset(ABC):
     unflatten
         Convert a flat representation to a dataset.
     """
+
     DEPENDENT_INDEX = 0
     """The index of  the dependent variable values."""
     INDEPENDENT_INDEX = 1
     """The index of the independent variable values."""
 
-    DEFAULT_FIGURE_SIZE: Tuple[int, int] = (5, 5)
+    DEFAULT_FIGURE_SIZE: tuple[int, int] = (5, 5)
     """Default size of dataset visualization (in inches)."""
     DEFAULT_COLOR: str = "black"
     """Default color for dataset data plots."""
-    DEFAULT_COLOR_MAP: matplotlib.colors.Colormap = \
-        matplotlib.cm.get_cmap("RdBu")
+    DEFAULT_COLOR_MAP: matplotlib.colors.Colormap = matplotlib.cm.get_cmap("RdBu")
     """Default color map for dataset visualizations."""
     DEFAULT_MARKER: str = "x"
     """Default marker for dataset visualizations."""
@@ -105,53 +107,49 @@ class Dataset(ABC):
 
     def _validate_attributes(self):
         """Check whether all attributes of this dataset are consistent."""
-        if len(self.dependent_variable_names) != \
-                self.number_of_dependent_dimensions:
+        if len(self.dependent_variable_names) != self.number_of_dependent_dimensions:
             raise ValueError(
                 f"Incorrect number of dependent names. "
                 f"Got {len(self.dependent_variable_names)}, "
                 f"expected {self.number_of_dependent_dimensions}"
             )
 
-        if len(self.dependent_variable_units) != \
-                self.number_of_dependent_dimensions:
+        if len(self.dependent_variable_units) != self.number_of_dependent_dimensions:
             raise ValueError(
                 f"Incorrect number of dependent units. "
                 f"Got {len(self.dependent_variable_units)}, "
                 f"expected {self.number_of_dependent_dimensions}"
             )
 
-        if len(self.independent_variable_names) != \
-                self.number_of_independent_dimensions:
+        if len(self.independent_variable_names) != self.number_of_independent_dimensions:
             raise ValueError(
                 f"Incorrect number of dependent names. "
                 f"Got {len(self.independent_variable_names)}, "
                 f"expected {self.number_of_independent_dimensions}"
             )
 
-        if len(self.independent_variable_units) != \
-                self.number_of_independent_dimensions:
+        if len(self.independent_variable_units) != self.number_of_independent_dimensions:
             raise ValueError(
                 f"Incorrect number of dependent units. "
                 f"Got {len(self.independent_variable_units)}, "
                 f"expected {self.number_of_independent_dimensions}"
             )
 
-    def split(self) -> List["Dataset"]:
+    def split(self) -> list["Dataset"]:
         """Alias for to_datasets method."""
         return self.to_datasets()
 
-    def to_datasets(self) -> List["Dataset"]:
+    def to_datasets(self) -> list["Dataset"]:  # noqa: B027 - optional hook, no-op by default
         """Split this dataset into multiple datasets."""
         pass
 
     @classmethod
-    def combine(cls, datasets: List["Dataset"]) -> "Dataset":
+    def combine(cls, datasets: list["Dataset"]) -> "Dataset":
         """Alias for from_datasets method."""
         return cls.from_datasets(datasets)
 
     @classmethod
-    def from_datasets(cls, datasets: List["Dataset"]) -> "Dataset":
+    def from_datasets(cls, datasets: list["Dataset"]) -> "Dataset":
         """Combine multiple datasets into one.
 
         Datasets can be combined provided they have consistent independent
@@ -161,52 +159,50 @@ class Dataset(ABC):
             return datasets[0]
 
         for dataset in datasets[1:]:
-            if dataset.number_of_independent_dimensions != \
-                    datasets[0].number_of_independent_dimensions:
-                raise ValueError("Cannot combine datasets with different "
-                                 "independent dimensions.")
+            if (
+                dataset.number_of_independent_dimensions
+                != datasets[0].number_of_independent_dimensions
+            ):
+                raise ValueError("Cannot combine datasets with different independent dimensions.")
 
         for dataset in datasets[1:]:
-            if dataset.number_of_dependent_dimensions != \
-                    datasets[0].number_of_dependent_dimensions:
-                raise ValueError("Cannot combine datasets with different "
-                                 "dependent dimensions.")
+            if dataset.number_of_dependent_dimensions != datasets[0].number_of_dependent_dimensions:
+                raise ValueError("Cannot combine datasets with different dependent dimensions.")
 
         for dataset in datasets[1:]:
-            if dataset.dependent_variable_names != \
-                    datasets[0].dependent_variable_names:
-                print("Warning: Dependent variable names are not "
-                      "consistent across datasets. Using generic labels.")
-                dependent_variable_names = None
+            if dataset.dependent_variable_names != datasets[0].dependent_variable_names:
+                print(
+                    "Warning: Dependent variable names are not "
+                    "consistent across datasets. Using generic labels."
+                )
                 break
 
         for dataset in datasets[1:]:
-            if dataset.dependent_variable_units != \
-                    datasets[0].dependent_variable_units:
-                print("Warning: Dependent variable units are not "
-                      "consistent across datasets. Removing units.")
-                dependent_variable_units = None
+            if dataset.dependent_variable_units != datasets[0].dependent_variable_units:
+                print(
+                    "Warning: Dependent variable units are not "
+                    "consistent across datasets. Removing units."
+                )
                 break
 
         for dataset in datasets[1:]:
-            if dataset.independent_variable_names != \
-                    datasets[0].independent_variable_names:
-                print("Warning: Independent variable names are not "
-                      "consistent across datasets. Using generic labels.")
-                independent_variable_names = None
+            if dataset.independent_variable_names != datasets[0].independent_variable_names:
+                print(
+                    "Warning: Independent variable names are not "
+                    "consistent across datasets. Using generic labels."
+                )
                 break
 
         for dataset in datasets[1:]:
-            if dataset.independent_variable_units != \
-                    datasets[0].independent_variable_units:
-                print("Warning: Independent variable names are not "
-                      "consistent across datasets. Removing units.")
-                independent_variable_units = None
+            if dataset.independent_variable_units != datasets[0].independent_variable_units:
+                print(
+                    "Warning: Independent variable names are not "
+                    "consistent across datasets. Removing units."
+                )
                 break
 
         source = ""
-        sources = [f"{dataset.source}, "
-                   for dataset in datasets if dataset.source is not None]
+        sources = [f"{dataset.source}, " for dataset in datasets if dataset.source is not None]
         for line in sources:
             source += line
 
@@ -216,10 +212,8 @@ class Dataset(ABC):
             source = None
 
         target_type = type(datasets[0])
-        if not all([isinstance(dataset, target_type)
-                    for dataset in datasets]):
-            print("Warning: Types are not consistent across datasets. "
-                  "Using generic class.")
+        if not all([isinstance(dataset, target_type) for dataset in datasets]):
+            print("Warning: Types are not consistent across datasets. Using generic class.")
             target_type = Dataset
 
         # create and return a new dataset,
@@ -262,8 +256,7 @@ class Dataset(ABC):
 
     @property
     @abstractmethod
-    def data(self) -> Set[Tuple[Tuple[Union[bool, int, float]],
-                                Tuple[Union[bool, int, float]]]]:
+    def data(self) -> set[tuple[tuple[bool | int | float], tuple[bool | int | float]]]:
         """The set of data points of this dataset."""
         ...
 
@@ -281,7 +274,7 @@ class Dataset(ABC):
 
     @property
     @abstractmethod
-    def dependent_variable_names(self) -> List[str]:
+    def dependent_variable_names(self) -> list[str]:
         """The names of the dependent variables of this dataset."""
         ...
 
@@ -299,7 +292,7 @@ class Dataset(ABC):
 
     @property
     @abstractmethod
-    def dependent_variable_units(self) -> List[str]:
+    def dependent_variable_units(self) -> list[str]:
         """The units of the dependent variables of this dataset."""
         ...
 
@@ -316,11 +309,10 @@ class Dataset(ABC):
             )
 
     @property
-    def dependent_variable_axis_labels(self) -> List[str]:
+    def dependent_variable_axis_labels(self) -> list[str]:
         """Axis labels for the dependent variables."""
         return self._generate_variable_axis_labels(
-            self.dependent_variable_names,
-            self.dependent_variable_units
+            self.dependent_variable_names, self.dependent_variable_units
         )
 
     @property
@@ -337,7 +329,7 @@ class Dataset(ABC):
 
     @property
     @abstractmethod
-    def independent_variable_names(self) -> List[str]:
+    def independent_variable_names(self) -> list[str]:
         """The names of the independent variables of this dataset."""
         ...
 
@@ -354,7 +346,7 @@ class Dataset(ABC):
 
     @property
     @abstractmethod
-    def independent_variable_units(self) -> List[str]:
+    def independent_variable_units(self) -> list[str]:
         """The units of the dependent variables of this dataset."""
         ...
 
@@ -371,24 +363,22 @@ class Dataset(ABC):
             )
 
     @property
-    def independent_variable_axis_labels(self) -> List[str]:
+    def independent_variable_axis_labels(self) -> list[str]:
         """Axis labels for the independent variables."""
         return self._generate_variable_axis_labels(
-            self.independent_variable_names,
-            self.independent_variable_units
+            self.independent_variable_names, self.independent_variable_units
         )
 
     @property
     @abstractmethod
-    def number_of_points(self):
-        ...
+    def number_of_points(self): ...
 
     @property
     def one_line_description(self) -> str:
         """A human-readable one-line string representation."""
         return self.__class__.__name__
 
-    def flatten(self) -> Tuple[List[str], np.ndarray]:
+    def flatten(self) -> tuple[list[str], np.ndarray]:
         """Convert dependent variables to a single row with column headers.
 
         Returns
@@ -398,11 +388,10 @@ class Dataset(ABC):
         numpy.ndarray
             A row of dependent variable data as a 1D numpy array.
         """
-        return (self._encode_column_labels(),
-                self.flatten_dependent_variables())
+        return (self._encode_column_labels(), self.flatten_dependent_variables())
 
     @abstractmethod
-    def _encode_column_labels(self) -> List[str]:
+    def _encode_column_labels(self) -> list[str]:
         """Create labels for the dependent variable data."""
         ...
 
@@ -413,8 +402,7 @@ class Dataset(ABC):
 
     @classmethod
     @abstractmethod
-    def unflatten(cls, column_labels, values):
-        ...
+    def unflatten(cls, column_labels, values): ...
 
     # @abstractmethod
     # def unflatten_dependent_variables(
@@ -427,7 +415,7 @@ class Dataset(ABC):
     #     ...
 
     @staticmethod
-    def _generate_default_variable_units(n: int) -> List[None]:
+    def _generate_default_variable_units(n: int) -> list[None]:
         """Generate a set of default units for this dataset.
 
         Parameters
@@ -443,7 +431,7 @@ class Dataset(ABC):
         return [None] * n
 
     @staticmethod
-    def _generate_default_variable_names(prefix: str, n: int) -> List[str]:
+    def _generate_default_variable_names(prefix: str, n: int) -> list[str]:
         """Generate a set of default names for this dataset.
 
         Parameters
@@ -462,13 +450,13 @@ class Dataset(ABC):
 
     @staticmethod
     @abstractmethod
-    def compute_average(datasets: List["Dataset"]) -> "Dataset":
+    def compute_average(datasets: list["Dataset"]) -> "Dataset":
         """Compute the average of a set of datasets."""
         ...
 
     @staticmethod
     @abstractmethod
-    def compute_variation(datasets: List["Dataset"]) -> "Dataset":
+    def compute_variation(datasets: list["Dataset"]) -> "Dataset":
         """Compute the variation across a set of datasets."""
         ...
 
@@ -494,20 +482,18 @@ class Dataset(ABC):
         """
         from piblin.dataio.pandas import _to_pandas
 
-        return _to_pandas(cralds_object=self,
-                          with_cralds_class=with_cralds_class,
-                          concat=False)
+        return _to_pandas(cralds_object=self, with_cralds_class=with_cralds_class, concat=False)
 
     def visualize(
-            self,
-            axes: matplotlib.axes.Axes = None,
-            variation: "Dataset" = None,
-            include_text: bool = False,
-            figure_title: str = None,
-            axis_title: str = None,
-            total_figsize: Tuple[int, int] = None,
-            **axes_plotting_kwargs
-    ) -> Tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]:
+        self,
+        axes: matplotlib.axes.Axes = None,
+        variation: "Dataset" = None,
+        include_text: bool = False,
+        figure_title: str = None,
+        axis_title: str = None,
+        total_figsize: tuple[int, int] = None,
+        **axes_plotting_kwargs,
+    ) -> tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]:
         """Represent and present this dataset to facilitate understanding.
 
         This method provides a general approach to visualizing datasets.
@@ -565,30 +551,26 @@ class Dataset(ABC):
         style_axes(). The dataset has all responsibility for the axes
         object it is plotted on and so can manipulate it.
         """
-        if axes is not None and \
-                (not isinstance(axes, matplotlib.axes.Axes)):
+        if axes is not None and (not isinstance(axes, matplotlib.axes.Axes)):
             raise VisualizationError(
-                f"Dataset can only be visualized on a single Axes. "
-                f"{axes} was supplied."
+                f"Dataset can only be visualized on a single Axes. {axes} was supplied."
             )
 
-        if variation is not None and type(variation) != type(self):
-            if isinstance(self, piblin.data.ZeroDimensionalDataset) \
-                    and isinstance(variation, float):
-                variation = piblin.data.ZeroDimensionalDataset.create(
-                        value=variation
-                )
+        if variation is not None and type(variation) is not type(self):
+            if isinstance(self, piblin.data.ZeroDimensionalDataset) and isinstance(
+                variation, float
+            ):
+                variation = piblin.data.ZeroDimensionalDataset.create(value=variation)
 
-            elif isinstance(self, piblin.data.OneDimensionalDataset) \
-                    and isinstance(variation, np.ndarray):
+            elif isinstance(self, piblin.data.OneDimensionalDataset) and isinstance(
+                variation, np.ndarray
+            ):
                 variation = piblin.data.OneDimensionalDataset.create(
-                    x_values=self.x_values,
-                    y_values=variation
+                    x_values=self.x_values, y_values=variation
                 )
             else:
                 raise ValueError(
-                    f"Variation dataset is not compatible: "
-                    f"{type(variation)} != {type(self)}"
+                    f"Variation dataset is not compatible: {type(variation)} != {type(self)}"
                 )
 
         if include_text:
@@ -597,21 +579,18 @@ class Dataset(ABC):
         if axis_title is None:
             axis_title = self.one_line_description
 
-        fig, axes = self.__setup_fig_and_axes(axes=axes,
-                                              axis_title=axis_title,
-                                              figure_size=total_figsize,
-                                              figure_title=figure_title)
+        fig, axes = self.__setup_fig_and_axes(
+            axes=axes, axis_title=axis_title, figure_size=total_figsize, figure_title=figure_title
+        )
 
-        axes_plotting_kwargs = \
-            self._validate_axes_plotting_kwargs(**axes_plotting_kwargs)
+        axes_plotting_kwargs = self._validate_axes_plotting_kwargs(**axes_plotting_kwargs)
 
         if variation is None:
-            self._plot_on_axes(axes=axes,
-                               **axes_plotting_kwargs)
+            self._plot_on_axes(axes=axes, **axes_plotting_kwargs)
         else:
-            self._plot_on_axes_with_variation(axes=axes,
-                                              variation=variation,
-                                              **axes_plotting_kwargs)
+            self._plot_on_axes_with_variation(
+                axes=axes, variation=variation, **axes_plotting_kwargs
+            )
 
         return fig, axes
 
@@ -630,12 +609,12 @@ class Dataset(ABC):
         return axes_plotting_kwargs
 
     def __setup_fig_and_axes(
-            self,
-            axes: matplotlib.axes.Axes = None,
-            axis_title: str = None,
-            figure_size: Tuple[int, int] = None,
-            figure_title: str = None
-    ) -> Tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]:
+        self,
+        axes: matplotlib.axes.Axes = None,
+        axis_title: str = None,
+        figure_size: tuple[int, int] = None,
+        figure_title: str = None,
+    ) -> tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]:
         """Set up a matplotlib figure and axes for plotting data.
 
         This method is generic for all classes inheriting from the
@@ -664,7 +643,6 @@ class Dataset(ABC):
             A matplotlib axes for plotting the dataset.
         """
         if axes is None:
-
             if figure_size is None:
                 figure_size = self.DEFAULT_FIGURE_SIZE
 
@@ -679,16 +657,13 @@ class Dataset(ABC):
 
         else:
             if figure_size is not None:
-                print("Warning: figure_size argument ignored "
-                      "when axes is supplied.")
+                print("Warning: figure_size argument ignored when axes is supplied.")
 
             if figure_title is not None:
-                print("Warning: figure_title argument ignored "
-                      "when axes is supplied.")
+                print("Warning: figure_title argument ignored when axes is supplied.")
 
             if axis_title != self.one_line_description:
-                print("Warning: axis_title argument ignored "
-                      "when axes is supplied.")
+                print("Warning: axis_title argument ignored when axes is supplied.")
 
             fig = axes.figure
 
@@ -699,9 +674,7 @@ class Dataset(ABC):
         return fig, axes
 
     @abstractmethod
-    def _plot_on_axes(self,
-                      axes: matplotlib.axes.Axes,
-                      **axes_plotting_kwargs) -> None:
+    def _plot_on_axes(self, axes: matplotlib.axes.Axes, **axes_plotting_kwargs) -> None:
         """Plot this dataset on a given matplotlib axes.
 
         Parameters
@@ -724,10 +697,9 @@ class Dataset(ABC):
         ...
 
     @abstractmethod
-    def _plot_on_axes_with_variation(self,
-                                     axes: matplotlib.axes.Axes,
-                                     variation,
-                                     **plot_kwargs) -> None:
+    def _plot_on_axes_with_variation(
+        self, axes: matplotlib.axes.Axes, variation, **plot_kwargs
+    ) -> None:
         """Visualize the given variation in this dataset.
 
         Parameters
@@ -768,9 +740,8 @@ class Dataset(ABC):
 
     @staticmethod
     def _generate_variable_axis_labels(
-            variable_names: List[str],
-            variable_units: List[str]
-    ) -> List[str]:
+        variable_names: list[str], variable_units: list[str]
+    ) -> list[str]:
         """Generate a set of axis labels for either type of variable.
 
         Parameters
@@ -785,7 +756,7 @@ class Dataset(ABC):
         axis_labels : List of str
             The labels for the axes.
         """
-        axis_labels: List[str] = []
+        axis_labels: list[str] = []
         for name, unit in zip(variable_names, variable_units):
             label = name
             label += f"({unit})" if unit is not None else "(None)"
@@ -794,8 +765,7 @@ class Dataset(ABC):
         return axis_labels
 
     @staticmethod
-    def _title_axes(axes: matplotlib.axes.Axes,
-                    title: str) -> None:
+    def _title_axes(axes: matplotlib.axes.Axes, title: str) -> None:
         """Add a title to the given axes.
 
         This method can be generic for all datasets because of the 1:1
@@ -822,16 +792,16 @@ class Dataset(ABC):
         axes : matplotlib.axes.Axes
             The Axes object to apply the class style to.
         """
-        axes.spines['top'].set_visible(False)
-        axes.spines['right'].set_visible(False)
+        axes.spines["top"].set_visible(False)
+        axes.spines["right"].set_visible(False)
 
-        axes.spines['bottom'].set_color('black')
-        axes.spines['left'].set_color('black')
+        axes.spines["bottom"].set_color("black")
+        axes.spines["left"].set_color("black")
         axes.tick_params(top=False)
         axes.tick_params(right=False)
-        axes.tick_params(axis='x', colors='black')
-        axes.tick_params(axis='y', colors='black')
-        axes.yaxis.label.set_color('black')
+        axes.tick_params(axis="x", colors="black")
+        axes.tick_params(axis="y", colors="black")
+        axes.yaxis.label.set_color("black")
 
     @classmethod
     def create_color_map(cls, n: int = 1) -> Iterator:

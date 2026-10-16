@@ -13,9 +13,10 @@ See Also
 piblin.fileio.FileParsingException
     Raised when a cralds file reader fails to convert a file to a measurement set.
 """
-from typing import ClassVar, Union, Set
-from abc import ABC, abstractmethod
+
 import os
+from abc import ABC, abstractmethod
+from typing import ClassVar
 
 import piblin.data.data_collections.measurement_set as measurement_set
 
@@ -43,7 +44,8 @@ class FileReader(ABC):
     supports_extension -> bool
         Determine whether this file reader supports the given extension.
     """
-    supported_extensions: ClassVar[Set[str]]
+
+    supported_extensions: ClassVar[set[str]]
 
     def __init__(self):
         super().__init__()
@@ -84,7 +86,7 @@ class FileReader(ABC):
         return "r"
 
     @property
-    def encoding(self) -> Union[str, None]:
+    def encoding(self) -> str | None:
         """The default encoding to use to read the file.
 
         All FileReader subclasses will by default attempt to use the builtin method "open" to read the file contents,
@@ -99,9 +101,7 @@ class FileReader(ABC):
         """
         return None
 
-    def data_from_filepath(self,
-                           filepath: str,
-                           **read_kwargs) -> measurement_set.MeasurementSet:
+    def data_from_filepath(self, filepath: str, **read_kwargs) -> measurement_set.MeasurementSet:
         """Convert the file at the given path into appropriate measurement(s).
 
         Parameters
@@ -123,7 +123,7 @@ class FileReader(ABC):
             file_contents=file_contents,
             file_location=file_location,
             file_name=file_name,
-            **read_kwargs
+            **read_kwargs,
         )
 
         file_location, file_name = os.path.split(filepath)
@@ -161,11 +161,9 @@ class FileReader(ABC):
 
     @classmethod
     @abstractmethod
-    def _data_from_file_contents(cls,
-                                 file_contents,
-                                 file_location=None,
-                                 file_name=None,
-                                 **read_kwargs) -> measurement_set.MeasurementSet:
+    def _data_from_file_contents(
+        cls, file_contents, file_location=None, file_name=None, **read_kwargs
+    ) -> measurement_set.MeasurementSet:
         """Convert file contents to an appropriate set of measurements.
 
         This is an abstract method so must be overridden in subclasses. It needs to raise a specific exception if read

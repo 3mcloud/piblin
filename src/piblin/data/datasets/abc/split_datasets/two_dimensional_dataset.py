@@ -1,14 +1,13 @@
-from typing import Union, List, Set, Tuple
-
 import matplotlib.axes
-import matplotlib.image
 import matplotlib.cm
 import matplotlib.colors
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+import matplotlib.image
 import numpy as np
 import numpy.typing
-from piblin.data.datasets.abc.split_datasets import SplitDataset
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.interpolate import RegularGridInterpolator
+
+from piblin.data.datasets.abc.split_datasets import SplitDataset
 
 
 class TwoDimensionalDataset(SplitDataset):
@@ -36,10 +35,10 @@ class TwoDimensionalDataset(SplitDataset):
         |
         __________> x (columns)
     """
+
     DEFAULT_FIGURE_SIZE = (8, 8)
     """Default size of 2D dataset visualization (in inches)."""
-    DEFAULT_COLOR_MAP: matplotlib.colors.Colormap = (
-        matplotlib.cm.get_cmap("inferno"))
+    DEFAULT_COLOR_MAP: matplotlib.colors.Colormap = matplotlib.cm.get_cmap("inferno")
     """Default color map for dataset visualizations."""
     DEFAULT_X_NAME: str = "x"
     """The default name for the first independent variable."""
@@ -48,18 +47,19 @@ class TwoDimensionalDataset(SplitDataset):
     DEFAULT_Z_NAME: str = "z"
     """The default name for the dependent variable."""
 
-    def __init__(self,
-                 dependent_variable_data: numpy.typing.ArrayLike,
-                 dependent_variable_names: List[str] = None,
-                 dependent_variable_units: List[str] = None,
-                 independent_variable_data: List[np.ndarray] = None,
-                 independent_variable_names: List[str] = None,
-                 independent_variable_units: List[str] = None,
-                 source: str = None):
+    def __init__(
+        self,
+        dependent_variable_data: numpy.typing.ArrayLike,
+        dependent_variable_names: list[str] = None,
+        dependent_variable_units: list[str] = None,
+        independent_variable_data: list[np.ndarray] = None,
+        independent_variable_names: list[str] = None,
+        independent_variable_units: list[str] = None,
+        source: str = None,
+    ):
 
         if independent_variable_names is None:
-            independent_variable_names = [self.DEFAULT_X_NAME,
-                                          self.DEFAULT_Y_NAME]
+            independent_variable_names = [self.DEFAULT_X_NAME, self.DEFAULT_Y_NAME]
 
         if dependent_variable_names is None:
             dependent_variable_names = [self.DEFAULT_Z_NAME]
@@ -71,34 +71,38 @@ class TwoDimensionalDataset(SplitDataset):
             independent_variable_data=independent_variable_data,
             independent_variable_names=independent_variable_names,
             independent_variable_units=independent_variable_units,
-            source=source
+            source=source,
         )
 
         if self.dependent_variable_data.ndim != 2:
             raise ValueError("Non-2D dataset!")
 
-        if not self.dependent_variable_data.shape[0] == \
-                len(self.independent_variable_data[0]):
-            raise ValueError(f"{self.dependent_variable_data.shape[0]} != "
-                             f"{len(self.independent_variable_data[0])}")
+        if not self.dependent_variable_data.shape[0] == len(self.independent_variable_data[0]):
+            raise ValueError(
+                f"{self.dependent_variable_data.shape[0]} != "
+                f"{len(self.independent_variable_data[0])}"
+            )
 
-        if not self.dependent_variable_data.shape[1] == \
-               len(self.independent_variable_data[1]):
-            raise ValueError(f"{self.dependent_variable_data.shape[1]} != "
-                             f"{len(self.independent_variable_data[1])}")
+        if not self.dependent_variable_data.shape[1] == len(self.independent_variable_data[1]):
+            raise ValueError(
+                f"{self.dependent_variable_data.shape[1]} != "
+                f"{len(self.independent_variable_data[1])}"
+            )
 
     @classmethod
-    def create(cls,
-               z_values: numpy.typing.ArrayLike,
-               x_values: numpy.typing.ArrayLike = None,
-               y_values: numpy.typing.ArrayLike = None,
-               x_name: str = None,
-               x_unit: str = None,
-               y_name: str = None,
-               y_unit: str = None,
-               z_name: str = None,
-               z_unit: str = None,
-               source: str = None):
+    def create(
+        cls,
+        z_values: numpy.typing.ArrayLike,
+        x_values: numpy.typing.ArrayLike = None,
+        y_values: numpy.typing.ArrayLike = None,
+        x_name: str = None,
+        x_unit: str = None,
+        y_name: str = None,
+        y_unit: str = None,
+        z_name: str = None,
+        z_unit: str = None,
+        source: str = None,
+    ):
 
         if x_values is None and y_values is None:
             independent_variable_data = None
@@ -125,18 +129,22 @@ class TwoDimensionalDataset(SplitDataset):
         else:
             dependent_variable_names = [z_name]
 
-        return cls(dependent_variable_data=z_values,
-                   dependent_variable_names=dependent_variable_names,
-                   dependent_variable_units=dependent_variable_units,
-                   independent_variable_data=independent_variable_data,
-                   independent_variable_names=independent_variable_names,
-                   independent_variable_units=independent_variable_units,
-                   source=source)
+        return cls(
+            dependent_variable_data=z_values,
+            dependent_variable_names=dependent_variable_names,
+            dependent_variable_units=dependent_variable_units,
+            independent_variable_data=independent_variable_data,
+            independent_variable_names=independent_variable_names,
+            independent_variable_units=independent_variable_units,
+            source=source,
+        )
 
-    def value_at(self,
-                 independent_variable_value_x: Union[int, float, complex],
-                 independent_variable_value_y: Union[int, float, complex],
-                 single_value: bool = True):
+    def value_at(
+        self,
+        independent_variable_value_x: int | float | complex,
+        independent_variable_value_y: int | float | complex,
+        single_value: bool = True,
+    ):
         """Determine the z-value corresponding to a given x,y-value.
 
         Parameters
@@ -167,28 +175,36 @@ class TwoDimensionalDataset(SplitDataset):
         not, an estimate must be produced, and the linear interpolation
         approach is taken. This is not guaranteed to work for all datasets.
         """
-        if independent_variable_value_x in self.independent_variable_data[0] and \
-                independent_variable_value_y in self.independent_variable_data[1]:
-
-            indices_x, indices_y = np.where(self.independent_variable_data[0] == independent_variable_value_x)[0], \
-                                   np.where(self.independent_variable_data[1] == independent_variable_value_y)[0]
+        if (
+            independent_variable_value_x in self.independent_variable_data[0]
+            and independent_variable_value_y in self.independent_variable_data[1]
+        ):
+            indices_x, indices_y = (
+                np.where(self.independent_variable_data[0] == independent_variable_value_x)[0],
+                np.where(self.independent_variable_data[1] == independent_variable_value_y)[0],
+            )
             if len(indices_x) == len(indices_y) == 1:
                 return [self.dependent_variable_data[indices_x[0], indices_y[0]]]
             else:
-                dependent_values = [self.dependent_variable_data[i, j] for i, j in zip(indices_x, indices_y)]
+                dependent_values = [
+                    self.dependent_variable_data[i, j] for i, j in zip(indices_x, indices_y)
+                ]
                 if not single_value:
                     return dependent_values
                 else:
                     return [np.median(dependent_values)]
 
         else:
-            interp = RegularGridInterpolator((self.independent_variable_data[0],
-                                              self.independent_variable_data[1]),
-                                             self.dependent_variable_data, method='slinear', bounds_error=True)
+            interp = RegularGridInterpolator(
+                (self.independent_variable_data[0], self.independent_variable_data[1]),
+                self.dependent_variable_data,
+                method="slinear",
+                bounds_error=True,
+            )
             return interp((independent_variable_value_x, independent_variable_value_y))
 
     @property
-    def data(self) -> Set[Tuple[Tuple, Tuple]]:
+    def data(self) -> set[tuple[tuple, tuple]]:
         raise NotImplementedError("Conversion from 2D to unambiguous not implemented")
 
     @classmethod
@@ -196,15 +212,15 @@ class TwoDimensionalDataset(SplitDataset):
         pass
 
     @staticmethod
-    def decode_column_labels(column_labels: List[str]):
+    def decode_column_labels(column_labels: list[str]):
         pass
 
     @staticmethod
-    def compute_average(datasets: List["TwoDimensionalDataset"]) -> "TwoDimensionalDataset":
+    def compute_average(datasets: list["TwoDimensionalDataset"]) -> "TwoDimensionalDataset":
         pass
 
     @staticmethod
-    def compute_variation(datasets: List["TwoDimensionalDataset"]) -> "TwoDimensionalDataset":
+    def compute_variation(datasets: list["TwoDimensionalDataset"]) -> "TwoDimensionalDataset":
         pass
 
     @property
@@ -282,9 +298,7 @@ class TwoDimensionalDataset(SplitDataset):
     @property
     def pixel_size(self) -> float:
         """The (shared) pixel size along the x- and y-dimensions."""
-        if not np.isclose(self.x_pixel_size,
-                          self.y_pixel_size,
-                          atol=1e-05):
+        if not np.isclose(self.x_pixel_size, self.y_pixel_size, atol=1e-05):
             raise ValueError(
                 "x and y pixel sizes are not equal, "
                 "no single pixel size is defined for this dataset."
@@ -323,9 +337,7 @@ class TwoDimensionalDataset(SplitDataset):
         superclass to the default if not present in the keyword arguments
         passed to visualize.
         """
-        axes_plotting_kwargs = (
-            super()._validate_axes_plotting_kwargs(**axes_plotting_kwargs)
-        )
+        axes_plotting_kwargs = super()._validate_axes_plotting_kwargs(**axes_plotting_kwargs)
 
         if "marker" in axes_plotting_kwargs:
             del axes_plotting_kwargs["marker"]
@@ -338,9 +350,7 @@ class TwoDimensionalDataset(SplitDataset):
 
         return axes_plotting_kwargs
 
-    def _plot_on_axes(self,
-                      axes: matplotlib.axes.Axes,
-                      **axes_plotting_kwargs) -> None:
+    def _plot_on_axes(self, axes: matplotlib.axes.Axes, **axes_plotting_kwargs) -> None:
         """Plot this 2D split dataset on a given matplotlib axes.
 
         The dependent variable data is stored in column, row order.
@@ -372,23 +382,25 @@ class TwoDimensionalDataset(SplitDataset):
         #     del axes_plotting_kwargs["color"]
 
         if self.dependent_variable_data.size == 1:
-            axes.scatter(x=self.independent_variable_data[0][0],
-                         y=self.independent_variable_data[1][0],
-                         c=self.dependent_variable_data[0][0])
+            axes.scatter(
+                x=self.independent_variable_data[0][0],
+                y=self.independent_variable_data[1][0],
+                c=self.dependent_variable_data[0][0],
+            )
             return
 
         else:
-
             # masked_array = np.ma.array(self.dependent_variable_data,
             #                            mask=np.isnan(self.dependent_variable_data))
 
-            masked_array = np.ma.array(self.dependent_variable_data,
-                                       mask=self.dependent_variable_data == 0)
+            masked_array = np.ma.array(
+                self.dependent_variable_data, mask=self.dependent_variable_data == 0
+            )
 
             if "cmap" not in axes_plotting_kwargs.keys():
                 print("missing CMAP")
                 current_cmap = self.DEFAULT_COLOR_MAP.copy()
-                current_cmap.set_bad(color='white')
+                current_cmap.set_bad(color="white")
                 axes_plotting_kwargs["cmap"] = current_cmap
 
             vmin = None
@@ -401,32 +413,32 @@ class TwoDimensionalDataset(SplitDataset):
                 vmax = axes_plotting_kwargs["vmax"]
                 del axes_plotting_kwargs["vmax"]
 
-            image: matplotlib.image.AxesImage = \
-                axes.imshow(
-                    X=masked_array.T,
-                    norm=None,
-                    aspect='equal',
-                    interpolation='nearest',
-                    vmin=vmin,
-                    vmax=vmax,
-                    origin="lower",
-                    # the extent is left, right, bottom, top
-                    extent=(
-                        # leftmost (lowest) x-value
-                        float(self.independent_variable_data[0][0]),
-                        # rightmost (highest) x-value
-                        float(self.independent_variable_data[0][-1]),
-                        # bottom (lowest) y-value
-                        float(self.independent_variable_data[1][0]),
-                        # top (highest) y-value
-                        float(self.independent_variable_data[1][-1])
-                    ),
-                    filternorm=True,
-                    filterrad=4.0,
-                    resample=True,
-                    url=None,
-                    data=None,
-                    **axes_plotting_kwargs)
+            image: matplotlib.image.AxesImage = axes.imshow(
+                X=masked_array.T,
+                norm=None,
+                aspect="equal",
+                interpolation="nearest",
+                vmin=vmin,
+                vmax=vmax,
+                origin="lower",
+                # the extent is left, right, bottom, top
+                extent=(
+                    # leftmost (lowest) x-value
+                    float(self.independent_variable_data[0][0]),
+                    # rightmost (highest) x-value
+                    float(self.independent_variable_data[0][-1]),
+                    # bottom (lowest) y-value
+                    float(self.independent_variable_data[1][0]),
+                    # top (highest) y-value
+                    float(self.independent_variable_data[1][-1]),
+                ),
+                filternorm=True,
+                filterrad=4.0,
+                resample=True,
+                url=None,
+                data=None,
+                **axes_plotting_kwargs,
+            )
 
         if self.dependent_variable_data.dtype != np.bool_:
             fig = axes.get_figure()
@@ -437,13 +449,10 @@ class TwoDimensionalDataset(SplitDataset):
             colorbar = fig.colorbar(image, cax=cax)
             colorbar.set_label(self.dependent_variable_axis_labels[0])
 
-    def _plot_on_axes_with_variation(self,
-                                     axes: matplotlib.axes.Axes,
-                                     variation,
-                                     **plot_kwargs) -> None:
-        raise NotImplementedError(
-            "Variation of 2D dataset class is not visualized in cralds."
-        )
+    def _plot_on_axes_with_variation(
+        self, axes: matplotlib.axes.Axes, variation, **plot_kwargs
+    ) -> None:
+        raise NotImplementedError("Variation of 2D dataset class is not visualized in cralds.")
 
     def _label_axes(self, axes: matplotlib.axes.Axes) -> None:
         """Add labels to a matplotlib axes."""
@@ -453,13 +462,14 @@ class TwoDimensionalDataset(SplitDataset):
     @property
     def one_line_description(self) -> str:
         """Create a single-line human-readable representation of this dataset."""
-        return self.__class__.__name__ + \
-            f": {self.z_name}=f({self.x_name}, {self.y_name})"
+        return self.__class__.__name__ + f": {self.z_name}=f({self.x_name}, {self.y_name})"
 
     def __str__(self):
         str_rep = super().__str__() + "\n\n"
-        str_rep += (f"Values of {self.y_name} ({self.y_unit}) "
-                    f"as a function of {self.x_name} ({self.x_unit})\n\n")
+        str_rep += (
+            f"Values of {self.y_name} ({self.y_unit}) "
+            f"as a function of {self.x_name} ({self.x_unit})\n\n"
+        )
         longest_length = max(len(self.x_name), len(self.y_name))
         str_rep += f"{self.x_name:{longest_length}} = {self.x_values}\n"
         str_rep += f"{self.y_name:{longest_length}} = {self.y_values}\n\n"

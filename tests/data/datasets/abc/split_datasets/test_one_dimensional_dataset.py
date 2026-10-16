@@ -1,6 +1,6 @@
 import numpy as np
-from numpy import array  # NOT UNUSED
 import pytest
+
 from piblin.data.datasets.abc.split_datasets.one_dimensional_dataset import OneDimensionalDataset
 
 
@@ -43,8 +43,7 @@ def test_as_ndarray(oned_dataset_single_point):
     assert np.array_equal(oned_dataset_single_point.as_ndarray(), [[0.0], [0.0]])
 
 
-def test_one_line_str(oned_dataset_single_point,
-                      oned_dataset_multiple_points):
+def test_one_line_str(oned_dataset_single_point, oned_dataset_multiple_points):
     """Ensure the one line str is one line."""
     assert oned_dataset_single_point.one_line_str().count("\n") == 0
     assert oned_dataset_multiple_points.one_line_str().count("\n") == 0
@@ -69,27 +68,36 @@ def test_flatten_multi_point(oned_dataset_multiple_points):
 
 
 def test_unflatten_single_point(oned_dataset_single_point):
-    unflattened_dataset = oned_dataset_single_point.unflatten(column_labels=["y(None)=f(x(None)=0.00)"],
-                                                               values=np.array([0.0]))
+    unflattened_dataset = oned_dataset_single_point.unflatten(
+        column_labels=["y(None)=f(x(None)=0.00)"], values=np.array([0.0])
+    )
     assert unflattened_dataset == oned_dataset_single_point
 
 
 def test_flatten_round_trip_single_point(oned_dataset_single_point):
     flat_dataset = oned_dataset_single_point.flatten()
-    assert oned_dataset_single_point.unflatten(flat_dataset[0], flat_dataset[1]) == oned_dataset_single_point
+    assert (
+        oned_dataset_single_point.unflatten(flat_dataset[0], flat_dataset[1])
+        == oned_dataset_single_point
+    )
 
 
 def test_unflatten_multi_point(oned_dataset_multiple_points):
-    assert oned_dataset_multiple_points.unflatten(column_labels=["y(None)=f(x(None)=0.0)",
-                                                                 "y(None)=f(x(None)=1.0)"],
-                                                  values=np.array([0.0, 0.0])) == \
-           oned_dataset_multiple_points
+    assert (
+        oned_dataset_multiple_points.unflatten(
+            column_labels=["y(None)=f(x(None)=0.0)", "y(None)=f(x(None)=1.0)"],
+            values=np.array([0.0, 0.0]),
+        )
+        == oned_dataset_multiple_points
+    )
 
 
 def test_flatten_round_trip_multi_point(oned_dataset_multiple_points):
     flat_dataset = oned_dataset_multiple_points.flatten()
-    assert oned_dataset_multiple_points.unflatten(flat_dataset[0],
-                                                  flat_dataset[1]) == oned_dataset_multiple_points
+    assert (
+        oned_dataset_multiple_points.unflatten(flat_dataset[0], flat_dataset[1])
+        == oned_dataset_multiple_points
+    )
 
 
 def test_repr(oned_dataset_single_point):
@@ -102,31 +110,35 @@ def test_equals(oned_dataset_single_point):
     # an instance is equal to itself
     assert oned_dataset_single_point == oned_dataset_single_point
     # an instance is not equal to another instance with different data
-    assert OneDimensionalDataset(dependent_variable_data=[0.0],
-                                 independent_variable_data=[[0.0]]) != \
-           OneDimensionalDataset(dependent_variable_data=[0.0],
-                                 independent_variable_data=[[1.0]])
+    assert OneDimensionalDataset(
+        dependent_variable_data=[0.0], independent_variable_data=[[0.0]]
+    ) != OneDimensionalDataset(dependent_variable_data=[0.0], independent_variable_data=[[1.0]])
     # an instance is equal to another instance with the same data
-    assert OneDimensionalDataset(dependent_variable_data=[0.0],
-                                 independent_variable_data=[[0.0]]) == \
-           OneDimensionalDataset(dependent_variable_data=[0.0],
-                                 independent_variable_data=[[0.0]])
+    assert OneDimensionalDataset(
+        dependent_variable_data=[0.0], independent_variable_data=[[0.0]]
+    ) == OneDimensionalDataset(dependent_variable_data=[0.0], independent_variable_data=[[0.0]])
     # two instances with the same data and different labels are not equal
-    assert OneDimensionalDataset(dependent_variable_data=[0.0],
-                                 independent_variable_data=[[0.0]],
-                                 dependent_variable_names=["a"]) != \
-           OneDimensionalDataset(dependent_variable_data=[0.0],
-                                 independent_variable_data=[[0.0]],
-                                 dependent_variable_names=["b"])
+    assert OneDimensionalDataset(
+        dependent_variable_data=[0.0],
+        independent_variable_data=[[0.0]],
+        dependent_variable_names=["a"],
+    ) != OneDimensionalDataset(
+        dependent_variable_data=[0.0],
+        independent_variable_data=[[0.0]],
+        dependent_variable_names=["b"],
+    )
     # two instances with the same data/dependent variable name and different independent labels are not equal
-    assert OneDimensionalDataset(dependent_variable_data=[0.0],
-                                 independent_variable_data=[[0.0]],
-                                 dependent_variable_names=["a"],
-                                 independent_variable_names=["b"]) != \
-           OneDimensionalDataset(dependent_variable_data=[0.0],
-                                 independent_variable_data=[[0.0]],
-                                 dependent_variable_names=["a"],
-                                 independent_variable_names=["c"])
+    assert OneDimensionalDataset(
+        dependent_variable_data=[0.0],
+        independent_variable_data=[[0.0]],
+        dependent_variable_names=["a"],
+        independent_variable_names=["b"],
+    ) != OneDimensionalDataset(
+        dependent_variable_data=[0.0],
+        independent_variable_data=[[0.0]],
+        dependent_variable_names=["a"],
+        independent_variable_names=["c"],
+    )
 
 
 @pytest.mark.skip
@@ -140,11 +152,13 @@ def test_visualize_oned_dataset_single_point_default(oned_dataset_single_point, 
 
 @pytest.mark.skip
 @pytest.mark.mpl_image_compare(hash_library="../../../../matplotlib_test_hashes.json")
-def test_visualize_oned_dataset_single_point_labelled_default(oned_dataset_single_point_labelled,
-                                                              nondefault_xvalue_name,
-                                                              nondefault_yvalue_name,
-                                                              nondefault_unit,
-                                                              datadir):
+def test_visualize_oned_dataset_single_point_labelled_default(
+    oned_dataset_single_point_labelled,
+    nondefault_xvalue_name,
+    nondefault_yvalue_name,
+    nondefault_unit,
+    datadir,
+):
 
     figure, axes = oned_dataset_single_point_labelled.visualize(include_text=False)
 
@@ -174,17 +188,16 @@ def dependent_variable_value():
 
 
 @pytest.fixture()
-def oned_dataset(independent_variable_name,
-                 dependent_variable_value):
+def oned_dataset(independent_variable_name, dependent_variable_value):
 
-    return OneDimensionalDataset.create(x_values=[0],
-                                        x_name=independent_variable_name,
-                                        y_values=[dependent_variable_value])
+    return OneDimensionalDataset.create(
+        x_values=[0], x_name=independent_variable_name, y_values=[dependent_variable_value]
+    )
 
 
-def test_remove_independent_variable_by_name(independent_variable_name,
-                                             dependent_variable_value,
-                                             oned_dataset):
+def test_remove_independent_variable_by_name(
+    independent_variable_name, dependent_variable_value, oned_dataset
+):
 
     dataset = oned_dataset.remove_independent_variable_by_name(independent_variable_name)
 

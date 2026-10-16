@@ -10,15 +10,18 @@ Classes
 -------
 FileReader - Abstract class for file readers.
 """
-from typing import ClassVar, Set, Union
 
-import piblin.data.datasets.abc.dataset as dataset
+from typing import ClassVar
+
 import piblin.data.data_collections.measurement as measurement
 import piblin.data.data_collections.measurement_set as measurement_set
+import piblin.data.datasets.abc.dataset as dataset
 import piblin.dataio.fileio.read.file_reader as file_reader
 
 
-class ExtReader(file_reader.FileReader):  # change the class name to match the extension being supported
+class ExtReader(
+    file_reader.FileReader
+):  # change the class name to match the extension being supported
     """Example class for file readers.
 
     All FileReader subclasses must implement the two abstract properties
@@ -29,7 +32,8 @@ class ExtReader(file_reader.FileReader):  # change the class name to match the e
     -------
     data_from_file_contents - convert file contents to appropriate dataset(s).
     """
-    supported_extensions: ClassVar[Set[str]]  # the extensions of the file formats this class reads
+
+    supported_extensions: ClassVar[set[str]]  # the extensions of the file formats this class reads
 
     def __init__(self):
         super().__init__()
@@ -39,7 +43,7 @@ class ExtReader(file_reader.FileReader):  # change the class name to match the e
         return ""  # the mode to pass to python's open function; likely "r" (text) or "rb" (binary)
 
     @property
-    def encoding(self) -> Union[str, None]:
+    def encoding(self) -> str | None:
         """The default encoding to use to read the file."""
         return None
 
@@ -68,6 +72,5 @@ class ExtReader(file_reader.FileReader):  # change the class name to match the e
 
         measurements = [measurement.Measurement.from_single_dataset(dataset_, conditions, details)]
 
-        measurement_set_ = measurement_set.MeasurementSet(measurements)  # return this measurement set instance
+        measurement_set.MeasurementSet(measurements)  # return this measurement set instance
         raise NotImplementedError("This is a template class not for use.")
-

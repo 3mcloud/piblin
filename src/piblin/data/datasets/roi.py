@@ -6,10 +6,9 @@ Classes
 LinearRegion
 CompoundRegion
 """
-from typing import List, Union
 
 
-class LinearRegion(object):
+class LinearRegion:
     """Linear region of a 1D space.
 
     Parameters
@@ -30,7 +29,8 @@ class LinearRegion(object):
     -------
     contains - Determine whether this region contains the given point.
     """
-    def __init__(self, region: List[Union[int, float]], name: str = None):
+
+    def __init__(self, region: list[int | float], name: str = None):
         self._region = region
         self.__validate_region()
         self._name = name
@@ -120,8 +120,7 @@ class LinearRegion(object):
         str_rep = self.__class__.__name__
         if self.name is not None:
             str_rep += f" ({self.name}) "
-        str_rep += (f"between {self.region_min:.3f} "
-                    f"and {self.region_max:.3f}")
+        str_rep += f"between {self.region_min:.3f} and {self.region_max:.3f}"
         return str_rep
 
     def __repr__(self):
@@ -129,11 +128,11 @@ class LinearRegion(object):
         str_rep = self.__class__.__name__ + "("
         str_rep += str(self.region)
         if self.name is not None:
-            str_rep += ", name=\"" + self.name + "\""
+            str_rep += ', name="' + self.name + '"'
         return str_rep + ")"
 
 
-class CompoundRegion(object):
+class CompoundRegion:
     """A collection of linear regions comprising a compound region.
 
     The order of linear regions is irrelevant, but as they are not
@@ -157,6 +156,7 @@ class CompoundRegion(object):
     remove - Remove a specified region from this compound region.
     contains - Determine whether this compound region contains a specified point.
     """
+
     def __init__(self, linear_regions: list = None):
         if linear_regions is None:
             self._linear_regions = []
@@ -164,9 +164,7 @@ class CompoundRegion(object):
             self._linear_regions = linear_regions
 
     @staticmethod
-    def from_data(regions: list,
-                  names: list = None,
-                  name_base: str = "region"):
+    def from_data(regions: list, names: list = None, name_base: str = "region"):
         """Create a set of linear regions from numerical values.
 
         Parameters
@@ -182,8 +180,8 @@ class CompoundRegion(object):
 
         if names is None:
             names = []
-            for i, region in enumerate(regions):
-                names.append(name_base + " " + str(i+1))
+            for i in range(len(regions)):
+                names.append(name_base + " " + str(i + 1))
 
         linear_regions = []
         for region, name in zip(regions, names):
@@ -224,7 +222,6 @@ class CompoundRegion(object):
             return self.linear_regions[0].contains(point)
 
         else:
-
             for linear_region in self.linear_regions:
                 if linear_region.contains(point):
                     return True

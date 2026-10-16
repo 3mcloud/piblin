@@ -1,10 +1,11 @@
-from typing import List
 import numpy.typing
+
 from piblin.data.datasets.abc.split_datasets import SplitDataset
 
 
 class ThreeDimensionalDataset(SplitDataset):
     """A dataset with three independent dimensions on a grid."""
+
     DEFAULT_X_NAME: str = "x"
     """The default name for the first independent variable."""
     DEFAULT_Y_NAME: str = "y"
@@ -14,19 +15,23 @@ class ThreeDimensionalDataset(SplitDataset):
     DEFAULT_Q_NAME: str = "q"
     """The default name for the dependent variable."""
 
-    def __init__(self,
-                 dependent_variable_data: numpy.typing.ArrayLike,
-                 dependent_variable_names: List[str] = None,
-                 dependent_variable_units: List[str] = None,
-                 independent_variable_data: List[numpy.typing.ArrayLike] = None,
-                 independent_variable_names: List[str] = None,
-                 independent_variable_units: List[str] = None,
-                 source: str = None):
+    def __init__(
+        self,
+        dependent_variable_data: numpy.typing.ArrayLike,
+        dependent_variable_names: list[str] = None,
+        dependent_variable_units: list[str] = None,
+        independent_variable_data: list[numpy.typing.ArrayLike] = None,
+        independent_variable_names: list[str] = None,
+        independent_variable_units: list[str] = None,
+        source: str = None,
+    ):
 
         if independent_variable_names is None:
-            independent_variable_names = [self.DEFAULT_X_NAME,
-                                          self.DEFAULT_Y_NAME,
-                                          self.DEFAULT_Z_NAME]
+            independent_variable_names = [
+                self.DEFAULT_X_NAME,
+                self.DEFAULT_Y_NAME,
+                self.DEFAULT_Z_NAME,
+            ]
 
         if dependent_variable_names is None:
             dependent_variable_names = [self.DEFAULT_Q_NAME]
@@ -38,42 +43,47 @@ class ThreeDimensionalDataset(SplitDataset):
             independent_variable_data=independent_variable_data,
             independent_variable_names=independent_variable_names,
             independent_variable_units=independent_variable_units,
-            source=source
+            source=source,
         )
 
         if self.dependent_variable_data.ndim != 3:
             raise ValueError("Non-3D dataset!")
 
-        if not self.dependent_variable_data.shape[0] == \
-                len(self.independent_variable_data[0]):
-            raise ValueError(f"{self.dependent_variable_data.shape[0]} != "
-                             f"{len(self.independent_variable_data[0])}")
+        if not self.dependent_variable_data.shape[0] == len(self.independent_variable_data[0]):
+            raise ValueError(
+                f"{self.dependent_variable_data.shape[0]} != "
+                f"{len(self.independent_variable_data[0])}"
+            )
 
-        if not self.dependent_variable_data.shape[1] == \
-               len(self.independent_variable_data[1]):
-            raise ValueError(f"{self.dependent_variable_data.shape[1]} != "
-                             f"{len(self.independent_variable_data[1])}")
+        if not self.dependent_variable_data.shape[1] == len(self.independent_variable_data[1]):
+            raise ValueError(
+                f"{self.dependent_variable_data.shape[1]} != "
+                f"{len(self.independent_variable_data[1])}"
+            )
 
-        if not self.dependent_variable_data.shape[2] == \
-               len(self.independent_variable_data[2]):
-            raise ValueError(f"{self.dependent_variable_data.shape[2]} != "
-                             f"{len(self.independent_variable_data[2])}")
+        if not self.dependent_variable_data.shape[2] == len(self.independent_variable_data[2]):
+            raise ValueError(
+                f"{self.dependent_variable_data.shape[2]} != "
+                f"{len(self.independent_variable_data[2])}"
+            )
 
     @classmethod
-    def create(cls,
-               q_values: numpy.typing.ArrayLike,
-               q_name: str = None,
-               q_unit: str = None,
-               x_values: numpy.typing.ArrayLike = None,
-               x_name: str = None,
-               x_unit: str = None,
-               y_values: numpy.typing.ArrayLike = None,
-               y_name: str = None,
-               y_unit: str = None,
-               z_values: numpy.typing.ArrayLike = None,
-               z_name: str = None,
-               z_unit: str = None,
-               source: str = None):
+    def create(
+        cls,
+        q_values: numpy.typing.ArrayLike,
+        q_name: str = None,
+        q_unit: str = None,
+        x_values: numpy.typing.ArrayLike = None,
+        x_name: str = None,
+        x_unit: str = None,
+        y_values: numpy.typing.ArrayLike = None,
+        y_name: str = None,
+        y_unit: str = None,
+        z_values: numpy.typing.ArrayLike = None,
+        z_name: str = None,
+        z_unit: str = None,
+        source: str = None,
+    ):
 
         if x_values is None and y_values is None and z_values is None:
             independent_variable_data = None
@@ -100,13 +110,15 @@ class ThreeDimensionalDataset(SplitDataset):
         else:
             dependent_variable_names = [q_name]
 
-        return cls(dependent_variable_data=q_values,
-                   dependent_variable_names=dependent_variable_names,
-                   dependent_variable_units=dependent_variable_units,
-                   independent_variable_data=independent_variable_data,
-                   independent_variable_names=independent_variable_names,
-                   independent_variable_units=independent_variable_units,
-                   source=source)
+        return cls(
+            dependent_variable_data=q_values,
+            dependent_variable_names=dependent_variable_names,
+            dependent_variable_units=dependent_variable_units,
+            independent_variable_data=independent_variable_data,
+            independent_variable_names=independent_variable_names,
+            independent_variable_units=independent_variable_units,
+            source=source,
+        )
 
     @property
     def x_values(self):
@@ -233,16 +245,16 @@ class ThreeDimensionalDataset(SplitDataset):
     @property
     def one_line_description(self) -> str:
         """Create a single-line human-readable representation of this dataset."""
-        return self.__class__.__name__ + \
-            (f": {self.dependent_variable_name}=f("
-             f"{self.x_name}, "
-             f"{self.y_name},"
-             f"{self.z_name})")
+        return self.__class__.__name__ + (
+            f": {self.dependent_variable_name}=f({self.x_name}, {self.y_name},{self.z_name})"
+        )
 
     def __str__(self):
         str_rep = super().__str__() + "\n\n"
-        str_rep += (f"Values of {self.y_name} ({self.y_unit}) "
-                    f"as a function of {self.x_name} ({self.x_unit})\n\n")
+        str_rep += (
+            f"Values of {self.y_name} ({self.y_unit}) "
+            f"as a function of {self.x_name} ({self.x_unit})\n\n"
+        )
         longest_length = max(len(self.x_name), len(self.y_name))
         str_rep += f"{self.x_name:{longest_length}} = {self.x_values}\n"
         str_rep += f"{self.y_name:{longest_length}} = {self.y_values}\n"

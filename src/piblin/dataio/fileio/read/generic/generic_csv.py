@@ -4,16 +4,18 @@ Classes
 -------
 CsvReader - Reader for files in the .csv format.
 """
+
 import numpy as np
 
-import piblin.data.datasets.abc.split_datasets.one_dimensional_dataset as one_d_dataset
 import piblin.data.data_collections.measurement as measurement
 import piblin.data.data_collections.measurement_set as measurement_set
+import piblin.data.datasets.abc.split_datasets.one_dimensional_dataset as one_d_dataset
 import piblin.dataio.fileio.read.generic.generic_file_reader as generic_file_reader
 
 
 class CsvReader(generic_file_reader.GenericFileReader):
     """Reader for files in the .csv format."""
+
     supported_extensions = {"csv"}
 
     def __init__(self):
@@ -46,17 +48,19 @@ class CsvReader(generic_file_reader.GenericFileReader):
         encoding = read_kwargs.get("encoding", None)
         max_rows = read_kwargs.get("max_rows", None)
 
-        return np.loadtxt(fname=str(filepath),
-                          dtype=dtype,
-                          comments=comments,
-                          delimiter=delimiter,
-                          converters=converters,
-                          skiprows=skiprows,
-                          usecols=usecols,
-                          unpack=unpack,
-                          ndmin=ndmin,
-                          encoding=encoding,
-                          max_rows=max_rows)
+        return np.loadtxt(
+            fname=str(filepath),
+            dtype=dtype,
+            comments=comments,
+            delimiter=delimiter,
+            converters=converters,
+            skiprows=skiprows,
+            usecols=usecols,
+            unpack=unpack,
+            ndmin=ndmin,
+            encoding=encoding,
+            max_rows=max_rows,
+        )
 
     @classmethod
     def _data_from_file_contents(cls, file_contents, file_location=None, **read_kwargs):
@@ -89,16 +93,19 @@ class CsvReader(generic_file_reader.GenericFileReader):
         if single_x_column:
             x_values = file_contents[:, 0]
             for y_column_index in range(1, num_columns):
-
                 if column_index_as_metadata:
                     conditions = {"index": y_column_index}
                 else:
                     conditions = {}
 
-                measurements.append(measurement.Measurement.from_single_dataset(
-                    one_d_dataset.OneDimensionalDataset.create(x_values=x_values,
-                                                               y_values=file_contents[:, y_column_index]),
-                    conditions=conditions))
+                measurements.append(
+                    measurement.Measurement.from_single_dataset(
+                        one_d_dataset.OneDimensionalDataset.create(
+                            x_values=x_values, y_values=file_contents[:, y_column_index]
+                        ),
+                        conditions=conditions,
+                    )
+                )
         else:
             for x_column_index in range(0, num_columns, 2):
                 x_values = file_contents[:, x_column_index]
@@ -108,9 +115,13 @@ class CsvReader(generic_file_reader.GenericFileReader):
                 else:
                     conditions = {}
 
-                measurements.append(measurement.Measurement.from_single_dataset(
-                    one_d_dataset.OneDimensionalDataset.create(x_values=x_values,
-                                                               y_values=y_values),
-                    conditions=conditions))
+                measurements.append(
+                    measurement.Measurement.from_single_dataset(
+                        one_d_dataset.OneDimensionalDataset.create(
+                            x_values=x_values, y_values=y_values
+                        ),
+                        conditions=conditions,
+                    )
+                )
 
         return measurement_set.MeasurementSet(measurements)

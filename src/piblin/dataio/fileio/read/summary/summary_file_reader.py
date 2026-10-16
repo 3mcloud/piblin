@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import List
+
 import piblin.dataio.fileio.read.file_reader as file_reader
 
 
 class InvalidSummaryFileError(Exception):
     """Raised when a summary file and its summarized files cannot be parsed."""
+
     ...
 
 
@@ -54,7 +55,7 @@ class SummaryFileReader(file_reader.FileReader, ABC):
         ...
 
     @abstractmethod
-    def get_summarized_filenames(self, filepath: str) -> List[str]:
+    def get_summarized_filenames(self, filepath: str) -> list[str]:
         """Create a list of summarized filenames for the given summary file.
         Parameters
         ----------

@@ -1,15 +1,13 @@
-from typing import List
+import piblin.data.data_collections.measurement as measurement
 import piblin.transform.abc.dataset_transform as dataset_transform
 import piblin.transform.abc.measurement_transform as measurement_transform
 from piblin.data.datasets.abc import dataset as dataset
-import piblin.data.data_collections.measurement as measurement
 
 
 class DatasetSplitTransform(dataset_transform.DatasetTransform):
     """A transform that converts a dataset into a list of datasets."""
-    def _apply(self,
-               target: dataset.Dataset,
-               **kwargs) -> List[dataset.Dataset]:
+
+    def _apply(self, target: dataset.Dataset, **kwargs) -> list[dataset.Dataset]:
         """
 
         Parameters
@@ -24,12 +22,9 @@ class DatasetSplitTransform(dataset_transform.DatasetTransform):
         """
         pass
 
-    def partitioner(self):
-        ...
+    def partitioner(self): ...
 
-    def _apply_to_dataset(self,
-                          target: dataset.Dataset,
-                          **kwargs) -> List[dataset.Dataset]:
+    def _apply_to_dataset(self, target: dataset.Dataset, **kwargs) -> list[dataset.Dataset]:
         """Apply this per-dataset transform to the provided target dataset.
 
         Parameters
@@ -46,8 +41,5 @@ class DatasetSplitTransform(dataset_transform.DatasetTransform):
 
 
 class MeasurementSplitTransform(measurement_transform.MeasurementTransform):
-
-    def _apply(self,
-               target: measurement.Measurement,
-               **kwargs) -> List[measurement.Measurement]:
+    def _apply(self, target: measurement.Measurement, **kwargs) -> list[measurement.Measurement]:
         pass

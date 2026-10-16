@@ -1,24 +1,23 @@
-from typing import List, Set, Tuple, Union
 import copy
+from typing import Union
+
+import matplotlib.axes
+import matplotlib.cm as cm
+import matplotlib.figure
+import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing
-import matplotlib.axes
-import matplotlib.figure
-import matplotlib.cm as cm
-import matplotlib.pyplot as plt
 
-import piblin.data.datasets.abc.unambiguous_datasets.unambiguous_dataset
-import piblin.data.datasets.abc.split_datasets.zero_dimensional_dataset as zero_dimensional_dataset
-import piblin.data.datasets.abc.split_datasets.one_dimensional_dataset as one_dimensional_dataset
-import piblin.data.datasets.abc.split_datasets.two_dimensional_dataset as two_dimensional_dataset
-
-import piblin.data.datasets.abc.dataset_factory as dataset_factory
-import piblin.data.data_collections.measurement_set as measurement_set_
 import piblin.data.data_collections.consistent_measurement_set as consistent_measurement_set_
+import piblin.data.data_collections.data_collection_factory as measurement_set_factory_
 import piblin.data.data_collections.experiment as experiment_
 import piblin.data.data_collections.measurement as measurement_
-import piblin.data.data_collections.data_collection_factory as measurement_set_factory_
+import piblin.data.data_collections.measurement_set as measurement_set_
 import piblin.data.datasets.abc.dataset
+import piblin.data.datasets.abc.dataset_factory as dataset_factory
+import piblin.data.datasets.abc.split_datasets.two_dimensional_dataset as two_dimensional_dataset
+import piblin.data.datasets.abc.split_datasets.zero_dimensional_dataset as zero_dimensional_dataset
+import piblin.data.datasets.abc.unambiguous_datasets.unambiguous_dataset
 from piblin.data.data_collections.consistent_measurement_set import InconsistentMeasurementsError
 
 
@@ -62,14 +61,16 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
     dataset_to_condition
         Convert the dataset at the given index to a condition.
     """
-    def __init__(self,
-                 measurements: List[measurement_.Measurement] = None,
-                 merge_redundant: bool = True):
+
+    def __init__(
+        self, measurements: list[measurement_.Measurement] = None, merge_redundant: bool = True
+    ):
         try:
-            super().__init__(measurements=measurements,
-                             merge_redundant=merge_redundant)
-        except InconsistentMeasurementsError:
-            raise InconsistentMeasurementsError("Measurements are not consistent." + self.consistency_str)
+            super().__init__(measurements=measurements, merge_redundant=merge_redundant)
+        except InconsistentMeasurementsError as err:
+            raise InconsistentMeasurementsError(
+                "Measurements are not consistent." + self.consistency_str
+            ) from err
 
         self._experiments = None
         self._update_experiments()
@@ -90,13 +91,15 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
             If the condition name is not a varying, shared condition of this experiment set.
         """
         if condition_name not in self.varying_shared_condition_names:
-            raise ValueError(f"Condition with name {condition_name} not a shared varying condition.")
+            raise ValueError(
+                f"Condition with name {condition_name} not a shared varying condition."
+            )
 
         for experiment in self.experiments:
             for replicate in experiment.repetitions:
                 dataset = zero_dimensional_dataset.ZeroDimensionalDataset.create(
-                     value=replicate.conditions[condition_name],
-                     label=condition_name)
+                    value=replicate.conditions[condition_name], label=condition_name
+                )
                 replicate.datasets.append(dataset)
 
         self.remove_condition(condition_name)
@@ -119,8 +122,10 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
             raise ValueError("Only zero-dimensional datasets can be converted to conditions.")
 
         for measurement in self.measurements:
-            dataset_name = f"{measurement.datasets[dataset_index].name}" \
-                           f"({measurement.datasets[dataset_index].unit})"
+            dataset_name = (
+                f"{measurement.datasets[dataset_index].name}"
+                f"({measurement.datasets[dataset_index].unit})"
+            )
             dataset_value = measurement.datasets[dataset_index].value
 
             measurement.update_condition(dataset_name, dataset_value)
@@ -154,14 +159,13 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
             a single multipoint dataset.
         """
         for experiment in self.experiments:
-            experiment.combine_zerod_datasets(x_name=x_name,
-                                              y_name=y_name,
-                                              merge_datasets=merge_datasets)
+            experiment.combine_zerod_datasets(
+                x_name=x_name, y_name=y_name, merge_datasets=merge_datasets
+            )
 
-    def combine_multi_zerod_datasets(self,
-                                     x_name: str,
-                                     y_names: List[str] = None,
-                                     merge_datasets: bool = True) -> None:
+    def combine_multi_zerod_datasets(
+        self, x_name: str, y_names: list[str] = None, merge_datasets: bool = True
+    ) -> None:
         """Perform combination of 0D datasets on a per-experiment basis.
 
         Parameters
@@ -175,9 +179,9 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
             a single multipoint dataset.
         """
         for experiment in self.experiments:
-            experiment.combine_multi_zerod_datasets(x_name=x_name,
-                                                    y_names=y_names,
-                                                    merge_datasets=merge_datasets)
+            experiment.combine_multi_zerod_datasets(
+                x_name=x_name, y_names=y_names, merge_datasets=merge_datasets
+            )
 
     def combine_oned_datasets(self, x_name, y_name):
         """Combine multiple one-dimensional datasets.
@@ -210,42 +214,59 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
 
         new_measurements = []
         for experiment in self.experiments:
-
             new_independent_variable_data = []
 
-            dataset_compiled_dependent_variables: List[np.typing.ndarray] = [[] for _ in indices_of_dataset_to_expand]
+            dataset_compiled_dependent_variables: list[np.typing.ndarray] = [
+                [] for _ in indices_of_dataset_to_expand
+            ]
             for replicate in experiment:
-
                 new_independent_variable_data.append(
-                    replicate.datasets[index_of_dataset_to_convert_to_independent].value)
+                    replicate.datasets[index_of_dataset_to_convert_to_independent].value
+                )
 
                 for index_of_dataset_to_expand in indices_of_dataset_to_expand:
                     dataset_compiled_dependent_variables[index_of_dataset_to_expand].append(
-                        np.squeeze(replicate.datasets[index_of_dataset_to_expand].dependent_variable_data))
+                        np.squeeze(
+                            replicate.datasets[index_of_dataset_to_expand].dependent_variable_data
+                        )
+                    )
 
             new_datasets = []
             for index_of_dataset_to_expand in indices_of_dataset_to_expand:
-
                 all_independent_variable_data = [new_independent_variable_data]
-                for ex in experiment[0].datasets[index_of_dataset_to_expand].independent_variable_data:
+                for ex in (
+                    experiment[0].datasets[index_of_dataset_to_expand].independent_variable_data
+                ):
                     all_independent_variable_data.append(ex)
 
-                new_datasets.append(dataset_factory.DatasetFactory.from_split_data(
-                                    dependent_variable_data=dataset_compiled_dependent_variables[index_of_dataset_to_expand],
-                                    dependent_variable_names=experiment[0].datasets[index_of_dataset_to_expand].dependent_variable_names,
-                                    dependent_variable_units=experiment[0].datasets[index_of_dataset_to_expand].dependent_variable_units,
-                                    independent_variable_data=all_independent_variable_data,
-                                    independent_variable_names=[condition_name],
-                                    independent_variable_units=None,
-                                    source=None))
+                new_datasets.append(
+                    dataset_factory.DatasetFactory.from_split_data(
+                        dependent_variable_data=dataset_compiled_dependent_variables[
+                            index_of_dataset_to_expand
+                        ],
+                        dependent_variable_names=experiment[0]
+                        .datasets[index_of_dataset_to_expand]
+                        .dependent_variable_names,
+                        dependent_variable_units=experiment[0]
+                        .datasets[index_of_dataset_to_expand]
+                        .dependent_variable_units,
+                        independent_variable_data=all_independent_variable_data,
+                        independent_variable_names=[condition_name],
+                        independent_variable_units=None,
+                        source=None,
+                    )
+                )
 
-            new_measurements.append(measurement_.Measurement(datasets=new_datasets,
-                                                             conditions=experiment.conditions))
+            new_measurements.append(
+                measurement_.Measurement(datasets=new_datasets, conditions=experiment.conditions)
+            )
 
         self.measurements = new_measurements
         self._update_experiments()
 
-    def independent_variable_to_condition(self, independent_variable_name: str) -> measurement_set_.MeasurementSet:
+    def independent_variable_to_condition(
+        self, independent_variable_name: str
+    ) -> measurement_set_.MeasurementSet:
         """Convert the independent variable with the specified name to a condition.
 
         The measurements of this experiment set have the same number and type of datasets with the
@@ -280,46 +301,55 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
         experiments_with_independent_variable: ExperimentSet
         experiments_without_independent_variable: ExperimentSet
 
-        experiments_with_independent_variable, \
-            experiments_without_independent_variable = \
-            self.split_by_dataset_independent_variable_name(independent_variable_name)  # defined in measurement set
+        experiments_with_independent_variable, experiments_without_independent_variable = (
+            self.split_by_dataset_independent_variable_name(independent_variable_name)
+        )  # defined in measurement set
 
         # TODO - must deal with the experiments without the independent variable, by combination
 
         if not experiments_with_independent_variable:
-            raise ValueError(f"Cannot convert independent variable \"{independent_variable_name}\" to a condition."
-                             "No measurements of this experiment set have datasets with the named variable.")
+            raise ValueError(
+                f'Cannot convert independent variable "{independent_variable_name}" to a condition.'
+                "No measurements of this experiment set have datasets with the named variable."
+            )
         # TODO - in this case, could just return self because technically we did the work
 
         # this part only works on measurements with datasets that do have the independent variable name
         new_measurements = []
         for measurement in experiments_with_independent_variable.measurements:
-
-            measurements_with_unique_values = \
+            measurements_with_unique_values = (
                 measurement.split_by_dataset_independent_variable_value(independent_variable_name)
+            )
 
             for measurement_with_unique_values in measurements_with_unique_values:
                 new_datasets = []
                 for dataset in measurement_with_unique_values.datasets:
-                    new_datasets.append(dataset.remove_independent_variable_by_name(independent_variable_name))
+                    new_datasets.append(
+                        dataset.remove_independent_variable_by_name(independent_variable_name)
+                    )
 
-                new_measurement_with_unique_values = \
-                    measurement_.Measurement(datasets=new_datasets,
-                                             conditions=measurement_with_unique_values.conditions,
-                                             details=measurement_with_unique_values.details)
+                new_measurement_with_unique_values = measurement_.Measurement(
+                    datasets=new_datasets,
+                    conditions=measurement_with_unique_values.conditions,
+                    details=measurement_with_unique_values.details,
+                )
 
                 new_measurements.append(new_measurement_with_unique_values)
 
-        new_measurement_set = measurement_set_factory_.DataCollectionFactory.from_measurements(new_measurements)
+        new_measurement_set = measurement_set_factory_.DataCollectionFactory.from_measurements(
+            new_measurements
+        )
 
         if isinstance(new_measurement_set, ExperimentSet):
             self.measurements = new_measurements
             self._update_experiments()
         else:
             # TODO - return it anyway?
-            raise ValueError("Converting independent variable to condition has removed consistency.")
+            raise ValueError(
+                "Converting independent variable to condition has removed consistency."
+            )
 
-    def independent_variables_to_conditions(self, independent_variable_names: List[str]):
+    def independent_variables_to_conditions(self, independent_variable_names: list[str]):
         """Convert a list of named independent variables to conditions.
 
         This is an operation that actually happens on measurements, and the datasets within them, therefore it can
@@ -329,45 +359,55 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
         specified independent variable names.
         This is a consistent measurement set, so all measurements will be affected in the same way.
         """
-        experiments_with_independent_variables, \
-            experiments_without_independent_variables = \
+        experiments_with_independent_variables, experiments_without_independent_variables = (
             self.split_by_dataset_independent_variable_names(independent_variable_names)
+        )
 
         if not experiments_with_independent_variables:
-            raise ValueError(f"No measurements with independent variable {independent_variable_names}")
+            raise ValueError(
+                f"No measurements with independent variable {independent_variable_names}"
+            )
 
         # now we just have to work on those datasets that do have the right independent variable names
         # in this case z = f(x, y) whatever z is
         new_measurements = []
         for measurement in experiments_with_independent_variables.measurements:
-            measurements_with_unique_values = \
+            measurements_with_unique_values = (
                 measurement.split_by_dataset_independent_variable_values(independent_variable_names)
+            )
 
             for measurement_with_unique_values in measurements_with_unique_values:
-
                 new_datasets = []
                 for dataset in measurement_with_unique_values.datasets:
-                    new_datasets.append(dataset.remove_independent_variables_by_name(independent_variable_names))
+                    new_datasets.append(
+                        dataset.remove_independent_variables_by_name(independent_variable_names)
+                    )
 
-                new_measurement_with_unique_values = \
-                    measurement_.Measurement(datasets=new_datasets,
-                                             conditions=measurement_with_unique_values.conditions,
-                                             details=measurement_with_unique_values.details)
+                new_measurement_with_unique_values = measurement_.Measurement(
+                    datasets=new_datasets,
+                    conditions=measurement_with_unique_values.conditions,
+                    details=measurement_with_unique_values.details,
+                )
 
                 new_measurements.append(new_measurement_with_unique_values)
 
-        new_measurement_set = measurement_set_factory_.DataCollectionFactory.from_measurements(new_measurements)
+        new_measurement_set = measurement_set_factory_.DataCollectionFactory.from_measurements(
+            new_measurements
+        )
 
         if isinstance(new_measurement_set, ExperimentSet):
             self.measurements = new_measurements
             self._update_experiments()
         else:
             # TODO - return it anyway?
-            raise ValueError("Converting independent variable to condition has removed consistency.")
+            raise ValueError(
+                "Converting independent variable to condition has removed consistency."
+            )
 
     def combine_with(self, experiment_set: "ExperimentSet", merge_redundant: bool):
-        return self.combine(measurement_sets=[self, experiment_set],
-                            merge_redundant=merge_redundant)
+        return self.combine(
+            measurement_sets=[self, experiment_set], merge_redundant=merge_redundant
+        )
 
     def remove_measurements_with_condition_name(self, name: str) -> None:
         super().remove_measurements_with_condition_name(name)
@@ -400,7 +440,7 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
         super().condition_to_detail(condition_name)
         self._update_experiments()
 
-    def conditions_to_details(self, condition_names: List[str]) -> None:
+    def conditions_to_details(self, condition_names: list[str]) -> None:
         for name in condition_names:
             super().condition_to_detail(name)
 
@@ -416,7 +456,7 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
         super().detail_to_condition(detail_name)
         self._update_experiments()
 
-    def details_to_conditions(self, detail_names: List[str]) -> None:
+    def details_to_conditions(self, detail_names: list[str]) -> None:
         """Convert a list of details to conditions and update experiments.
         Parameters
         ----------
@@ -428,9 +468,7 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
 
         self._update_experiments()
 
-    def add_equal_shared_condition(self,
-                                   name: str,
-                                   value: object = None) -> None:
+    def add_equal_shared_condition(self, name: str, value: object = None) -> None:
         """Add a condition with an optional value to all experiments.
         Parameters
         ----------
@@ -443,21 +481,17 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
         super().add_equal_shared_condition(name, value)
         self._update_experiments()
 
-    def add_equal_shared_conditions(self,
-                                    names: List[str],
-                                    values: List[object]) -> None:
+    def add_equal_shared_conditions(self, names: list[str], values: list[object]) -> None:
         """Add a new equal shared condition to this experiment set."""
         for name, value in zip(names, values):
             super().add_equal_shared_condition(name, value)
         self._update_experiments()
 
-    def add_varying_shared_condition(self, name: str, values: List[object]) -> None:
+    def add_varying_shared_condition(self, name: str, values: list[object]) -> None:
         super().add_varying_shared_condition(name, values)
         self._update_experiments()
 
-    def add_varying_shared_conditions(self,
-                                      names: List[str],
-                                      values: List[List[object]]) -> None:
+    def add_varying_shared_conditions(self, names: list[str], values: list[list[object]]) -> None:
         for name, value in zip(names, values):
             super().add_varying_shared_condition(name, value)
         self._update_experiments()
@@ -472,12 +506,14 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
         super().remove_condition(name)
         self._update_experiments()
 
-    def remove_conditions(self, names: List[str]) -> None:
+    def remove_conditions(self, names: list[str]) -> None:
         super().remove_conditions(names)
         self._update_experiments()
 
     @staticmethod
-    def from_experiment_sets(experiment_sets: List["ExperimentSet"], merge_redundant: bool = True) -> "ExperimentSet":
+    def from_experiment_sets(
+        experiment_sets: list["ExperimentSet"], merge_redundant: bool = True
+    ) -> "ExperimentSet":
         """Create an experiment set from a collection of experiment sets."""
         measurements = []
         for experiment_set in experiment_sets:
@@ -486,8 +522,9 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
         return ExperimentSet(measurements=measurements, merge_redundant=merge_redundant)
 
     @staticmethod
-    def from_measurement_set(measurement_set: "measurement_set_.MeasurementSet",
-                             merge_redundant: bool = True) -> Union["ExperimentSet", "measurement_set_.MeasurementSet"]:
+    def from_measurement_set(
+        measurement_set: "measurement_set_.MeasurementSet", merge_redundant: bool = True
+    ) -> Union["ExperimentSet", "measurement_set_.MeasurementSet"]:
         """Create an experiment set from a given measurement set.
 
         Parameters
@@ -505,12 +542,13 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
         try:
             return ExperimentSet(measurement_set.measurements, merge_redundant=merge_redundant)
         except InconsistentMeasurementsError:
-            return measurement_set_.MeasurementSet(measurement_set.measurements,
-                                                   merge_redundant=merge_redundant)
+            return measurement_set_.MeasurementSet(
+                measurement_set.measurements, merge_redundant=merge_redundant
+            )
 
-    def to_measurement_set(self,
-                           expand_replicates: bool = True,
-                           merge_redundant: bool = True) -> "measurement_set_.MeasurementSet":
+    def to_measurement_set(
+        self, expand_replicates: bool = True, merge_redundant: bool = True
+    ) -> "measurement_set_.MeasurementSet":
         """Convert this set of experiments to a set of measurements.
 
         Parameters
@@ -527,43 +565,49 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
             The set of measurements corresponding to this set of experiments.
         """
         if expand_replicates:
-            return measurement_set_.MeasurementSet(self.measurements,
-                                                   merge_redundant=merge_redundant)
+            return measurement_set_.MeasurementSet(
+                self.measurements, merge_redundant=merge_redundant
+            )
         else:
             measurements = []
             for experiment in self.experiments:
                 measurements.append(experiment.mean)
 
-            return measurement_set_.MeasurementSet(measurements,
-                                                   merge_redundant=merge_redundant)
+            return measurement_set_.MeasurementSet(measurements, merge_redundant=merge_redundant)
 
-    def flatten(self,
-                force_tidiness: bool = False,
-                include_unshared_conditions: bool = False,
-                include_equal_conditions: bool = True,
-                default_value: object = None,
-                expand_replicates: bool = True) -> Tuple[List[str], List[List[object]]]:
+    def flatten(
+        self,
+        force_tidiness: bool = False,
+        include_unshared_conditions: bool = False,
+        include_equal_conditions: bool = True,
+        default_value: object = None,
+        expand_replicates: bool = True,
+    ) -> tuple[list[str], list[list[object]]]:
 
         if expand_replicates:
-
-            return super().flatten(force_tidiness=force_tidiness,
-                                   include_unshared_conditions=include_unshared_conditions,
-                                   include_equal_conditions=include_equal_conditions,
-                                   default_value=default_value)
+            return super().flatten(
+                force_tidiness=force_tidiness,
+                include_unshared_conditions=include_unshared_conditions,
+                include_equal_conditions=include_equal_conditions,
+                default_value=default_value,
+            )
 
         else:
-            average_measurements = [experiment.average_measurement for experiment in self.experiments]
+            average_measurements = [
+                experiment.average_measurement for experiment in self.experiments
+            ]
             average_experiment_set = ExperimentSet(measurements=average_measurements)
-            return average_experiment_set.flatten(force_tidiness=True,
-                                                  include_unshared_conditions=include_unshared_conditions,
-                                                  include_equal_conditions=include_equal_conditions,
-                                                  default_value=default_value,
-                                                  expand_replicates=True)
+            return average_experiment_set.flatten(
+                force_tidiness=True,
+                include_unshared_conditions=include_unshared_conditions,
+                include_equal_conditions=include_equal_conditions,
+                default_value=default_value,
+                expand_replicates=True,
+            )
 
-    def flatten_datasets(self,
-                         force_tidiness=True,
-                         expand_replicates=True) -> Tuple[List[numpy.typing.NDArray],
-                                                          List[List[object]]]:
+    def flatten_datasets(
+        self, force_tidiness=True, expand_replicates=True
+    ) -> tuple[list[numpy.typing.NDArray], list[list[object]]]:
         """Flatten the datasets of this experiment set.
 
         Parameters
@@ -576,7 +620,9 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
         if expand_replicates:
             return super().flatten_datasets(force_tidiness=force_tidiness)
         else:
-            average_measurements = [experiment.average_measurement for experiment in self.experiments]
+            average_measurements = [
+                experiment.average_measurement for experiment in self.experiments
+            ]
             average_experiment_set = ExperimentSet(measurements=average_measurements)
             return average_experiment_set.flatten_datasets(force_tidiness=True)
 
@@ -593,11 +639,11 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
             The index of the dataset to remove from all measurements.
         """
         for measurement in self.measurements:
-            measurement.datasets = measurement.datasets[0:index] + measurement.datasets[index+1:]
+            measurement.datasets = measurement.datasets[0:index] + measurement.datasets[index + 1 :]
         self._update_experiments()
 
     @property
-    def varying_conditions(self) -> Set[str]:
+    def varying_conditions(self) -> set[str]:
         """The names of the conditions which vary across the experiments.
         Returns
         -------
@@ -606,7 +652,7 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
         """
         return self._determine_varying_conditions()
 
-    def _determine_varying_conditions(self) -> Set[str]:
+    def _determine_varying_conditions(self) -> set[str]:
         """Create a set of conditions which can be treated as variables.
 
         If a set of experiments has a condition in common, the variation of
@@ -623,9 +669,9 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
         """
         experiment_conditions = [experiment.conditions for experiment in self.experiments]
 
-        keys: Set = set()
+        keys: set = set()
         for i, experiment in enumerate(self.experiments):
-            for key, value in experiment_conditions[i].items():
+            for key, _value in experiment_conditions[i].items():
                 condition_in_all_experiments = True
                 for j, other_experiment in enumerate(self.experiments):
                     if other_experiment is experiment:
@@ -653,7 +699,7 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
 
         return keys
 
-    def get_varying_condition_values(self, keys: List[str] = None):
+    def get_varying_condition_values(self, keys: list[str] = None):
         """The values of specified conditions which vary across the experiments of this set.
 
         Parameters
@@ -683,9 +729,8 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
         conditions_as_variables = []
         key_index = 0
         for experiment in new_experiment_set:
-
             experiment_independent_variable_data = []
-            for measurement_index in range(experiment.num_measurements):
+            for _measurement_index in range(experiment.num_measurements):
                 experiment_independent_variable_data.append(key_values[key_index])
                 key_index += 1
 
@@ -693,10 +738,12 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
 
         return conditions_as_variables
 
-    def get_varying_datasets(self,
-                             condition_name: str,
-                             dataset_indices: List[int] = None,
-                             expand_replicates: bool = False):
+    def get_varying_datasets(
+        self,
+        condition_name: str,
+        dataset_indices: list[int] = None,
+        expand_replicates: bool = False,
+    ):
         """Return the specified datasets across the experiments.
 
         Parameters
@@ -728,10 +775,9 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
         new_dependent_data = []
         start_index = 0
         for experiment in new_experiment_set:
-
             experiment_data = []
             for index in dataset_indices:
-                dataset_data = data_to_convert[index][start_index: start_index + len(experiment)]
+                dataset_data = data_to_convert[index][start_index : start_index + len(experiment)]
                 experiment_data.append(dataset_data)
 
             start_index += len(experiment)
@@ -743,8 +789,7 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
     def _update_experiments(self) -> None:
         """Update the set of experiments based on the condition metadata."""
         # which conditions are present in all measurements?
-        shared_condition_names = \
-            self.shared_condition_names
+        shared_condition_names = self.shared_condition_names
 
         # cache these for performance reasons
         measurement_conditions = [measurement.conditions for measurement in self.measurements]
@@ -755,18 +800,17 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
         # for each unique combination, must create an Experiment
         experiment_lists = []
         for unique_combination in unique_combinations:
-
             experimental_measurements = []
 
             # create a list of measurements with the given conditions
             for i, measurement in enumerate(self.measurements):
-
                 shared_conditions = {}
 
                 for condition_name in measurement.condition_names:
                     if condition_name in shared_condition_names:
-                        shared_conditions[condition_name] = \
-                            measurement_conditions[i][condition_name]
+                        shared_conditions[condition_name] = measurement_conditions[i][
+                            condition_name
+                        ]
 
                 if shared_conditions == unique_combination:
                     experimental_measurements.append(measurement)
@@ -787,14 +831,13 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
 
     def sort_by_condition(self, condition_name: str) -> None:
         """Sort the list of experiments by the values of a specified condition."""
+
         def get_key(experiment):
             return experiment.conditions[condition_name]
 
         self.experiments.sort(key=get_key)
 
-    def summary_table(self,
-                      keys: Set[str] = None,
-                      expand_replicates: bool = True) -> str:
+    def summary_table(self, keys: set[str] = None, expand_replicates: bool = True) -> str:
         """Create a table giving details of all experimental conditions.
 
         Parameters
@@ -823,17 +866,19 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
             output += "\t" + key
         output += "\t"
 
-        for _ in self.experiments[0].datasets[0]:  # if there are a lot of datasets, there are lots of columns that need to be summarized
+        for _ in self.experiments[0].datasets[
+            0
+        ]:  # if there are a lot of datasets, there are lots of columns that need to be summarized
             output += "Data Types" + "\t"
 
         output += "\n"
 
-        if self.num_experiments < 500:  # this will be a cutoff based on rows. If there are loads, need a more summarized version
-
+        if (
+            self.num_experiments < 500
+        ):  # this will be a cutoff based on rows. If there are loads, need a more summarized version
             if expand_replicates:  # one repetition per line
                 for i, experiment in enumerate(self.experiments):
                     for replicate in experiment.datasets:
-
                         output += str(i) + "\t"
                         for key in keys:
                             output += str(experiment.conditions[key]) + "\t"
@@ -853,7 +898,6 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
                     output += "\n"
 
         else:
-
             output += str(0) + "\t" + str(len(self.experiments[0])) + "\t"
             for key in keys:
                 output += str(self.experiments[0].conditions[key]) + "\t"
@@ -872,10 +916,10 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
         """Create a color map to differentiate between experiments."""
         return iter(cm.get_cmap("cool")(np.linspace(0, 1, len(self.experiments))))
 
-    def condition_labels(self, include_name: bool = True) -> List[str]:
+    def condition_labels(self, include_name: bool = True) -> list[str]:
         return [experiment.condition_label(include_name) for experiment in self.experiments]
 
-    def produce_legend_labels(self) -> List[str]:
+    def produce_legend_labels(self) -> list[str]:
         """Create labels to be inserted into the figure legend.
 
         Returns
@@ -885,23 +929,26 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
         """
         legend_labels = []
         for experiment in self.experiments:
-
             legend_label = ""
             for condition_name in self.varying_conditions:
-                legend_label += condition_name + "=" + str(experiment.conditions[condition_name]) + ", "
+                legend_label += (
+                    condition_name + "=" + str(experiment.conditions[condition_name]) + ", "
+                )
 
             legend_labels.append(legend_label[:-2])
 
         return legend_labels
 
-    def visualize(self,
-                  include_text: bool = True,
-                  expand_datasets: bool = True,
-                  expand_replicates: bool = False,
-                  expand_experiments: bool = False,
-                  figure_title: str = None,
-                  total_figsize: Tuple[int] = None,
-                  **plot_kwargs):
+    def visualize(
+        self,
+        include_text: bool = True,
+        expand_datasets: bool = True,
+        expand_replicates: bool = False,
+        expand_experiments: bool = False,
+        figure_title: str = None,
+        total_figsize: tuple[int] = None,
+        **plot_kwargs,
+    ):
         """Visualize the project's experiments.
 
         Each experiment needs to be displayed along with its relevant
@@ -943,26 +990,25 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
         for dataset_list in self.datasets:
             for dataset in dataset_list:
                 if isinstance(dataset, two_dimensional_dataset.TwoDimensionalDataset):
-
                     expand_experiments = True
                     expand_replicates = True
                     expand_datasets = True
 
-        legend_labels = self.produce_legend_labels()  # one label per-experiment
+        self.produce_legend_labels()  # one label per-experiment
 
         colormap = None
         if expand_experiments:
             colormap = self.produce_color_map()
 
-        fig, axes = self._setup_fig_and_axes(axes=None,
-                                             expand_experiments=expand_experiments,
-                                             expand_datasets=expand_datasets,
-                                             total_figsize=total_figsize,
-                                             figure_title=figure_title)
+        fig, axes = self._setup_fig_and_axes(
+            axes=None,
+            expand_experiments=expand_experiments,
+            expand_datasets=expand_datasets,
+            total_figsize=total_figsize,
+            figure_title=figure_title,
+        )
 
-        total_index = 0
         for i, experiment in enumerate(self.experiments):
-
             if colormap:
                 color = next(colormap)
             else:
@@ -973,12 +1019,14 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
             elif expand_experiments:
                 experiment_axes = axes[i]
 
-            experiment.visualize(axes=experiment_axes,
-                                 include_text=False,
-                                 expand_datasets=expand_datasets,
-                                 expand_replicates=expand_replicates,
-                                 color=color,
-                                 **plot_kwargs)
+            experiment.visualize(
+                axes=experiment_axes,
+                include_text=False,
+                expand_datasets=expand_datasets,
+                expand_replicates=expand_replicates,
+                color=color,
+                **plot_kwargs,
+            )
 
             # if not expand_experiments:
             #     if self.num_datasets == 1:
@@ -1000,9 +1048,9 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
 
         return fig, axes
 
-    def compute_figure_size(self,
-                            expand_datasets: bool = False,
-                            expand_experiments: bool = False) -> Tuple[int]:
+    def compute_figure_size(
+        self, expand_datasets: bool = False, expand_experiments: bool = False
+    ) -> tuple[int]:
         """Compute an appropriate size for the complete figure.
 
         If a single plot has been requested, then the figure will
@@ -1026,20 +1074,20 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
         figsize = [0, 0]
 
         if not expand_experiments:
-
             for experiment in self.experiments:
-                experiment_size = experiment.compute_figure_size(expand_replicates=True,
-                                                                 expand_datasets=expand_datasets)
+                experiment_size = experiment.compute_figure_size(
+                    expand_replicates=True, expand_datasets=expand_datasets
+                )
                 if experiment_size[0] > figsize[0]:
                     figsize[0] = experiment_size[0]
                 if experiment_size[1] > figsize[1]:
                     figsize[1] = experiment_size[1]
 
         else:  # is not on a single plot
-
             for experiment in self.experiments:
-                experiment_size = experiment.compute_figure_size(expand_replicates=True,
-                                                                 expand_datasets=expand_datasets)
+                experiment_size = experiment.compute_figure_size(
+                    expand_replicates=True, expand_datasets=expand_datasets
+                )
 
                 if experiment_size[0] > figsize[0]:
                     figsize[0] = experiment_size[0]
@@ -1048,25 +1096,25 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
 
         return tuple(figsize)
 
-    def _validate_figsize(self,
-                          figsize: Tuple[int],
-                          expand_experiments: bool = False,
-                          expand_datasets: bool = False) -> Tuple[int, int]:
+    def _validate_figsize(
+        self, figsize: tuple[int], expand_experiments: bool = False, expand_datasets: bool = False
+    ) -> tuple[int, int]:
         """Assess and potentially create a title for the complete figure."""
         if figsize is None:
-            figsize = self.compute_figure_size(expand_experiments=expand_experiments,
-                                               expand_datasets=expand_datasets)
+            figsize = self.compute_figure_size(
+                expand_experiments=expand_experiments, expand_datasets=expand_datasets
+            )
 
         return figsize
 
-    def _setup_fig_and_axes(self,
-                            axes: matplotlib.axes.Axes = None,
-                            expand_datasets: bool = False,
-                            expand_experiments: bool = False,
-                            total_figsize: Tuple[int] = None,
-                            figure_title: str = None) -> Tuple[matplotlib.figure.Figure,
-                                                               Union[matplotlib.axes.Axes,
-                                                                     List[matplotlib.axes.Axes]]]:
+    def _setup_fig_and_axes(
+        self,
+        axes: matplotlib.axes.Axes = None,
+        expand_datasets: bool = False,
+        expand_experiments: bool = False,
+        total_figsize: tuple[int] = None,
+        figure_title: str = None,
+    ) -> tuple[matplotlib.figure.Figure, matplotlib.axes.Axes | list[matplotlib.axes.Axes]]:
         """Prepare a figure and axes for plotting this measurement set.
 
         Parameters
@@ -1090,41 +1138,31 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
         if axes is not None:
             raise ValueError("An experiment set must create its own fig and axes.")
 
-        total_figsize = self._validate_figsize(total_figsize,
-                                               expand_datasets=expand_datasets,
-                                               expand_experiments=expand_experiments)
+        total_figsize = self._validate_figsize(
+            total_figsize, expand_datasets=expand_datasets, expand_experiments=expand_experiments
+        )
 
         if not expand_experiments:
-
             if not expand_datasets:
-                fig, axes = plt.subplots(1,
-                                         1,
-                                         figsize=total_figsize)
+                fig, axes = plt.subplots(1, 1, figsize=total_figsize)
             else:
-                fig, axes = plt.subplots(1,
-                                         self.num_datasets,
-                                         figsize=total_figsize)
+                fig, axes = plt.subplots(1, self.num_datasets, figsize=total_figsize)
 
         elif expand_experiments:
-
             if not expand_datasets:
-                fig, axes = plt.subplots(self.num_experiments,
-                                         1,
-                                         figsize=total_figsize)
+                fig, axes = plt.subplots(self.num_experiments, 1, figsize=total_figsize)
             elif expand_datasets:
-
-                fig, axes = plt.subplots(self.num_experiments,
-                                         self.num_datasets,
-                                         figsize=total_figsize)
+                fig, axes = plt.subplots(
+                    self.num_experiments, self.num_datasets, figsize=total_figsize
+                )
 
         fig.suptitle(self._validate_title(figure_title))
         fig.set_tight_layout({"rect": [0, 0.03, 1, 0.9]})
         return fig, axes
 
-    def condition_to_data(self,
-                          condition_name: str,
-                          new_condition_name: str = None,
-                          condition_unit: str = None) -> None:
+    def condition_to_data(
+        self, condition_name: str, new_condition_name: str = None, condition_unit: str = None
+    ) -> None:
         """Convert a condition to a scalar dataset.
 
         Parameters
@@ -1141,17 +1179,19 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
 
         for measurement in self.measurements:
             measurement.datasets.append(
-                zero_dimensional_dataset.ZeroDimensionalDataset.create(label=new_condition_name,
-                                                                       unit=condition_unit,
-                                                                       value=measurement.conditions[condition_name]))
+                zero_dimensional_dataset.ZeroDimensionalDataset.create(
+                    label=new_condition_name,
+                    unit=condition_unit,
+                    value=measurement.conditions[condition_name],
+                )
+            )
 
         self.remove_condition(condition_name)
         self._update_experiments()
 
-    def compress_conditions(self,
-                            condition_names: List[str],
-                            separator: str = ",",
-                            merge_redundant: bool = True) -> "ExperimentSet":
+    def compress_conditions(
+        self, condition_names: list[str], separator: str = ",", merge_redundant: bool = True
+    ) -> "ExperimentSet":
         """Convert the conditions of each measurement to a single condition.
 
         Parameters
@@ -1168,14 +1208,25 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
             label = ""
             for condition_name in condition_names:
                 if condition_name in self.varying_conditions:
-                    label += condition_name + "=" + str(measurement.conditions[condition_name]) + separator + " "
+                    label += (
+                        condition_name
+                        + "="
+                        + str(measurement.conditions[condition_name])
+                        + separator
+                        + " "
+                    )
 
             label = label[:-2]
 
-            measurements.append(piblin.data.data_collections.measurement.Measurement(measurement.datasets, conditions={"label": label}))
+            measurements.append(
+                piblin.data.data_collections.measurement.Measurement(
+                    measurement.datasets, conditions={"label": label}
+                )
+            )
 
-        return ExperimentSet.from_measurement_set(measurement_set_.MeasurementSet(measurements),
-                                                  merge_redundant=merge_redundant)
+        return ExperimentSet.from_measurement_set(
+            measurement_set_.MeasurementSet(measurements), merge_redundant=merge_redundant
+        )
 
     def __len__(self):
         """The number of experiments in this set.
@@ -1187,7 +1238,7 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
         """
         return len(self.experiments)
 
-    def __getitem__(self, position: Union[int, slice]):
+    def __getitem__(self, position: int | slice):
         """The experiment(s) at the specified position in the set.
 
         Parameters
@@ -1237,7 +1288,10 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
         value : Experiment or list of Experiment
             The experiments to place at the given position.
         """
-        measurements = [experiment.to_measurement_set().measurements for experiment in self.experiments[position]]
+        measurements = [
+            experiment.to_measurement_set().measurements
+            for experiment in self.experiments[position]
+        ]
         for measurement in measurements:
             self.measurements.remove(measurement)
 
@@ -1271,7 +1325,6 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
         str_rep += "\nSummary\n-------\n"
         str_rep += f"Number of Experiments: {self.num_experiments}\n"
         if self.num_experiments < 500 and self.num_datasets < 20:
-
             str_rep += "\nVaried Conditions\n-----------------\n"
             for name in self.varying_conditions:
                 str_rep += str(name) + ", "
@@ -1279,7 +1332,6 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
 
             str_rep += self.summary_table(expand_replicates=False) + "\n"
         else:  # too many experiments or datasets for the table to look nice
-
             previous_dataset_type = self.dataset_types[0]
             dataset_type_str = ""
             dataset_type_count = 0
@@ -1304,10 +1356,21 @@ class ExperimentSet(consistent_measurement_set_.ConsistentMeasurementSet):
                 str_rep += "\nVaried Conditions\n-----------------\n\n"
 
                 for condition_name, condition_value in self.varying_shared_conditions.items():
-                    unique_condition_values = set(sorted([experiment.conditions[condition_name]
-                                                         for experiment in self.experiments]))
+                    unique_condition_values = set(
+                        sorted(
+                            [
+                                experiment.conditions[condition_name]
+                                for experiment in self.experiments
+                            ]
+                        )
+                    )
 
-                    if all([type(condition_value) == str for condition_value in unique_condition_values]):
+                    if all(
+                        [
+                            type(condition_value) is str
+                            for condition_value in unique_condition_values
+                        ]
+                    ):
                         str_rep += f"{condition_name}: ["
                         for condition_value in unique_condition_values:
                             str_rep += f"{condition_value}, "

@@ -1,11 +1,13 @@
-from typing import List, Set, Tuple, Union
-import re
 import copy
+import re
+from typing import Union
 
 import matplotlib.axes
 import numpy as np
 import numpy.typing
+
 import piblin.data.datasets.abc.dataset as dataset
+
 # import piblin.data.datasets.abc.dataset_factory as dataset_factory
 
 
@@ -91,78 +93,93 @@ class SplitDataset(dataset.Dataset):
     create_color_map
         Create a color map for the requested number of datasets of this type.
     """
+
     COLUMN_LABEL_REGEX = r"(\w+)\((\w+)\)=(\d+)"
     """Regular expression for extracting dataset information from column labels of flat data."""
 
-    def __init__(self,
-                 dependent_variable_data: numpy.typing.ArrayLike,
-                 dependent_variable_names: List[str] = None,
-                 dependent_variable_units: List[str] = None,
-                 independent_variable_data: List[numpy.typing.ArrayLike] = None,
-                 independent_variable_names: List[str] = None,
-                 independent_variable_units: List[str] = None,
-                 source: str = None):
+    def __init__(
+        self,
+        dependent_variable_data: numpy.typing.ArrayLike,
+        dependent_variable_names: list[str] = None,
+        dependent_variable_units: list[str] = None,
+        independent_variable_data: list[numpy.typing.ArrayLike] = None,
+        independent_variable_names: list[str] = None,
+        independent_variable_units: list[str] = None,
+        source: str = None,
+    ):
 
         super().__init__(source=source)
 
         self._dependent_variable_data = np.array(dependent_variable_data)
 
         if independent_variable_data is None:
-            self._independent_variable_data = [np.array(range(number_of_points))
-                                               for number_of_points in
-                                               self.dependent_variable_data.shape]
+            self._independent_variable_data = [
+                np.array(range(number_of_points))
+                for number_of_points in self.dependent_variable_data.shape
+            ]
 
         else:
-            self._independent_variable_data = [np.array(independent_axis_values) for independent_axis_values in
-                                               independent_variable_data]
+            self._independent_variable_data = [
+                np.array(independent_axis_values)
+                for independent_axis_values in independent_variable_data
+            ]
 
             # TODO - should be in a validation method
             for independent_axis_values in self.independent_variable_data:
                 if independent_axis_values.ndim != 1:
-                    raise ValueError(f"Incorrect number of dimensions for independent axis: "
-                                     f"{independent_axis_values.ndim} != 1, "
-                                     f"shape={independent_axis_values.shape}")
+                    raise ValueError(
+                        f"Incorrect number of dimensions for independent axis: "
+                        f"{independent_axis_values.ndim} != 1, "
+                        f"shape={independent_axis_values.shape}"
+                    )
 
             if len(self.independent_variable_data) != self.number_of_independent_dimensions:
-                raise ValueError(f"Incorrect number of independent axes provided. "
-                                 f"Expected: {self.number_of_dependent_dimensions}, "
-                                 f"Received: {len(self.independent_variable_data)}")
+                raise ValueError(
+                    f"Incorrect number of independent axes provided. "
+                    f"Expected: {self.number_of_dependent_dimensions}, "
+                    f"Received: {len(self.independent_variable_data)}"
+                )
 
             for i, dependent_variable_data_length in enumerate(self.dependent_variable_data.shape):
                 if dependent_variable_data_length != len(self.independent_variable_data[i]):
-                    raise ValueError(f"Independent variable lengths do not match shape of dependent variable data. "
-                                     f"Expected: {self.dependent_variable_data.shape} "
-                                     f"Received: {[len(ind) for ind in self.independent_variable_data]}")
+                    raise ValueError(
+                        f"Independent variable lengths do not match shape of dependent variable data. "
+                        f"Expected: {self.dependent_variable_data.shape} "
+                        f"Received: {[len(ind) for ind in self.independent_variable_data]}"
+                    )
 
         if dependent_variable_names is None:
-            self._dependent_variable_names = \
-                self._generate_default_variable_names(prefix="d", n=self.number_of_dependent_dimensions)
+            self._dependent_variable_names = self._generate_default_variable_names(
+                prefix="d", n=self.number_of_dependent_dimensions
+            )
         else:
             self._dependent_variable_names = dependent_variable_names
 
         if dependent_variable_units is None:
-            self._dependent_variable_units = \
-                self._generate_default_variable_units(n=self.number_of_dependent_dimensions)
+            self._dependent_variable_units = self._generate_default_variable_units(
+                n=self.number_of_dependent_dimensions
+            )
         else:
             self._dependent_variable_units = dependent_variable_units
 
         if independent_variable_names is None:
-            self._independent_variable_names = \
-                self._generate_default_variable_names(prefix="i", n=self.number_of_independent_dimensions)
+            self._independent_variable_names = self._generate_default_variable_names(
+                prefix="i", n=self.number_of_independent_dimensions
+            )
         else:
             self._independent_variable_names = independent_variable_names
 
         if independent_variable_units is None:
-            self._independent_variable_units = \
-                self._generate_default_variable_units(n=self.number_of_independent_dimensions)
+            self._independent_variable_units = self._generate_default_variable_units(
+                n=self.number_of_independent_dimensions
+            )
         else:
             self._independent_variable_units = independent_variable_units
 
         self._validate_attributes()
 
     @property
-    def data(self) -> Set[Tuple[Tuple[Union[bool, int, float]],
-                                Tuple[Union[bool, int, float]]]]:
+    def data(self) -> set[tuple[tuple[bool | int | float], tuple[bool | int | float]]]:
         """Convert this split dataset to an unambiguous form."""
         pass
 
@@ -180,7 +197,9 @@ class SplitDataset(dataset.Dataset):
         reason new values must be validated before being set.
         """
         if dependent_variable_data.shape != self.dependent_variable_data.shape:
-            print(f"New shape: {dependent_variable_data.shape}\nOriginal Shape: { self.dependent_variable_data.shape}")
+            print(
+                f"New shape: {dependent_variable_data.shape}\nOriginal Shape: {self.dependent_variable_data.shape}"
+            )
             raise ValueError("Cannot replace dependent variable data with different shape")
         else:
             self._dependent_variable_data = dependent_variable_data
@@ -188,10 +207,10 @@ class SplitDataset(dataset.Dataset):
     @property
     def number_of_dependent_dimensions(self) -> int:
         """The dimensionality of the dependent variables of each data point of this dataset."""
-        return 1  #self.dependent_variable_data.ndim
+        return 1  # self.dependent_variable_data.ndim
 
     @property
-    def dependent_variable_range(self) -> Tuple[float, float]:
+    def dependent_variable_range(self) -> tuple[float, float]:
         """The ranges (min, max) of the dependent variable.
 
         Returns
@@ -202,34 +221,36 @@ class SplitDataset(dataset.Dataset):
         return np.min(self.dependent_variable_data), np.max(self.dependent_variable_data)
 
     @property
-    def dependent_variable_names(self) -> List[str]:
+    def dependent_variable_names(self) -> list[str]:
         """The names of the dependent variables."""
         return self._dependent_variable_names
 
     @dependent_variable_names.setter
-    def dependent_variable_names(self, dependent_variable_names: List[str]) -> None:
+    def dependent_variable_names(self, dependent_variable_names: list[str]) -> None:
         if len(dependent_variable_names) != self.number_of_dependent_dimensions:
-            raise ValueError(f"Incorrect number ({len(dependent_variable_names)}) of dependent variable names. "
-                             f"Expected {self.number_of_dependent_dimensions}")
+            raise ValueError(
+                f"Incorrect number ({len(dependent_variable_names)}) of dependent variable names. "
+                f"Expected {self.number_of_dependent_dimensions}"
+            )
         else:
             self._dependent_variable_names = dependent_variable_names
 
     @property
-    def dependent_variable_units(self) -> List[str]:
+    def dependent_variable_units(self) -> list[str]:
         """The units of the dependent variables."""
         return self._dependent_variable_units
 
     @dependent_variable_units.setter
     def dependent_variable_units(self, dependent_variable_units) -> None:
         if len(dependent_variable_units) != self.number_of_dependent_dimensions:
-            raise ValueError(f"Incorrect number ({len(dependent_variable_units)}) of dependent variable units. "
-                             f"Expected {self.number_of_dependent_dimensions}")
+            raise ValueError(
+                f"Incorrect number ({len(dependent_variable_units)}) of dependent variable units. "
+                f"Expected {self.number_of_dependent_dimensions}"
+            )
         else:
             self._dependent_variable_units = dependent_variable_units
 
-    def change_dependent_variable_data_unit(self,
-                                            factor: float,
-                                            unit_name: str) -> None:
+    def change_dependent_variable_data_unit(self, factor: float, unit_name: str) -> None:
         """Change the units of the independent variable by a multiplicative factor.
 
         Parameters
@@ -243,7 +264,7 @@ class SplitDataset(dataset.Dataset):
         self.dependent_variable_units = [unit_name]
 
     @property
-    def independent_variable_data(self) -> List[np.ndarray]:
+    def independent_variable_data(self) -> list[np.ndarray]:
         """The values of independent variables along each axis."""
         return self._independent_variable_data
 
@@ -253,7 +274,7 @@ class SplitDataset(dataset.Dataset):
         return len(self.independent_variable_data)
 
     @property
-    def independent_variable_ranges(self) -> List[Tuple[float, float]]:
+    def independent_variable_ranges(self) -> list[tuple[float, float]]:
         """The ranges (min, max) of each independent variable.
 
         Returns
@@ -261,8 +282,10 @@ class SplitDataset(dataset.Dataset):
         List of Tuple of float
             The minimum and maximum values of each independent variable.
         """
-        return [(np.min(independent_variables),
-                 np.max(independent_variables)) for independent_variables in self.independent_variable_data]
+        return [
+            (np.min(independent_variables), np.max(independent_variables))
+            for independent_variables in self.independent_variable_data
+        ]
 
     def step_size_along_independent_dimension(self, dimension: int) -> float:
         """Determine the pixel size along the given dimension.
@@ -277,40 +300,54 @@ class SplitDataset(dataset.Dataset):
         float
             The pixel size along the given dimension.
         """
-        first_step_size = self.independent_variable_data[dimension][1] - self.independent_variable_data[dimension][0]
-        for pair in ((self.independent_variable_data[dimension][i],
-                      self.independent_variable_data[dimension][i + 1])
-                     for i in range(0, len(self.independent_variable_data[dimension]) - 1)):
-
+        first_step_size = (
+            self.independent_variable_data[dimension][1]
+            - self.independent_variable_data[dimension][0]
+        )
+        for pair in (
+            (
+                self.independent_variable_data[dimension][i],
+                self.independent_variable_data[dimension][i + 1],
+            )
+            for i in range(0, len(self.independent_variable_data[dimension]) - 1)
+        ):
             step_size = pair[1] - pair[0]
             if not np.isclose(step_size, first_step_size):
-                raise ValueError(f"2D dataset does not have constant x pixel size: {first_step_size} != {step_size}")
+                raise ValueError(
+                    f"2D dataset does not have constant x pixel size: {first_step_size} != {step_size}"
+                )
 
         return float(first_step_size)
 
     @property
-    def size(self) -> List[float]:
+    def size(self) -> list[float]:
         """The size of the dataset along each independent dimension"""
-        return [variable_range[1] - variable_range[0]
-                for variable_range in self.independent_variable_ranges]
+        return [
+            variable_range[1] - variable_range[0]
+            for variable_range in self.independent_variable_ranges
+        ]
 
     @property
-    def center(self) -> List[float]:
+    def center(self) -> list[float]:
         """The center of the dataset along each independent dimension"""
-        return [np.min(independent_variables) +
-                ((np.max(independent_variables) -
-                  np.min(independent_variables)) / 2) for independent_variables in self.independent_variable_data]
+        return [
+            np.min(independent_variables)
+            + ((np.max(independent_variables) - np.min(independent_variables)) / 2)
+            for independent_variables in self.independent_variable_data
+        ]
 
     @property
-    def independent_variable_names(self) -> List[str]:
+    def independent_variable_names(self) -> list[str]:
         """The names of the independent variables."""
         return self._independent_variable_names
 
     @independent_variable_names.setter
-    def independent_variable_names(self, independent_variable_names: List[str]) -> None:
+    def independent_variable_names(self, independent_variable_names: list[str]) -> None:
         if len(independent_variable_names) != self.number_of_independent_dimensions:
-            raise ValueError(f"Incorrect number ({len(independent_variable_names)}) of independent variable names. "
-                             f"Expected {self.number_of_independent_dimensions}")
+            raise ValueError(
+                f"Incorrect number ({len(independent_variable_names)}) of independent variable names. "
+                f"Expected {self.number_of_independent_dimensions}"
+            )
         else:
             self._independent_variable_names = independent_variable_names
 
@@ -330,7 +367,7 @@ class SplitDataset(dataset.Dataset):
         independent_variable_index = self.independent_variable_index(independent_variable_name)
         return self.remove_independent_variable(independent_variable_index)
 
-    def remove_independent_variables_by_name(self, independent_variable_names: List[str]):
+    def remove_independent_variables_by_name(self, independent_variable_names: list[str]):
         """Create a new dataset without the specified independent variable names.
 
         Parameters
@@ -343,7 +380,9 @@ class SplitDataset(dataset.Dataset):
         SplitDataset
             A split dataset with the named independent variables removed.
         """
-        independent_variable_indices = [self.independent_variable_index(name) for name in independent_variable_names]
+        independent_variable_indices = [
+            self.independent_variable_index(name) for name in independent_variable_names
+        ]
         return self.remove_independent_variables(independent_variable_indices)
 
     def remove_independent_variable(self, independent_variable_index: int) -> "SplitDataset":
@@ -360,22 +399,24 @@ class SplitDataset(dataset.Dataset):
         """
         dataset = copy.deepcopy(self)
 
-        independent_variable_data_to_keep = \
-            dataset.independent_variable_data[:independent_variable_index] + \
-            dataset.independent_variable_data[independent_variable_index + 1:]
+        independent_variable_data_to_keep = (
+            dataset.independent_variable_data[:independent_variable_index]
+            + dataset.independent_variable_data[independent_variable_index + 1 :]
+        )
 
-        independent_variable_names_to_keep = \
-            dataset.independent_variable_names[:independent_variable_index] + \
-            dataset.independent_variable_names[independent_variable_index + 1:]
+        independent_variable_names_to_keep = (
+            dataset.independent_variable_names[:independent_variable_index]
+            + dataset.independent_variable_names[independent_variable_index + 1 :]
+        )
 
-        independent_variable_units_to_keep = \
-            dataset.independent_variable_units[:independent_variable_index] + \
-            dataset.independent_variable_units[independent_variable_index + 1:]
+        independent_variable_units_to_keep = (
+            dataset.independent_variable_units[:independent_variable_index]
+            + dataset.independent_variable_units[independent_variable_index + 1 :]
+        )
 
         new_dependent_variable_data = np.squeeze(dataset.dependent_variable_data, -1)
 
-        import \
-            piblin.data.datasets.abc.dataset_factory as dataset_factory
+        import piblin.data.datasets.abc.dataset_factory as dataset_factory
 
         return dataset_factory.DatasetFactory.from_split_data(
             dependent_variable_data=new_dependent_variable_data,
@@ -383,10 +424,12 @@ class SplitDataset(dataset.Dataset):
             dependent_variable_units=dataset.dependent_variable_units,
             independent_variable_data=independent_variable_data_to_keep,
             independent_variable_names=independent_variable_names_to_keep,
-            independent_variable_units=independent_variable_units_to_keep
+            independent_variable_units=independent_variable_units_to_keep,
         )
 
-    def remove_independent_variables(self, independent_variable_indices: List[int]) -> "SplitDataset":
+    def remove_independent_variables(
+        self, independent_variable_indices: list[int]
+    ) -> "SplitDataset":
         """Create a new dataset without the specified independent variables.
 
         Parameters
@@ -400,25 +443,33 @@ class SplitDataset(dataset.Dataset):
         """
         dataset = copy.deepcopy(self)
 
-        independent_variable_data_to_keep = \
-            [independent_variable_data
-             for independent_variable_index, independent_variable_data in enumerate(dataset.independent_variable_data)
-             if independent_variable_index not in independent_variable_indices]
+        independent_variable_data_to_keep = [
+            independent_variable_data
+            for independent_variable_index, independent_variable_data in enumerate(
+                dataset.independent_variable_data
+            )
+            if independent_variable_index not in independent_variable_indices
+        ]
 
-        independent_variable_names_to_keep = \
-            [independent_variable_name
-             for independent_variable_index, independent_variable_name in enumerate(dataset.independent_variable_names)
-             if independent_variable_index not in independent_variable_indices]
+        independent_variable_names_to_keep = [
+            independent_variable_name
+            for independent_variable_index, independent_variable_name in enumerate(
+                dataset.independent_variable_names
+            )
+            if independent_variable_index not in independent_variable_indices
+        ]
 
-        independent_variable_units_to_keep = \
-            [independent_variable_unit
-             for independent_variable_index, independent_variable_unit in enumerate(dataset.independent_variable_units)
-             if independent_variable_index not in independent_variable_indices]
+        independent_variable_units_to_keep = [
+            independent_variable_unit
+            for independent_variable_index, independent_variable_unit in enumerate(
+                dataset.independent_variable_units
+            )
+            if independent_variable_index not in independent_variable_indices
+        ]
 
         new_dependent_variable_data = np.squeeze(dataset.dependent_variable_data, -1)
 
-        import \
-            piblin.data.datasets.abc.dataset_factory as dataset_factory
+        import piblin.data.datasets.abc.dataset_factory as dataset_factory
 
         return dataset_factory.DatasetFactory.from_split_data(
             dependent_variable_data=new_dependent_variable_data,
@@ -426,7 +477,7 @@ class SplitDataset(dataset.Dataset):
             dependent_variable_units=dataset.dependent_variable_units,
             independent_variable_data=independent_variable_data_to_keep,
             independent_variable_names=independent_variable_names_to_keep,
-            independent_variable_units=independent_variable_units_to_keep
+            independent_variable_units=independent_variable_units_to_keep,
         )
 
     def independent_variable_index(self, independent_variable_name: str) -> int:
@@ -449,26 +500,29 @@ class SplitDataset(dataset.Dataset):
         """
         try:
             return self.independent_variable_names.index(independent_variable_name)
-        except ValueError:
-            raise ValueError("No independent variable with name: {independent_variable_name}")
+        except ValueError as err:
+            raise ValueError(
+                f"No independent variable with name: {independent_variable_name}"
+            ) from err
 
     @property
-    def independent_variable_units(self) -> List[str]:
+    def independent_variable_units(self) -> list[str]:
         """The units of the independent variables."""
         return self._independent_variable_units
 
     @independent_variable_units.setter
     def independent_variable_units(self, independent_variable_units) -> None:
         if len(independent_variable_units) != self.number_of_independent_dimensions:
-            raise ValueError(f"Incorrect number ({len(independent_variable_units)}) of independent variable units. "
-                             f"Expected {self.number_of_independent_dimensions}")
+            raise ValueError(
+                f"Incorrect number ({len(independent_variable_units)}) of independent variable units. "
+                f"Expected {self.number_of_independent_dimensions}"
+            )
         else:
             self._independent_variable_units = independent_variable_units
 
     def change_independent_variable_data_units(
-            self,
-            factors: List[float],
-            unit_names: List[str]) -> None:
+        self, factors: list[float], unit_names: list[str]
+    ) -> None:
         """Change the units of the independent variable by a factor.
 
         Parameters
@@ -479,8 +533,7 @@ class SplitDataset(dataset.Dataset):
             The (per-independent variable) new unit names.
         """
         for i, (factor, unit_name) in enumerate(zip(factors, unit_names)):
-            self.independent_variable_data[i] = \
-                self.independent_variable_data[i] * factor
+            self.independent_variable_data[i] = self.independent_variable_data[i] * factor
             self.independent_variable_units[i] = unit_name
 
     def number_of_points(self) -> int:
@@ -488,34 +541,25 @@ class SplitDataset(dataset.Dataset):
         return self.dependent_variable_data.size
 
     @staticmethod
-    def compute_average(datasets: List["SplitDataset"]) -> "SplitDataset":
+    def compute_average(datasets: list["SplitDataset"]) -> "SplitDataset":
         """Compute the average split dataset from a given set."""
-        raise NotImplementedError(
-            "Averaging of generic split datasets is not implemented."
-        )
+        raise NotImplementedError("Averaging of generic split datasets is not implemented.")
 
     @staticmethod
-    def compute_variation(
-            datasets: List["SplitDataset"]
-    ) -> "SplitDataset":
+    def compute_variation(datasets: list["SplitDataset"]) -> "SplitDataset":
         """Compute the variation across a set of split datasets."""
-        raise NotImplementedError(
-            "Variation in generic split datasets is not implemented."
-        )
+        raise NotImplementedError("Variation in generic split datasets is not implemented.")
 
-    def _plot_on_axes(self,
-                      axes: matplotlib.axes.Axes,
-                      **axes_plotting_kwargs) -> None:
+    def _plot_on_axes(self, axes: matplotlib.axes.Axes, **axes_plotting_kwargs) -> None:
         """Plot this dataset on a given matplotlib axes."""
         raise NotImplementedError(
             "Visualization for generic split dataset is not supported."
             "Consider using/creating a subclass of defined dimensionality."
         )
 
-    def _plot_on_axes_with_variation(self,
-                                     axes: matplotlib.axes.Axes,
-                                     variation,
-                                     **plot_kwargs) -> None:
+    def _plot_on_axes_with_variation(
+        self, axes: matplotlib.axes.Axes, variation, **plot_kwargs
+    ) -> None:
         """Visualize the given variation in this dataset."""
         raise NotImplementedError(
             "Visualization for generic split dataset is not supported."
@@ -545,8 +589,9 @@ class SplitDataset(dataset.Dataset):
 
             if self.number_of_independent_dimensions != 0:
                 str_rep += "=f("
-                for independent_variable_name, independent_variable_unit in zip(self.independent_variable_names,
-                                                                                self.independent_variable_units):
+                for independent_variable_name, independent_variable_unit in zip(
+                    self.independent_variable_names, self.independent_variable_units
+                ):
                     str_rep += f"{independent_variable_name}"
                     if independent_variable_unit is not None:
                         str_rep += f"[{independent_variable_unit}]"
@@ -561,7 +606,7 @@ class SplitDataset(dataset.Dataset):
 
         return str_rep
 
-    def _encode_column_labels(self) -> List[str]:
+    def _encode_column_labels(self) -> list[str]:
         """Create a label for each column of a flattened dataset.
 
         The column labels need to follow a strict format so that they
@@ -632,7 +677,7 @@ class SplitDataset(dataset.Dataset):
             The dependent variable data as a 1D numpy array.
         """
         return self.dependent_variable_data.flatten(order="C")
-    
+
     def to_xarray(self):
         """Converts Dataset to xarray.DataArray
 
@@ -642,17 +687,17 @@ class SplitDataset(dataset.Dataset):
             Dataset converted to xarray DataArray object.
         """
         import xarray as xr
+
         tech = self.__class__.__module__ + "." + self.__class__.__name__
         xr_data = xr.DataArray(
             self.dependent_variable_data,
             name=self.dependent_variable_name,  # 1-D only?
             coords=self.independent_variable_data,
-            dims=self.independent_variable_names)
+            dims=self.independent_variable_names,
+        )
         xr_data.attrs["cralds_cls"] = tech
-        xr_data.attrs[
-            "dependent_variable_units"] = self.dependent_variable_units
-        xr_data.attrs[
-            "independent_variable_units"] = self.independent_variable_units
+        xr_data.attrs["dependent_variable_units"] = self.dependent_variable_units
+        xr_data.attrs["independent_variable_units"] = self.independent_variable_units
         xr_data.attrs["source"] = self.source
         return xr_data
 
@@ -671,30 +716,26 @@ class SplitDataset(dataset.Dataset):
             Dataset created from DataArry object.
         """
         import xarray as xr
+
         dependent_variable_data = xr_data.values
-        dependent_variable_names = [
-            xr_data.attrs.get("dependent_variable_name", xr_data.name)
-        ]
-        independent_variable_data = [
-            coord.values for coord in xr_data.coords.values()
-        ]
+        dependent_variable_names = [xr_data.attrs.get("dependent_variable_name", xr_data.name)]
+        independent_variable_data = [coord.values for coord in xr_data.coords.values()]
         independent_variable_names = list(xr_data.coords.keys())
         dependent_variable_units = xr_data.attrs["dependent_variable_units"]
-        independent_variable_units = xr_data.attrs[
-            "independent_variable_units"]
+        independent_variable_units = xr_data.attrs["independent_variable_units"]
         source = xr_data.attrs["source"]
-        return cls(dependent_variable_data=dependent_variable_data,
-                   dependent_variable_names=dependent_variable_names,
-                   dependent_variable_units=dependent_variable_units,
-                   independent_variable_data=independent_variable_data,
-                   independent_variable_names=independent_variable_names,
-                   independent_variable_units=independent_variable_units,
-                   source=source)
+        return cls(
+            dependent_variable_data=dependent_variable_data,
+            dependent_variable_names=dependent_variable_names,
+            dependent_variable_units=dependent_variable_units,
+            independent_variable_data=independent_variable_data,
+            independent_variable_names=independent_variable_names,
+            independent_variable_units=independent_variable_units,
+            source=source,
+        )
 
     @classmethod
-    def unflatten(cls,
-                  column_labels: List[str],
-                  values: np.ndarray) -> "SplitDataset":
+    def unflatten(cls, column_labels: list[str], values: np.ndarray) -> "SplitDataset":
         """Turn the provided column labels and values into a dataset.
 
         Parameters
@@ -716,7 +757,6 @@ class SplitDataset(dataset.Dataset):
 
         all_coords = []
         for label in column_labels:
-
             variable_split_pattern = re.compile(variable_split_regex)
             match = variable_split_pattern.match(label)
             if match is not None:
@@ -767,13 +807,15 @@ class SplitDataset(dataset.Dataset):
         else:
             dependent_variable_data = values.reshape(new_shape)
 
-        return cls(dependent_variable_data=dependent_variable_data,
-                   dependent_variable_names=[dependent_variable_name],
-                   dependent_variable_units=[dependent_variable_unit],
-                   independent_variable_data=independent_variable_data,
-                   independent_variable_names=names,
-                   independent_variable_units=units,
-                   source=None)
+        return cls(
+            dependent_variable_data=dependent_variable_data,
+            dependent_variable_names=[dependent_variable_name],
+            dependent_variable_units=[dependent_variable_unit],
+            independent_variable_data=independent_variable_data,
+            independent_variable_names=names,
+            independent_variable_units=units,
+            source=None,
+        )
 
     @classmethod
     def unflatten_dependent_variables(cls, values: np.ndarray):
@@ -794,7 +836,7 @@ class SplitDataset(dataset.Dataset):
         raise NotImplementedError("To be implemented.")
 
     @staticmethod
-    def decode_column_labels(column_labels: List[str]):
+    def decode_column_labels(column_labels: list[str]):
         """Turn the provided column label into dataset information.
 
         For a scalar there is only one label, for the y-value, and
@@ -822,12 +864,14 @@ class SplitDataset(dataset.Dataset):
         if self.source is not None:
             str_rep += f"Dataset Source: {self.source}\n"
 
-        str_rep += f"\nDependent Variable Data Properties: " \
-                   f"ndim={self.dependent_variable_data.ndim}, " \
-                   f"size={self.dependent_variable_data.size} ({self.dependent_variable_data.size} bytes), " \
-                   f"shape={self.dependent_variable_data.shape}\n"
+        str_rep += (
+            f"\nDependent Variable Data Properties: "
+            f"ndim={self.dependent_variable_data.ndim}, "
+            f"size={self.dependent_variable_data.size} ({self.dependent_variable_data.size} bytes), "
+            f"shape={self.dependent_variable_data.shape}\n"
+        )
 
-        str_rep += f"Dependent Variable Labels: "
+        str_rep += "Dependent Variable Labels: "
         for label in self.dependent_variable_axis_labels:
             str_rep += f"{label}, "
         str_rep = str_rep[:-2]
@@ -835,10 +879,12 @@ class SplitDataset(dataset.Dataset):
         if self.number_of_independent_dimensions == 0:
             return str_rep
         else:
-            str_rep += f"\n\nIndependent Variable Data Properties: " \
-                       f"n={self.number_of_independent_dimensions}, lengths={[len(axis) for axis in self.independent_variable_data]}\n"
+            str_rep += (
+                f"\n\nIndependent Variable Data Properties: "
+                f"n={self.number_of_independent_dimensions}, lengths={[len(axis) for axis in self.independent_variable_data]}\n"
+            )
 
-            str_rep += f"Independent Variable Labels: "
+            str_rep += "Independent Variable Labels: "
             for label in self.independent_variable_axis_labels:
                 str_rep += f"{label}, "
 
@@ -850,9 +896,9 @@ class SplitDataset(dataset.Dataset):
         str_rep += f"dependent_variable_data={self.dependent_variable_data}, "
         str_rep += f"dependent_variable_names={self.dependent_variable_names}, "
         str_rep += f"dependent_variable_units={self.dependent_variable_units}, "
-        str_rep += f"independent_variable_data=["
+        str_rep += "independent_variable_data=["
         for array in self.independent_variable_data:
-            str_rep += np.array2string(array, separator=',')
+            str_rep += np.array2string(array, separator=",")
         str_rep += "], "
         str_rep += f"independent_variable_names={self.independent_variable_names}, "
         str_rep += f"independent_variable_units={self.independent_variable_units}, "
@@ -865,14 +911,13 @@ class SplitDataset(dataset.Dataset):
         if self is other:
             return True
 
-        if not np.array_equal(self._dependent_variable_data,
-                              other.dependent_variable_data):
+        if not np.array_equal(self._dependent_variable_data, other.dependent_variable_data):
             return False
 
-        for this_axis, other_axis in zip(self.independent_variable_data,
-                                         other.independent_variable_data):
-            if not np.array_equal(this_axis,
-                                  other_axis):
+        for this_axis, other_axis in zip(
+            self.independent_variable_data, other.independent_variable_data
+        ):
+            if not np.array_equal(this_axis, other_axis):
                 return False
 
         if self.dependent_variable_names != other.dependent_variable_names:

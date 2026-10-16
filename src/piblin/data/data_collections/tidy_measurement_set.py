@@ -1,9 +1,8 @@
-from typing import List, Tuple
-
 import numpy as np
 import numpy.typing
-import piblin.data.data_collections.measurement as measurement_
+
 import piblin.data.data_collections.consistent_measurement_set as consistent_measurement_set
+import piblin.data.data_collections.measurement as measurement_
 
 
 class TidyMeasurementSet(consistent_measurement_set.ConsistentMeasurementSet):
@@ -18,18 +17,18 @@ class TidyMeasurementSet(consistent_measurement_set.ConsistentMeasurementSet):
     measurements : list of Measurement
         The measurements of this tidy measurement set.
     """
-    def __init__(self,
-                 measurements: List[measurement_.Measurement] = None,
-                 merge_redundant: bool = True):
 
-        super().__init__(measurements=measurements,
-                         merge_redundant=merge_redundant)
+    def __init__(
+        self, measurements: list[measurement_.Measurement] = None, merge_redundant: bool = True
+    ):
+
+        super().__init__(measurements=measurements, merge_redundant=merge_redundant)
 
         if not self.is_tidy:
             raise ValueError("Measurements are not tidy.")
 
     @property
-    def dataset_lengths(self) -> List[int]:
+    def dataset_lengths(self) -> list[int]:
         """The number of data points in each dataset of this tidy measurement set."""
         if not self.measurements:
             return []
@@ -104,20 +103,20 @@ class TidyMeasurementSet(consistent_measurement_set.ConsistentMeasurementSet):
         mean_datasets = []
         dataset_index = 0
         dataset_start_index = 0
-        for dataset_length, dataset_type in zip(self.dataset_lengths,
-                                                self.dataset_types):
-
-            mean_dataset = dataset_type(mean_data[dataset_start_index:dataset_start_index + dataset_length],
-                                        self.datasets[0][dataset_index].independent_variable_data,
-                                        dependent_variable_name=self.repetitions[0][dataset_index].dependent_variable_name)
+        for dataset_length, dataset_type in zip(self.dataset_lengths, self.dataset_types):
+            mean_dataset = dataset_type(
+                mean_data[dataset_start_index : dataset_start_index + dataset_length],
+                self.datasets[0][dataset_index].independent_variable_data,
+                dependent_variable_name=self.repetitions[0][dataset_index].dependent_variable_name,
+            )
             mean_datasets.append(mean_dataset)
 
             dataset_start_index = dataset_length
             dataset_index += 1
 
-        return measurement_.Measurement(mean_datasets,
-                                        self.equal_shared_conditions,
-                                        self.equal_shared_details)
+        return measurement_.Measurement(
+            mean_datasets, self.equal_shared_conditions, self.equal_shared_details
+        )
 
     @property
     def data_variation(self):
@@ -137,10 +136,8 @@ class TidyMeasurementSet(consistent_measurement_set.ConsistentMeasurementSet):
         var_datasets = []
         dataset_index = 0
         dataset_start_index = 0
-        for dataset_length, dataset_type in zip(self.dataset_lengths,
-                                                self.dataset_types):
-
-            var_dataset = var_data[dataset_start_index:dataset_start_index + dataset_length]
+        for dataset_length, _dataset_type in zip(self.dataset_lengths, self.dataset_types):
+            var_dataset = var_data[dataset_start_index : dataset_start_index + dataset_length]
             var_datasets.append(var_dataset)
 
             dataset_start_index = dataset_length
@@ -148,8 +145,7 @@ class TidyMeasurementSet(consistent_measurement_set.ConsistentMeasurementSet):
 
         return var_datasets
 
-    def flatten_datasets(self) -> Tuple[List[str],
-                                        List[np.ndarray]]:
+    def flatten_datasets(self) -> tuple[list[str], list[np.ndarray]]:
         """Flatten the datasets of this tidy measurement set.
 
         The tidy measurement set is consistent and by definition has datasets in each measurement
@@ -167,14 +163,13 @@ class TidyMeasurementSet(consistent_measurement_set.ConsistentMeasurementSet):
         """
         dataset_column_headers = []
         for dataset in self.measurements[0].datasets:
-            column_labels: List[str]
+            column_labels: list[str]
             column_labels, _ = dataset.flatten()
             dataset_column_headers.extend(column_labels)
 
         dataset_rows = []
         for measurement in self.measurements:
-
-            dataset_values: List[object] = []
+            dataset_values: list[object] = []
             for dataset in measurement.datasets:
                 data: np.ndarray
                 _, data = dataset.flatten()
