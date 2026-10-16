@@ -26,7 +26,8 @@ readme = "README.md"
 dynamic = ["version"]
 requires-python = ">=3.10, <3.14"
 
-license = { text = "Proprietary" }
+license = "MIT"
+license-files = ["LICENSE"]
 classifiers = [
     "Development Status :: 1 - Planning",
     "Intended Audience :: Science/Research",
@@ -39,7 +40,6 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "License :: OSI Approved :: MIT License",
 ]
 
 dependencies = [
