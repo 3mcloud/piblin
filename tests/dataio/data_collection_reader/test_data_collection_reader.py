@@ -1,5 +1,10 @@
 import pytest
 import pathlib
+import shutil
+import piblin.dataio
+from piblin.dataio.data_collection_reader import UnsupportedFileSubtypeError
+from piblin.dataio.fileio.read import FileParsingException
+from piblin.dataio.fileio.read.generic.generic_csv import CsvReader
 from piblin.dataio.data_collection_reader import DataCollectionReader
 from piblin.dataio.metadata_converter import MetadataConverter
 
@@ -85,3 +90,73 @@ def test_metadata_converters(metadata):
 def test_bad_metadata_converter():
     with pytest.raises(TypeError):
         reader = DataCollectionReader("d")
+
+
+class DatAsCsvReader(CsvReader):
+    """Reads comma-separated .dat files; not selected by extension."""
+    supported_extensions = set()
+    calls = 0
+
+    def _read_file_contents(self, filepath, **read_kwargs):
+        DatAsCsvReader.calls += 1
+        return super()._read_file_contents(filepath, **read_kwargs)
+
+
+class FailingReader(CsvReader):
+    supported_extensions = set()
+
+    def _read_file_contents(self, filepath, **read_kwargs):
+        raise FileParsingException("cannot parse")
+
+
+@pytest.fixture()
+def dat_filepath(example_filepath):
+    dat = example_filepath.with_suffix(".dat")
+    shutil.copy(example_filepath, dat)
+    return dat
+
+
+def test_unregistered_extension_needs_file_reader(dat_filepath):
+    with pytest.raises(UnsupportedFileSubtypeError):
+        DataCollectionReader().from_filepath(dat_filepath)
+
+
+def test_file_reader_is_used(dat_filepath):
+    DatAsCsvReader.calls = 0
+    measurements = DataCollectionReader().from_filepath(dat_filepath, file_reader=DatAsCsvReader)
+    assert DatAsCsvReader.calls == 1
+    assert measurements.details["key"] == "value"
+
+
+def test_file_reader_takes_precedence_over_extension(example_filepath):
+    DatAsCsvReader.calls = 0
+    DataCollectionReader().from_filepath(example_filepath, file_reader=DatAsCsvReader)
+    assert DatAsCsvReader.calls == 1
+
+
+def test_file_reader_list_is_tried_in_order(dat_filepath):
+    DatAsCsvReader.calls = 0
+    DataCollectionReader().from_filepath(dat_filepath, file_reader=[FailingReader, DatAsCsvReader])
+    assert DatAsCsvReader.calls == 1
+
+
+def test_file_reader_list_all_fail(dat_filepath):
+    with pytest.raises(UnsupportedFileSubtypeError, match="FailingReader"):
+        DataCollectionReader().from_filepath(dat_filepath, file_reader=[FailingReader])
+
+
+@pytest.mark.parametrize("bad", [CsvReader(), "CsvReader", [], [CsvReader, int]])
+def test_file_reader_type_is_checked(dat_filepath, bad):
+    with pytest.raises(TypeError):
+        DataCollectionReader().from_filepath(dat_filepath, file_reader=bad)
+
+
+def test_read_functions_pass_file_reader(dat_filepath):
+    DatAsCsvReader.calls = 0
+    piblin.dataio.read_file(str(dat_filepath), file_reader=DatAsCsvReader)
+    piblin.dataio.read_files([str(dat_filepath)], file_reader=DatAsCsvReader)
+    piblin.dataio.read_directory(str(dat_filepath.parent), extension="dat",
+                                 file_reader=DatAsCsvReader)
+    piblin.dataio.read_directories([str(dat_filepath.parent)], extension="dat",
+                                   file_reader=DatAsCsvReader)
+    assert DatAsCsvReader.calls == 4
