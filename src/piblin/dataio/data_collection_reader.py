@@ -13,10 +13,11 @@ import csv
 import pathlib
 from base64 import b64decode, b64encode
 from pathlib import Path
-from typing import List, Dict, Union
+from typing import List, Dict, Type, Union
 from piblin.dataio.fileio import list_files_in_directory
 from piblin.dataio.fileio.autodetect import potential_file_readers_by_extension
 from piblin.dataio.fileio.read import FileParsingException
+from piblin.dataio.fileio.read.file_reader import FileReader
 import piblin.dataio.metadata_converter as filename_metadata
 import piblin.data.data_collections.measurement_set as measurement_set_
 import piblin.data.data_collections.consistent_measurement_set as consistent_measurement_set_
@@ -62,6 +63,7 @@ class DataCollectionReader(object):
                       to_experiments: bool = True,
                       minimize_hierarchy: bool = False,
                       merge_redundant: bool = True,
+                      file_reader: Union[Type[FileReader], List[Type[FileReader]]] = None,
                       **read_kwargs) -> \
             Union[measurement_set_.MeasurementSet,
                   consistent_measurement_set_.ConsistentMeasurementSet,
@@ -88,6 +90,9 @@ class DataCollectionReader(object):
             Whether to remove as much hierarchy as possible from the data collection.
         merge_redundant : bool
             Whether to merge measurements that are redundant based on conditions.
+        file_reader : FileReader subclass or list thereof, optional
+            Reader class, or classes tried in order, to use instead of
+            selecting readers from the file extension.
 
         Returns
         -------
@@ -163,9 +168,7 @@ class DataCollectionReader(object):
         external_details = __parse_filename_metadata(parse_filename_metadata)
         external_details.update(__parse_metadata_file(filepath))
 
-        potential_file_readers = potential_file_readers_by_extension(extension[1:])
-        if len(potential_file_readers) == 0:
-            raise UnsupportedFileSubtypeError(f"No cralds file reader can parse files with the extension {extension}")
+        potential_file_readers = self.get_potential_file_readers(extension, file_reader)
 
         measurements = measurement_set_.MeasurementSet(merge_redundant=merge_redundant)
         error_messages = []
@@ -199,6 +202,48 @@ class DataCollectionReader(object):
                                                                                merge_redundant=merge_redundant)
 
     @staticmethod
+    def get_potential_file_readers(
+            extension: str = None,
+            file_reader: Union[Type[FileReader], List[Type[FileReader]]] = None,
+    ) -> List[Type[FileReader]]:
+        """Determine which file reader classes to try for a file.
+
+        Parameters
+        ----------
+        extension : str, optional
+            The file extension including the leading dot, e.g. ``".csv"``.
+        file_reader : FileReader subclass or list thereof, optional
+            Reader class, or classes tried in order. Takes precedence over
+            the extension, so files can be read by readers that are not
+            registered with piblin or whose extension is shared.
+
+        Returns
+        -------
+        list of FileReader subclasses
+            The reader classes to try, in order.
+
+        Raises
+        ------
+        TypeError
+            If ``file_reader`` is not a FileReader subclass or a list thereof.
+        UnsupportedFileSubtypeError
+            If no file reader is given and none supports the extension.
+        """
+        if file_reader is None:
+            potential_file_readers = potential_file_readers_by_extension(extension[1:])
+            if len(potential_file_readers) == 0:
+                raise UnsupportedFileSubtypeError(
+                    f"No piblin file reader can parse files with the extension {extension}")
+            return potential_file_readers
+
+        readers = list(file_reader) if isinstance(file_reader, (list, tuple)) else [file_reader]
+        if len(readers) == 0 or not all(
+                isinstance(reader, type) and issubclass(reader, FileReader) for reader in readers):
+            raise TypeError("`file_reader` must be a FileReader subclass or a list thereof, "
+                            f"not {file_reader!r}")
+        return readers
+
+    @staticmethod
     def parse_directory_metadata(directory: str):
         """Extract any external metadata from the directory .json file.
 
@@ -229,6 +274,7 @@ class DataCollectionReader(object):
                        to_experiments: bool = True,
                        minimize_hierarchy=False,
                        merge_redundant: bool = True,
+                       file_reader: Union[Type[FileReader], List[Type[FileReader]]] = None,
                        **read_kwargs) -> \
             Union[measurement_set_.MeasurementSet,
                   consistent_measurement_set_.ConsistentMeasurementSet,
@@ -252,6 +298,9 @@ class DataCollectionReader(object):
             Whether to remove as much hierarchy as possible from the data collection.
         merge_redundant : bool
             Whether to merge measurements that are redundant based on conditions.
+        file_reader : FileReader subclass or list thereof, optional
+            Reader class, or classes tried in order, to use instead of
+            selecting readers from the file extension.
 
         Returns
         -------
@@ -265,6 +314,7 @@ class DataCollectionReader(object):
             if Path(filepath).suffix != ".json":
                 file_measurements = self.from_filepath(filepath,
                                                        parse_filename_metadata,
+                                                       file_reader=file_reader,
                                                        **read_kwargs)
 
                 measurements.extend(file_measurements.measurements)
@@ -287,6 +337,7 @@ class DataCollectionReader(object):
                                       to_experiments: bool = True,
                                       minimize_hierarchy: bool = False,
                                       merge_redundant: bool = True,
+                                      file_reader: Union[Type[FileReader], List[Type[FileReader]]] = None,
                                       **read_kwargs) -> \
             Union[measurement_set_.MeasurementSet,
                   consistent_measurement_set_.ConsistentMeasurementSet,
@@ -312,6 +363,9 @@ class DataCollectionReader(object):
             Whether to remove as much hierarchy as possible from the data collection.
         merge_redundant : bool
             Whether to merge measurements that are redundant based on conditions.
+        file_reader : FileReader subclass or list thereof, optional
+            Reader class, or classes tried in order, to use instead of
+            selecting readers from the file extension.
 
         Returns
         -------
@@ -330,6 +384,7 @@ class DataCollectionReader(object):
 
                 file_measurements = self.from_filepath(filepath,
                                                        parse_filename_metadata,
+                                                       file_reader=file_reader,
                                                        **read_kwargs)
 
                 measurements.extend(file_measurements.measurements)
@@ -352,6 +407,7 @@ class DataCollectionReader(object):
                          to_experiments: bool = True,
                          minimize_hierarchy: bool = False,
                          merge_redundant: bool = True,
+                         file_reader: Union[Type[FileReader], List[Type[FileReader]]] = None,
                          **read_kwargs) -> \
             Union[measurement_set_.MeasurementSet,
                   consistent_measurement_set_.ConsistentMeasurementSet,
@@ -377,6 +433,9 @@ class DataCollectionReader(object):
             Whether to remove as much hierarchy as possible from the data collection.
         merge_redundant : bool
             Whether to merge measurements that are redundant based on conditions.
+        file_reader : FileReader subclass or list thereof, optional
+            Reader class, or classes tried in order, to use instead of
+            selecting readers from the file extension.
 
         Returns
         -------
@@ -390,6 +449,7 @@ class DataCollectionReader(object):
                                                                         recursive,
                                                                         case_sensitive,
                                                                         parse_filename_metadata,
+                                                                        file_reader=file_reader,
                                                                         **read_kwargs)
             measurements.extend(directory_measurements.measurements)
 
@@ -404,6 +464,7 @@ class DataCollectionReader(object):
                        to_experiments: bool = True,
                        minimize_hierarchy: bool = False,
                        merge_redundant: bool = True,
+                       file_reader: Union[Type[FileReader], List[Type[FileReader]]] = None,
                        **read_kwargs) -> \
             Union[measurement_set_.MeasurementSet,
                   consistent_measurement_set_.ConsistentMeasurementSet,
@@ -423,6 +484,9 @@ class DataCollectionReader(object):
             Whether to remove as much hierarchy as possible from the data collection.
         merge_redundant : bool
             Whether to merge measurements that are redundant based on conditions.
+        file_reader : FileReader subclass or list thereof, optional
+            Reader class, or classes tried in order, to use instead of
+            selecting readers from the file extension.
 
         Returns
         -------
@@ -439,6 +503,7 @@ class DataCollectionReader(object):
                     to_experiments=to_experiments,
                     minimize_hierarchy=minimize_hierarchy,
                     merge_redundant=merge_redundant,
+                    file_reader=file_reader,
                     **read_kwargs)
 
                 measurements.extend(file_measurements.measurements)
