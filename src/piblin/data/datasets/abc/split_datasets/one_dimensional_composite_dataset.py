@@ -1,5 +1,5 @@
-from typing import List, Union
 import numpy as np
+
 import piblin.data.datasets.abc.split_datasets.one_dimensional_dataset as one_dimensional_dataset
 import piblin.data.datasets.roi as roi
 
@@ -36,11 +36,11 @@ class OneDimensionalCompositeDataset(one_dimensional_dataset.OneDimensionalDatas
     """
 
     @property
-    def data_arrays(self) -> List[np.ndarray]:
+    def data_arrays(self) -> list[np.ndarray]:
         return self._data_arrays
 
     @data_arrays.setter
-    def data_arrays(self, data_arrays: List[np.ndarray]):
+    def data_arrays(self, data_arrays: list[np.ndarray]):
         self._data_arrays = data_arrays
 
     @property
@@ -65,23 +65,23 @@ class OneDimensionalCompositeDataset(one_dimensional_dataset.OneDimensionalDatas
         self.data_arrays[self._dependent_data_index] = dependent_variable_data
 
     @property
-    def dependent_variable_names(self) -> List[str]:
+    def dependent_variable_names(self) -> list[str]:
         return [self._data_array_names[self._dependent_data_index]]
 
     @dependent_variable_names.setter
-    def dependent_variable_names(self, dependent_variable_names: List[str]):
+    def dependent_variable_names(self, dependent_variable_names: list[str]):
         self._data_array_names[self._dependent_data_index] = dependent_variable_names[0]
 
     @property
-    def dependent_variable_units(self) -> List[str]:
+    def dependent_variable_units(self) -> list[str]:
         return [self._data_array_units[self._dependent_data_index]]
 
     @dependent_variable_units.setter
-    def dependent_variable_units(self, dependent_variable_units: List[str]):
+    def dependent_variable_units(self, dependent_variable_units: list[str]):
         self._data_array_units[self._dependent_data_index] = dependent_variable_units[0]
 
     @property
-    def independent_variable_data(self) -> List[np.ndarray]:
+    def independent_variable_data(self) -> list[np.ndarray]:
         return [self._data_arrays[self._independent_data_index]]
 
     @independent_variable_data.setter
@@ -89,31 +89,32 @@ class OneDimensionalCompositeDataset(one_dimensional_dataset.OneDimensionalDatas
         self._data_arrays[self._independent_data_index] = independent_variable_data
 
     @property
-    def independent_variable_names(self) -> List[str]:
+    def independent_variable_names(self) -> list[str]:
         return [self._data_array_names[self._independent_data_index]]
 
     @independent_variable_names.setter
-    def independent_variable_names(self, independent_variable_names: List[str]):
+    def independent_variable_names(self, independent_variable_names: list[str]):
         self._data_array_names[self._independent_data_index] = independent_variable_names[0]
 
     @property
-    def independent_variable_units(self) -> List[str]:
+    def independent_variable_units(self) -> list[str]:
         return [self._data_array_units[self._independent_data_index]]
 
     @independent_variable_units.setter
-    def independent_variable_units(self, independent_variable_units: List[str]):
+    def independent_variable_units(self, independent_variable_units: list[str]):
         self._data_array_units[self._independent_data_index] = independent_variable_units[0]
 
-    def __init__(self,
-                 data_arrays: List[np.array],
-                 data_array_names: List[str],
-                 data_array_units: List[str],
-                 default_independent_name: str = None,
-                 default_dependent_name: str = None,
-                 source=None):
+    def __init__(
+        self,
+        data_arrays: list[np.array],
+        data_array_names: list[str],
+        data_array_units: list[str],
+        default_independent_name: str = None,
+        default_dependent_name: str = None,
+        source=None,
+    ):
 
-        self._data_arrays = [np.array(data_array)
-                             for data_array in data_arrays]
+        self._data_arrays = [np.array(data_array) for data_array in data_arrays]
         self._data_array_names = data_array_names
         self._data_array_units = data_array_units
 
@@ -134,7 +135,7 @@ class OneDimensionalCompositeDataset(one_dimensional_dataset.OneDimensionalDatas
             independent_variable_data=[self.independent_variable_data],
             independent_variable_names=self.independent_variable_names,
             independent_variable_units=self.independent_variable_units,
-            source=source
+            source=source,
         )
 
     def switch_independent_coordinate(self, coordinate_name: str) -> None:
@@ -152,10 +153,11 @@ class OneDimensionalCompositeDataset(one_dimensional_dataset.OneDimensionalDatas
         """
         if coordinate_name not in self._data_array_names:
             error_str = ", ".join(self._data_array_names)
-            raise ValueError(f"Dataset has no variable array with the name: {coordinate_name}\nNames:{error_str}")
+            raise ValueError(
+                f"Dataset has no variable array with the name: {coordinate_name}\nNames:{error_str}"
+            )
         else:
-            self._independent_data_index = \
-                self._data_array_names.index(coordinate_name)
+            self._independent_data_index = self._data_array_names.index(coordinate_name)
 
     def switch_dependent_coordinate(self, coordinate_name: str) -> None:
         """Change the dependent coordinate to the named variable.
@@ -176,8 +178,7 @@ class OneDimensionalCompositeDataset(one_dimensional_dataset.OneDimensionalDatas
                 f"Dataset has no variable array with the name: {coordinate_name}\nNames:{error_str}"
             )
         else:
-            self._dependent_data_index = \
-                self._data_array_names.index(coordinate_name)
+            self._dependent_data_index = self._data_array_names.index(coordinate_name)
 
     def switch_coordinates(self, independent_name: str, dependent_name: str) -> None:
         """Change the independent and dependent coordinates to the named variables.
@@ -191,20 +192,25 @@ class OneDimensionalCompositeDataset(one_dimensional_dataset.OneDimensionalDatas
         """
         if independent_name not in self._data_array_names:
             error_str = ", ".join(self._data_array_names)
-            raise ValueError(f"Dataset has no variable array with the name: {independent_name}\nNames:{error_str}")
+            raise ValueError(
+                f"Dataset has no variable array with the name: {independent_name}\nNames:{error_str}"
+            )
 
         if dependent_name not in self._data_array_names:
             error_str = ", ".join(self._data_array_names)
-            raise ValueError(f"Dataset has no variable array with the name: {dependent_name}\nNames:{error_str}")
+            raise ValueError(
+                f"Dataset has no variable array with the name: {dependent_name}\nNames:{error_str}"
+            )
 
         self._independent_data_index = self._data_array_names.index(independent_name)
         self._dependent_data_index = self._data_array_names.index(dependent_name)
 
     def to_onedimensional_dataset(
-            self,
-            coord_names: Union[str, List[str]] = None
-    ) -> Union[one_dimensional_dataset.OneDimensionalDataset,
-               List[one_dimensional_dataset.OneDimensionalDataset]]:
+        self, coord_names: str | list[str] = None
+    ) -> (
+        one_dimensional_dataset.OneDimensionalDataset
+        | list[one_dimensional_dataset.OneDimensionalDataset]
+    ):
         """Convert this composite dataset back to a non-composite dataset.
 
         Returns
@@ -220,7 +226,7 @@ class OneDimensionalCompositeDataset(one_dimensional_dataset.OneDimensionalDatas
                 dependent_variable_data=self.dependent_variable_data,
                 dependent_variable_names=self.dependent_variable_names,
                 dependent_variable_units=self.dependent_variable_units,
-                source=self.source
+                source=self.source,
             )
         elif isinstance(coord_names, str):
             coord_names = [coord_names]
@@ -235,7 +241,7 @@ class OneDimensionalCompositeDataset(one_dimensional_dataset.OneDimensionalDatas
                 dependent_variable_data=self.dependent_variable_data,
                 dependent_variable_names=self.dependent_variable_names,
                 dependent_variable_units=self.dependent_variable_units,
-                source=self.source
+                source=self.source,
             )
             datasets.append(dataset)
 
@@ -252,7 +258,7 @@ class OneDimensionalCompositeDataset(one_dimensional_dataset.OneDimensionalDatas
 
     @staticmethod
     def from_datasets(
-            datasets:List["OneDimensionalCompositeDataset"]
+        datasets: list["OneDimensionalCompositeDataset"],
     ) -> "OneDimensionalCompositeDataset":
         """
         Create a new OneDimensionalCompositeDataset from a list of OneDimensionalCompositeDataset objects.
@@ -280,11 +286,12 @@ class OneDimensionalCompositeDataset(one_dimensional_dataset.OneDimensionalDatas
             data_array_units,
             default_independent_name,
             default_dependent_name,
-            source
+            source,
         )
 
-    def split_by_independent_variable_regions(self,
-                                              split_regions: roi.CompoundRegion) -> List["OneDimensionalDataset"]:
+    def split_by_independent_variable_regions(
+        self, split_regions: roi.CompoundRegion
+    ) -> list["one_dimensional_dataset.OneDimensionalDataset"]:
         """Split this dataset into multiple datasets using the specified independent variable regions.
 
         Parameters
@@ -295,26 +302,27 @@ class OneDimensionalCompositeDataset(one_dimensional_dataset.OneDimensionalDatas
         datasets = []
 
         for region in split_regions:
-
             if self.x_values.max() < region.min or self.x_values.min() > region.max:
-                print(f"Warning: split by [{region.min}, {region.max}], ({self.independent_variable_axis_labels[0]} range = [{self.x_values.min()}, {self.x_values.max()}]) will result in empty array")
+                print(
+                    f"Warning: split by [{region.min}, {region.max}], ({self.independent_variable_axis_labels[0]} range = [{self.x_values.min()}, {self.x_values.max()}]) will result in empty array"
+                )
 
             region_data_arrays = [[] for array in self.data_arrays]
 
             for i, independent_value in enumerate(self.x_values):
-
                 if region.contains(independent_value):
                     for j in range(len(self.data_arrays)):
-                        region_data_arrays[j].append(
-                            self.data_arrays[j][i])
+                        region_data_arrays[j].append(self.data_arrays[j][i])
 
-            datasets.append(self.__class__(
-                data_arrays=region_data_arrays,
-                data_array_names=self.data_array_names,
-                data_array_units=self.data_array_units,
-                default_independent_name=self.independent_variable_name,
-                default_dependent_name=self.dependent_variable_name,
-                source=self.source
-            ))
+            datasets.append(
+                self.__class__(
+                    data_arrays=region_data_arrays,
+                    data_array_names=self.data_array_names,
+                    data_array_units=self.data_array_units,
+                    default_independent_name=self.independent_variable_name,
+                    default_dependent_name=self.dependent_variable_name,
+                    source=self.source,
+                )
+            )
 
         return datasets

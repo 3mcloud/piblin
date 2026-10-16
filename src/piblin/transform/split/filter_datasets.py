@@ -1,17 +1,16 @@
 from collections.abc import Callable
-from typing import Union
 
 import piblin.data.datasets.abc.dataset as dataset_
 import piblin.transform.abc.measurement_transform as measurement_transform_
+from piblin.data.data_collections import experiment as experiment
+from piblin.data.data_collections import experiment_set as experiment_set
+from piblin.data.data_collections import measurement as measurement
+from piblin.data.data_collections import measurement_set as measurement_set
 from piblin.data.datasets.abc import dataset as dataset
-from piblin.data.data_collections import measurement as measurement, measurement_set as measurement_set, \
-    experiment as experiment, experiment_set as experiment_set
 
 
 class FilterDatasets(measurement_transform_.MeasurementTransform):
-    """Remove datasets from a measurement using the filter builtin.
-
-    """
+    """Remove datasets from a measurement using the filter builtin."""
 
     def _apply(self, target: measurement.Measurement, **kwargs) -> measurement.Measurement:
         """Apply the filter builtin to a target measurement.

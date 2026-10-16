@@ -4,17 +4,19 @@ determine the parameters of a transform, that transform can be
 created by analysis of the experiment set and then applied to
 the experiment set as if it were a one-in-one-out transform.
 """
-from typing import List, Tuple, Union
-import math
+
 import copy
+import math
+
 import numpy as np
-import piblin.transform.abc.dataset_transform as dataset_transform
-import piblin.data.datasets.abc.dataset as dataset
-import piblin.data.data_collections.measurement as measurement
-import piblin.data.data_collections.measurement_set as measurement_set
+
 import piblin.data.data_collections.experiment as experiment
 import piblin.data.data_collections.experiment_set as experiment_set
+import piblin.data.data_collections.measurement as measurement
+import piblin.data.data_collections.measurement_set as measurement_set
+import piblin.data.datasets.abc.dataset as dataset
 import piblin.data.datasets.abc.split_datasets.one_dimensional_dataset as one_dimensional_dataset
+import piblin.transform.abc.dataset_transform as dataset_transform
 
 
 class Interpolate1D(dataset_transform.DatasetTransform):
@@ -66,18 +68,19 @@ class Interpolate1D(dataset_transform.DatasetTransform):
     from_experiment_set
     """
 
-    def __init__(self,
-                 min_value: float = None,
-                 max_value: float = None,
-                 spacing: float = None,
-                 snap_to_ints: bool = False,
-                 respect_bounds: bool = True):
+    def __init__(
+        self,
+        min_value: float = None,
+        max_value: float = None,
+        spacing: float = None,
+        snap_to_ints: bool = False,
+        respect_bounds: bool = True,
+    ):
 
         self.snap_to_ints = snap_to_ints
         self.respect_bounds = respect_bounds
 
-        super().__init__(data_independent_parameters=[self.snap_to_ints,
-                                                      self.respect_bounds])
+        super().__init__(data_independent_parameters=[self.snap_to_ints, self.respect_bounds])
 
         self.min_value = min_value
         self.max_value = max_value
@@ -136,40 +139,38 @@ class Interpolate1D(dataset_transform.DatasetTransform):
             self._spacing_is_frozen = True
 
     @property
-    def min_value(self) -> Union[int, float, None]:
+    def min_value(self) -> int | float | None:
         """The minimum independent variable value."""
         return self._min_value
 
     @min_value.setter
-    def min_value(self, min_value: Union[int, float, None]) -> None:
+    def min_value(self, min_value: int | float | None) -> None:
         """Set the minimum independent variable value."""
         if self.snap_to_ints and min_value is not None:
-            self._min_value = self.__min_value_float_to_int(min_value,
-                                                            self._respect_bounds)
+            self._min_value = self.__min_value_float_to_int(min_value, self._respect_bounds)
         else:
             self._min_value = min_value
 
     @property
-    def max_value(self) -> Union[int, float, None]:
+    def max_value(self) -> int | float | None:
         """The maximum independent variable value."""
         return self._max_value
 
     @max_value.setter
-    def max_value(self, max_value: Union[int, float, None]) -> None:
+    def max_value(self, max_value: int | float | None) -> None:
         """Set the maximum independent variable value."""
         if self.snap_to_ints and max_value is not None:
-            self._max_value = self.__max_value_float_to_int(max_value,
-                                                            self._respect_bounds)
+            self._max_value = self.__max_value_float_to_int(max_value, self._respect_bounds)
         else:
             self._max_value = max_value
 
     @property
-    def spacing(self) -> Union[int, float, None]:
+    def spacing(self) -> int | float | None:
         """The spacing between independent variable values."""
         return self._spacing
 
     @spacing.setter
-    def spacing(self, spacing: Union[int, float, None]) -> None:
+    def spacing(self, spacing: int | float | None) -> None:
         """Set the spacing between independent variable values."""
         self._spacing = spacing
 
@@ -204,18 +205,25 @@ class Interpolate1D(dataset_transform.DatasetTransform):
         cralds.data.datasets.OneDimensionalDataset
             The transformed dataset after the interpolation.
         """
-        target.update_data(independent_variable_data=self._independent_variable_values,
-                           dependent_variable_data=np.interp(self._independent_variable_values,
-                                                   target.independent_variable_data[0],
-                                                   target.dependent_variable_data))
+        target.update_data(
+            independent_variable_data=self._independent_variable_values,
+            dependent_variable_data=np.interp(
+                self._independent_variable_values,
+                target.independent_variable_data[0],
+                target.dependent_variable_data,
+            ),
+        )
 
         return target
 
-    def compute_data_dependent_parameters(self, parameter_source: Union[dataset.Dataset,
-                                                                        measurement.Measurement,
-                                                                        measurement_set.MeasurementSet,
-                                                                        experiment.Experiment,
-                                                                        experiment_set.ExperimentSet]) -> List[object]:
+    def compute_data_dependent_parameters(
+        self,
+        parameter_source: dataset.Dataset
+        | measurement.Measurement
+        | measurement_set.MeasurementSet
+        | experiment.Experiment
+        | experiment_set.ExperimentSet,
+    ) -> list[object]:
         """Compute parameters of this transform from the given data collection.
 
         Only those parameters which have not been set either in the initializer
@@ -239,7 +247,9 @@ class Interpolate1D(dataset_transform.DatasetTransform):
             self._spacing = Interpolate1D.__compute_mean_spacing(datasets)
 
         if self.snap_to_ints:
-            independent_variable_range = Interpolate1D.__compute_integer_range(datasets, self.respect_bounds)
+            independent_variable_range = Interpolate1D.__compute_integer_range(
+                datasets, self.respect_bounds
+            )
         else:
             independent_variable_range = Interpolate1D.__compute_range(datasets)
 
@@ -252,12 +262,12 @@ class Interpolate1D(dataset_transform.DatasetTransform):
         return [self.min_value, self.max_value, self.spacing]
 
     @property
-    def data_dependent_parameters(self) -> List[object]:
+    def data_dependent_parameters(self) -> list[object]:
         """Data-dependent parameters for this transform."""
         return [self.min_value, self.max_value, self.spacing]
 
     @data_dependent_parameters.setter
-    def data_dependent_parameters(self, data_dependent_parameters: List[Union[int, float]]) -> None:
+    def data_dependent_parameters(self, data_dependent_parameters: list[int | float]) -> None:
         """Set the data-dependent parameters for this transform."""
         self.min_value = data_dependent_parameters[0]
         self.max_value = data_dependent_parameters[1]
@@ -265,11 +275,13 @@ class Interpolate1D(dataset_transform.DatasetTransform):
         self._independent_variable_values = self.__compute_independent_variable_values()
 
     @classmethod
-    def from_dataset(cls,
-                     dataset_: dataset.Dataset,
-                     spacing: float = None,
-                     snap_to_ints: bool = False,
-                     respect_bounds: bool = False) -> "Interpolate1D":
+    def from_dataset(
+        cls,
+        dataset_: dataset.Dataset,
+        spacing: float = None,
+        snap_to_ints: bool = False,
+        respect_bounds: bool = False,
+    ) -> "Interpolate1D":
         """Create an interpolate transform from a dataset.
 
         Parameters
@@ -287,17 +299,16 @@ class Interpolate1D(dataset_transform.DatasetTransform):
         -------
         Interpolate1D
         """
-        return cls.from_datasets([dataset_],
-                                 spacing,
-                                 snap_to_ints,
-                                 respect_bounds)
+        return cls.from_datasets([dataset_], spacing, snap_to_ints, respect_bounds)
 
     @classmethod
-    def from_datasets(cls,
-                      datasets: List[dataset.Dataset],
-                      spacing: float = None,
-                      snap_to_ints: bool = False,
-                      respect_bounds: bool = False) -> "Interpolate1D":
+    def from_datasets(
+        cls,
+        datasets: list[dataset.Dataset],
+        spacing: float = None,
+        snap_to_ints: bool = False,
+        respect_bounds: bool = False,
+    ) -> "Interpolate1D":
         """Create an interpolate transform from a list of datasets.
 
         Parameters
@@ -327,12 +338,14 @@ class Interpolate1D(dataset_transform.DatasetTransform):
         return cls(x_range[0], x_range[1], spacing)
 
     @classmethod
-    def from_measurement_set_datasets(cls,
-                                      measurement_set_,
-                                      dataset_index: int,
-                                      spacing: float = None,
-                                      snap_to_ints: bool = False,
-                                      respect_bounds: bool = False) -> "Interpolate1D":
+    def from_measurement_set_datasets(
+        cls,
+        measurement_set_,
+        dataset_index: int,
+        spacing: float = None,
+        snap_to_ints: bool = False,
+        respect_bounds: bool = False,
+    ) -> "Interpolate1D":
         """Create an interpolation spanning a measurement set.
 
         Parameters
@@ -351,33 +364,40 @@ class Interpolate1D(dataset_transform.DatasetTransform):
         Interpolate1D
             The interpolation spanning the measurement set.
         """
-        return Interpolate1D.from_datasets(measurement_set_.datasets_at_index(dataset_index),
-                                           spacing,
-                                           snap_to_ints,
-                                           respect_bounds)
+        return Interpolate1D.from_datasets(
+            measurement_set_.datasets_at_index(dataset_index), spacing, snap_to_ints, respect_bounds
+        )
 
     @staticmethod
-    def list_from_measurement_set(measurement_set,
-                                  spacing: float = None,
-                                  snap_to_ints: bool = False,
-                                  respect_bounds: bool = False):
+    def list_from_measurement_set(
+        measurement_set,
+        spacing: float = None,
+        snap_to_ints: bool = False,
+        respect_bounds: bool = False,
+    ):
 
         interpolations = []
         for dataset_index in range(len(measurement_set[0].datasets)):
-            interpolations.append(Interpolate1D.from_measurement_set_datasets(measurement_set=measurement_set,
-                                                                              dataset_index=dataset_index,
-                                                                              spacing=spacing,
-                                                                              snap_to_ints=snap_to_ints,
-                                                                              respect_bounds=respect_bounds))
+            interpolations.append(
+                Interpolate1D.from_measurement_set_datasets(
+                    measurement_set=measurement_set,
+                    dataset_index=dataset_index,
+                    spacing=spacing,
+                    snap_to_ints=snap_to_ints,
+                    respect_bounds=respect_bounds,
+                )
+            )
 
         return interpolations
 
     @staticmethod
-    def from_experiment_set_datasets(experiment_set,
-                                     dataset_index: int,
-                                     spacing: float = None,
-                                     snap_to_ints: bool = False,
-                                     respect_bounds: bool = False):
+    def from_experiment_set_datasets(
+        experiment_set,
+        dataset_index: int,
+        spacing: float = None,
+        snap_to_ints: bool = False,
+        respect_bounds: bool = False,
+    ):
         """Create an interpolation spanning an experiment set.
 
         Parameters
@@ -396,14 +416,14 @@ class Interpolate1D(dataset_transform.DatasetTransform):
         Interpolate1D
             The interpolation spanning the experiment set.
         """
-        return Interpolate1D.from_measurement_set_datasets(experiment_set.measurement_set_,
-                                                           dataset_index,
-                                                           spacing,
-                                                           snap_to_ints,
-                                                           respect_bounds)
+        return Interpolate1D.from_measurement_set_datasets(
+            experiment_set.measurement_set_, dataset_index, spacing, snap_to_ints, respect_bounds
+        )
 
     @staticmethod
-    def __compute_mean_spacing(datasets: List[one_dimensional_dataset.OneDimensionalDataset]) -> float:
+    def __compute_mean_spacing(
+        datasets: list[one_dimensional_dataset.OneDimensionalDataset],
+    ) -> float:
         """Determine the mean spacing across all datasets.
 
         This is default behaviour for determining the spacing to use in
@@ -425,14 +445,18 @@ class Interpolate1D(dataset_transform.DatasetTransform):
         count = 0
         for dataset_ in datasets:
             for i in range(len(dataset_.independent_variable_data[0]) - 1):
-                step += dataset_.independent_variable_data[0][i + 1] - dataset_.independent_variable_data[0][i]
+                step += (
+                    dataset_.independent_variable_data[0][i + 1]
+                    - dataset_.independent_variable_data[0][i]
+                )
                 count += 1
 
         return abs(step) / count
 
     @staticmethod
-    def __compute_integer_range(datasets: List[one_dimensional_dataset.OneDimensionalDataset],
-                                respect_bounds=True):
+    def __compute_integer_range(
+        datasets: list[one_dimensional_dataset.OneDimensionalDataset], respect_bounds=True
+    ):
         """Find the minimum and maximum x-value across a number of datasets.
 
         Parameters
@@ -451,11 +475,11 @@ class Interpolate1D(dataset_transform.DatasetTransform):
         max_x = np.NINF
 
         for dataset_ in datasets:
-
-            min_x_dataset, max_x_dataset = \
-                Interpolate1D.__extreme_values_float_to_int(min_value=np.min(dataset_.independent_variable_data),
-                                                            max_value=np.max(dataset_.independent_variable_data),
-                                                            respect_bounds=respect_bounds)
+            min_x_dataset, max_x_dataset = Interpolate1D.__extreme_values_float_to_int(
+                min_value=np.min(dataset_.independent_variable_data),
+                max_value=np.max(dataset_.independent_variable_data),
+                respect_bounds=respect_bounds,
+            )
 
             if min_x_dataset < min_x:
                 min_x = min_x_dataset
@@ -465,7 +489,7 @@ class Interpolate1D(dataset_transform.DatasetTransform):
         return min_x, max_x
 
     @staticmethod
-    def __extreme_values_float_to_int(min_value, max_value, respect_bounds) -> Tuple[int, int]:
+    def __extreme_values_float_to_int(min_value, max_value, respect_bounds) -> tuple[int, int]:
         """Convert input extreme values to integers.
 
         Parameters
@@ -482,8 +506,10 @@ class Interpolate1D(dataset_transform.DatasetTransform):
         Tuple of int
             The integers to use as extreme values of independent variables.
         """
-        return (Interpolate1D.__min_value_float_to_int(min_value, respect_bounds),
-                Interpolate1D.__max_value_float_to_int(max_value, respect_bounds))
+        return (
+            Interpolate1D.__min_value_float_to_int(min_value, respect_bounds),
+            Interpolate1D.__max_value_float_to_int(max_value, respect_bounds),
+        )
 
     @staticmethod
     def __min_value_float_to_int(min_value: float, respect_bounds: bool) -> int:
@@ -585,12 +611,9 @@ class Interpolate1D(dataset_transform.DatasetTransform):
         """
         dataset_ = copy.deepcopy(dataset_)
 
-        transformed_data = self.apply_to(dataset_,
-                                         make_copy=True)
+        transformed_data = self.apply_to(dataset_, make_copy=True)
 
-        transformed_data.visualize(axes=axes,
-                                   include_text=False,
-                                   markersize=3)
+        transformed_data.visualize(axes=axes, include_text=False, markersize=3)
 
     def visualize_transform_parameters(self, axes):
         """Visualize the parameters of this transform.
@@ -629,7 +652,7 @@ class Interpolate1D(dataset_transform.DatasetTransform):
         else:
             str_rep += " (not frozen)\n"
 
-        if not None in {self.min_value, self.max_value, self.spacing}:
+        if None not in {self.min_value, self.max_value, self.spacing}:
             str_rep += f"\tThe resulting x-values are: {self._independent_variable_values}\n"
 
         return str_rep

@@ -19,34 +19,39 @@ read_directory - Create a data collection from files in a given directory.
 read_directories - Create a data collection from files in a given set of directories.
 read_tabular_data - Create a data collection from tabular data in the file at the given path.
 """
-from typing import List, Union
+
+from typing import Union
+
+import piblin.data.data_collections.consistent_measurement_set as consistent_measurement_set_
+import piblin.data.data_collections.experiment_set as experiment_set_
+import piblin.data.data_collections.measurement as measurement_
+import piblin.data.data_collections.measurement_set as measurement_set
+import piblin.data.data_collections.tidy_measurement_set as tidy_measurement_set_
+import piblin.data.datasets.abc.dataset as dataset_
+import piblin.dataio.data_collection_reader as data_collection_reader
+
 from .fileio.read.file_reader import FileReader
 from .fileio.read.generic.generic_file_reader import GenericFileReader
 from .fileio.read.multifile.multifile_reader import MultifileReader
 from .fileio.read.summary.summary_file_reader import SummaryFileReader
 from .fileio.write.file_writer import FileWriter
 
-import piblin.dataio.data_collection_reader as data_collection_reader
-import piblin.data.datasets.abc.dataset as dataset_
-import piblin.data.data_collections.measurement as measurement_
-import piblin.data.data_collections.measurement_set as measurement_set
-import piblin.data.data_collections.consistent_measurement_set as consistent_measurement_set_
-import piblin.data.data_collections.tidy_measurement_set as tidy_measurement_set_
-import piblin.data.data_collections.experiment_set as experiment_set_
 
-
-def read_file(filepath: str,
-              parse_filename_metadata: bool = False,
-              to_experiments: bool = True,
-              minimize_hierarchy: bool = False,
-              merge_redundant: bool = True,
-              **read_kwargs) -> \
-        Union[dataset_.Dataset,
-              measurement_.Measurement,
-              measurement_set.MeasurementSet,
-              consistent_measurement_set_.ConsistentMeasurementSet,
-              tidy_measurement_set_.TidyMeasurementSet,
-              experiment_set_.ExperimentSet]:
+def read_file(
+    filepath: str,
+    parse_filename_metadata: bool = False,
+    to_experiments: bool = True,
+    minimize_hierarchy: bool = False,
+    merge_redundant: bool = True,
+    **read_kwargs,
+) -> (
+    dataset_.Dataset
+    | measurement_.Measurement
+    | measurement_set.MeasurementSet
+    | consistent_measurement_set_.ConsistentMeasurementSet
+    | tidy_measurement_set_.TidyMeasurementSet
+    | experiment_set_.ExperimentSet
+):
     """Create a data collection from a single file.
 
     Parameters
@@ -71,29 +76,33 @@ def read_file(filepath: str,
     ExperimentSet
         The set of experiments contained in the file.
     """
-    data_collection = \
-        data_collection_reader.DataCollectionReader().from_filepath(filepath=filepath,
-                                                                    parse_filename_metadata=parse_filename_metadata,
-                                                                    to_experiments=to_experiments,
-                                                                    minimize_hierarchy=minimize_hierarchy,
-                                                                    merge_redundant=merge_redundant,
-                                                                    **read_kwargs)
+    data_collection = data_collection_reader.DataCollectionReader().from_filepath(
+        filepath=filepath,
+        parse_filename_metadata=parse_filename_metadata,
+        to_experiments=to_experiments,
+        minimize_hierarchy=minimize_hierarchy,
+        merge_redundant=merge_redundant,
+        **read_kwargs,
+    )
 
     return data_collection
 
 
-def read_files(file_paths: List[str],
-               parse_filename_metadata: bool = False,
-               to_experiments: bool = True,
-               minimize_hierarchy: bool = False,
-               merge_redundant: bool = True,
-               **read_kwargs) -> \
-        Union[dataset_.Dataset,
-              measurement_.Measurement,
-              measurement_set.MeasurementSet,
-              consistent_measurement_set_.ConsistentMeasurementSet,
-              tidy_measurement_set_.TidyMeasurementSet,
-              experiment_set_.ExperimentSet]:
+def read_files(
+    file_paths: list[str],
+    parse_filename_metadata: bool = False,
+    to_experiments: bool = True,
+    minimize_hierarchy: bool = False,
+    merge_redundant: bool = True,
+    **read_kwargs,
+) -> (
+    dataset_.Dataset
+    | measurement_.Measurement
+    | measurement_set.MeasurementSet
+    | consistent_measurement_set_.ConsistentMeasurementSet
+    | tidy_measurement_set_.TidyMeasurementSet
+    | experiment_set_.ExperimentSet
+):
     """Create a data collection from a list of files.
 
     Parameters
@@ -116,29 +125,34 @@ def read_files(file_paths: List[str],
         A single experiment set containing all measurements found in the
         listed files.
     """
-    return data_collection_reader.DataCollectionReader().from_file_list(filelist=file_paths,
-                                                                        parse_filename_metadata=parse_filename_metadata,
-                                                                        to_experiments=to_experiments,
-                                                                        minimize_hierarchy=minimize_hierarchy,
-                                                                        merge_redundant=merge_redundant,
-                                                                        **read_kwargs)
+    return data_collection_reader.DataCollectionReader().from_file_list(
+        filelist=file_paths,
+        parse_filename_metadata=parse_filename_metadata,
+        to_experiments=to_experiments,
+        minimize_hierarchy=minimize_hierarchy,
+        merge_redundant=merge_redundant,
+        **read_kwargs,
+    )
 
 
-def read_directory(directory: str,
-                   extension: str = None,
-                   recursive: bool = False,
-                   case_sensitive: bool = False,
-                   parse_filename_metadata: bool = False,
-                   to_experiments: bool = True,
-                   minimize_hierarchy: bool = False,
-                   merge_redundant: bool = True,
-                   **read_kwargs) -> \
-        Union[dataset_.Dataset,
-              measurement_.Measurement,
-              measurement_set.MeasurementSet,
-              consistent_measurement_set_.ConsistentMeasurementSet,
-              tidy_measurement_set_.TidyMeasurementSet,
-              experiment_set_.ExperimentSet]:
+def read_directory(
+    directory: str,
+    extension: str = None,
+    recursive: bool = False,
+    case_sensitive: bool = False,
+    parse_filename_metadata: bool = False,
+    to_experiments: bool = True,
+    minimize_hierarchy: bool = False,
+    merge_redundant: bool = True,
+    **read_kwargs,
+) -> (
+    dataset_.Dataset
+    | measurement_.Measurement
+    | measurement_set.MeasurementSet
+    | consistent_measurement_set_.ConsistentMeasurementSet
+    | tidy_measurement_set_.TidyMeasurementSet
+    | experiment_set_.ExperimentSet
+):
     """Create a data collection from files in a given directory.
 
     Parameters
@@ -178,7 +192,7 @@ def read_directory(directory: str,
             to_experiments=to_experiments,
             minimize_hierarchy=minimize_hierarchy,
             merge_redundant=merge_redundant,
-            **read_kwargs
+            **read_kwargs,
         )
     else:
         return data_collection_reader.DataCollectionReader().from_directory(
@@ -188,25 +202,28 @@ def read_directory(directory: str,
             to_experiments=to_experiments,
             minimize_hierarchy=minimize_hierarchy,
             merge_redundant=merge_redundant,
-            **read_kwargs
+            **read_kwargs,
         )
 
 
-def read_directories(directories: List[str],
-                     extension: str = None,
-                     recursive: bool = False,
-                     case_sensitive: bool = False,
-                     parse_filename_metadata: bool = False,
-                     to_experiments: bool = True,
-                     minimize_hierarchy: bool = False,
-                     merge_redundant: bool = True,
-                     **read_kwargs) -> \
-        Union[dataset_.Dataset,
-              measurement_.Measurement,
-              measurement_set.MeasurementSet,
-              consistent_measurement_set_.ConsistentMeasurementSet,
-              tidy_measurement_set_.TidyMeasurementSet,
-              experiment_set_.ExperimentSet]:
+def read_directories(
+    directories: list[str],
+    extension: str = None,
+    recursive: bool = False,
+    case_sensitive: bool = False,
+    parse_filename_metadata: bool = False,
+    to_experiments: bool = True,
+    minimize_hierarchy: bool = False,
+    merge_redundant: bool = True,
+    **read_kwargs,
+) -> (
+    dataset_.Dataset
+    | measurement_.Measurement
+    | measurement_set.MeasurementSet
+    | consistent_measurement_set_.ConsistentMeasurementSet
+    | tidy_measurement_set_.TidyMeasurementSet
+    | experiment_set_.ExperimentSet
+):
     """Create a data collection from files in a given set of directories.
 
     Parameters
@@ -245,24 +262,27 @@ def read_directories(directories: List[str],
         to_experiments=to_experiments,
         minimize_hierarchy=minimize_hierarchy,
         merge_redundant=merge_redundant,
-        **read_kwargs
+        **read_kwargs,
     )
 
 
-def read_tabular_data(filepath: str,
-                      n_metadata_columns: int = 0,
-                      dataset_types: List = None,
-                      dataset_end_indices: List[int] = None,
-                      to_experiments: bool = True,
-                      minimize_hierarchy: bool = False,
-                      merge_redundant: bool = True,
-                      **read_kwargs) -> \
-        Union[dataset_.Dataset,
-              measurement_.Measurement,
-              measurement_set.MeasurementSet,
-              consistent_measurement_set_.ConsistentMeasurementSet,
-              tidy_measurement_set_.TidyMeasurementSet,
-              experiment_set_.ExperimentSet]:
+def read_tabular_data(
+    filepath: str,
+    n_metadata_columns: int = 0,
+    dataset_types: list = None,
+    dataset_end_indices: list[int] = None,
+    to_experiments: bool = True,
+    minimize_hierarchy: bool = False,
+    merge_redundant: bool = True,
+    **read_kwargs,
+) -> (
+    dataset_.Dataset
+    | measurement_.Measurement
+    | measurement_set.MeasurementSet
+    | consistent_measurement_set_.ConsistentMeasurementSet
+    | tidy_measurement_set_.TidyMeasurementSet
+    | experiment_set_.ExperimentSet
+):
     """Create a data collection from tabular data in the file at the given path.
 
     Parameters
@@ -295,5 +315,5 @@ def read_tabular_data(filepath: str,
         to_experiments=to_experiments,
         minimize_hierarchy=minimize_hierarchy,
         merge_redundant=merge_redundant,
-        **read_kwargs
+        **read_kwargs,
     )

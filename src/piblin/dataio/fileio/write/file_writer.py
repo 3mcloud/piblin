@@ -1,5 +1,5 @@
-from typing import Set
 from abc import ABC, abstractmethod
+
 from piblin.data.datasets.abc.dataset import Dataset
 
 
@@ -8,7 +8,7 @@ class FileWriter(ABC):
 
     @property
     @abstractmethod
-    def supported_extensions(self) -> Set[str]:
+    def supported_extensions(self) -> set[str]:
         pass
 
     @abstractmethod

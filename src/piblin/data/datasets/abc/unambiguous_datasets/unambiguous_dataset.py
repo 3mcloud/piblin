@@ -1,8 +1,9 @@
-from typing import Set, Tuple, List
 import itertools
 import random
-import numpy as np
+
 import matplotlib.axes
+import numpy as np
+
 from piblin.data.datasets.abc.dataset import Dataset
 
 
@@ -26,23 +27,30 @@ class UnambiguousDataset(Dataset):
     variable_units : tuple of tuple of str
         The units of this dataset.
     """
+
     DEPENDENT_INDEX = 0
     """The index of each data point corresponding to the dependent variable values."""
     INDEPENDENT_INDEX = 1
     """The index of each data point corresponding to the independent variable values."""
 
-    def __init__(self,
-                 data: Set[Tuple[Tuple, Tuple]],
-                 variable_names: Tuple[Tuple[str], Tuple[str]] = None,
-                 variable_units: Tuple[Tuple[str], Tuple[str]] = None,
-                 source: str = None):
+    def __init__(
+        self,
+        data: set[tuple[tuple, tuple]],
+        variable_names: tuple[tuple[str], tuple[str]] = None,
+        variable_units: tuple[tuple[str], tuple[str]] = None,
+        source: str = None,
+    ):
 
         super().__init__(source=source)
 
         self._data = data
 
-        self._number_of_dependent_dimensions = len(random.choice(tuple(self._data))[self.DEPENDENT_INDEX])
-        self._number_of_independent_dimensions = len(random.choice(tuple(self._data))[self.INDEPENDENT_INDEX])
+        self._number_of_dependent_dimensions = len(
+            random.choice(tuple(self._data))[self.DEPENDENT_INDEX]
+        )
+        self._number_of_independent_dimensions = len(
+            random.choice(tuple(self._data))[self.INDEPENDENT_INDEX]
+        )
 
         self.assert_consistency()
 
@@ -58,29 +66,32 @@ class UnambiguousDataset(Dataset):
 
         self.assert_consistency()
 
-        self._number_of_dependent_dimensions = len(random.choice(tuple(self._data))[self.DEPENDENT_INDEX])
-        self._number_of_independent_dimensions = len(random.choice(tuple(self._data))[self.INDEPENDENT_INDEX])
+        self._number_of_dependent_dimensions = len(
+            random.choice(tuple(self._data))[self.DEPENDENT_INDEX]
+        )
+        self._number_of_independent_dimensions = len(
+            random.choice(tuple(self._data))[self.INDEPENDENT_INDEX]
+        )
 
     @property
     def number_of_points(self):
         return len(self.data)
 
     @classmethod
-    def unflatten(cls, column_labels, values):
-        ...
+    def unflatten(cls, column_labels, values): ...
 
     # TODO - abstract properties?
     @property
-    def variable_names(self) -> Tuple[Tuple[str], Tuple[str]]:
+    def variable_names(self) -> tuple[tuple[str], tuple[str]]:
         """The names of the dependent and independent variables."""
         return self._variable_names
 
     @property
-    def variable_units(self) -> Tuple[Tuple[str], Tuple[str]]:
+    def variable_units(self) -> tuple[tuple[str], tuple[str]]:
         """The units of the dependent and independent variables."""
         return self._variable_units
 
-    def _encode_column_labels(self) -> List[str]:
+    def _encode_column_labels(self) -> list[str]:
         """Create labels for the dependent variable data of this dataset."""
         ...
 
@@ -89,11 +100,11 @@ class UnambiguousDataset(Dataset):
         ...
 
     @staticmethod
-    def compute_average(datasets: List["Dataset"]) -> "Dataset":
+    def compute_average(datasets: list["Dataset"]) -> "Dataset":
         pass
 
     @staticmethod
-    def compute_variation(datasets: List["Dataset"]) -> "Dataset":
+    def compute_variation(datasets: list["Dataset"]) -> "Dataset":
         pass
 
     def assert_consistency(self):
@@ -113,7 +124,8 @@ class UnambiguousDataset(Dataset):
         for point in ordered_data[1:]:
             if len(point[self.INDEPENDENT_INDEX]) != number_of_independent_dimensions:
                 raise ValueError(
-                    f"Not all points have the same independent variable dimensionality.{len(point[self.INDEPENDENT_INDEX])} {number_of_independent_dimensions}")
+                    f"Not all points have the same independent variable dimensionality.{len(point[self.INDEPENDENT_INDEX])} {number_of_independent_dimensions}"
+                )
 
         number_of_dependent_dimensions = len(ordered_data[0][self.DEPENDENT_INDEX])
         for point in ordered_data[1:]:
@@ -128,22 +140,25 @@ class UnambiguousDataset(Dataset):
         for data_point_pair in data_point_pairs:
             if np.array_equal(data_point_pair[0], data_point_pair[1]):
                 raise ValueError(
-                    f"At least one pair of data points shares independent variable values: {data_point_pair}")
+                    f"At least one pair of data points shares independent variable values: {data_point_pair}"
+                )
 
-    def generate_labels(self) -> Tuple[List[str], List[str]]:
+    def generate_labels(self) -> tuple[list[str], list[str]]:
         """Generate labels for this dataset."""
         dependent_variable_labels = [f"d_{i}" for i in range(self.number_of_dependent_dimensions)]
-        independent_variable_labels = [f"i_{i}" for i in range(self.number_of_independent_dimensions)]
+        independent_variable_labels = [
+            f"i_{i}" for i in range(self.number_of_independent_dimensions)
+        ]
         return dependent_variable_labels, independent_variable_labels
 
-    def generate_units(self) -> Tuple[List[None], List[None]]:
+    def generate_units(self) -> tuple[list[None], list[None]]:
         """Generate empty units for this dataset."""
         dependent_variable_units = [None] * self.number_of_dependent_dimensions
         independent_variable_units = [None] * self.number_of_independent_dimensions
         return dependent_variable_units, independent_variable_units
 
     @property
-    def data(self) -> Set[Tuple[Tuple[object], Tuple[object]]]:
+    def data(self) -> set[tuple[tuple[object], tuple[object]]]:
         """The data of this dataset."""
         return self._data
 
@@ -155,11 +170,11 @@ class UnambiguousDataset(Dataset):
         return np.array([data_point[self.DEPENDENT_INDEX] for data_point in self._data])
 
     @property
-    def dependent_variable_names(self) -> List[str]:
+    def dependent_variable_names(self) -> list[str]:
         return self._variable_names[self.DEPENDENT_INDEX]
 
     @property
-    def dependent_variable_units(self) -> List[str]:
+    def dependent_variable_units(self) -> list[str]:
         return self._variable_units[self.DEPENDENT_INDEX]
 
     @property
@@ -167,7 +182,7 @@ class UnambiguousDataset(Dataset):
         return self._number_of_dependent_dimensions
 
     @property
-    def independent_variable_data(self) -> List[np.ndarray]:
+    def independent_variable_data(self) -> list[np.ndarray]:
         """Must have shape (number of points, number of independent dimensions)."""
         if self.number_of_independent_dimensions == 0:
             return []
@@ -176,11 +191,11 @@ class UnambiguousDataset(Dataset):
         return [np.array([data_point[self.INDEPENDENT_INDEX] for data_point in self._data])]
 
     @property
-    def independent_variable_names(self) -> List[str]:
+    def independent_variable_names(self) -> list[str]:
         return self._variable_names[self.INDEPENDENT_INDEX]
 
     @property
-    def independent_variable_units(self) -> List[str]:
+    def independent_variable_units(self) -> list[str]:
         return self._variable_units[self.INDEPENDENT_INDEX]
 
     @property
@@ -191,10 +206,9 @@ class UnambiguousDataset(Dataset):
         """Produce a scatter plot of this dataset."""
         raise NotImplementedError("Plotting of generic unambiguous datasets is not supported.")
 
-    def _plot_on_axes_with_variation(self,
-                                     axes: matplotlib.axes.Axes,
-                                     variation,
-                                     **plot_kwargs) -> None:
+    def _plot_on_axes_with_variation(
+        self, axes: matplotlib.axes.Axes, variation, **plot_kwargs
+    ) -> None:
         """Produce a scatter plot of this dataset with an indication of variation."""
         raise NotImplementedError("Plotting of generic unambiguous datasets is not supported.")
 

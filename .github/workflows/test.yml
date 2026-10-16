@@ -10,6 +10,21 @@ permissions:
   contents: read
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+    - name: Set up uv
+      uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+
+    - name: Ruff lint
+      run: uvx ruff@0.15.0 check --output-format=github .
+
+    - name: Ruff format
+      run: uvx ruff@0.15.0 format --check .
+
   test:
     runs-on: ${{ matrix.os }}
 

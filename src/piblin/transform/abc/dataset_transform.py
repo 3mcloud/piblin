@@ -1,17 +1,16 @@
-from typing import Union, Tuple, List
 from abc import ABC, abstractmethod
+
 import matplotlib.axes
 import matplotlib.figure
 import matplotlib.pyplot as plt
 
-import piblin.data.datasets.abc.dataset
-import piblin.transform.abc.transform as transform
-import piblin.data.datasets.abc.dataset as dataset
-import piblin.data.data_collections.measurement as measurement
-import piblin.data.data_collections.measurement_set as measurement_set
 import piblin.data.data_collections.experiment as experiment
 import piblin.data.data_collections.experiment_set as experiment_set
-import piblin.data.data_collections.data_collection_factory as data_collection_factory
+import piblin.data.data_collections.measurement as measurement
+import piblin.data.data_collections.measurement_set as measurement_set
+import piblin.data.datasets.abc.dataset
+import piblin.data.datasets.abc.dataset as dataset
+import piblin.transform.abc.transform as transform
 
 
 class DatasetTransform(transform.Transform, ABC):
@@ -52,16 +51,18 @@ class DatasetTransform(transform.Transform, ABC):
     """The type to which this transform's _apply method may be applied."""
 
     @abstractmethod
-    def _apply(self,
-               target: dataset.Dataset,
-               **kwargs) -> Union[None,
-                                  dataset.Dataset,
-                                  List[dataset.Dataset],
-                                  measurement.Measurement,
-                                  measurement_set.MeasurementSet,
-                                  experiment.Experiment,
-                                  experiment_set.ExperimentSet,
-                                  object]:
+    def _apply(
+        self, target: dataset.Dataset, **kwargs
+    ) -> (
+        None
+        | dataset.Dataset
+        | list[dataset.Dataset]
+        | measurement.Measurement
+        | measurement_set.MeasurementSet
+        | experiment.Experiment
+        | experiment_set.ExperimentSet
+        | object
+    ):
         """Apply this transform to a target dataset.
 
         Any object can be returned by this transform. If the target is
@@ -84,16 +85,17 @@ class DatasetTransform(transform.Transform, ABC):
         """
         ...
 
-    def _apply_to_dataset(self,
-                          target: dataset.Dataset,
-                          **kwargs) \
-            -> Union[None,
-                     dataset.Dataset,
-                     measurement.Measurement,
-                     measurement_set.MeasurementSet,
-                     experiment.Experiment,
-                     experiment_set.ExperimentSet,
-                     object]:
+    def _apply_to_dataset(
+        self, target: dataset.Dataset, **kwargs
+    ) -> (
+        None
+        | dataset.Dataset
+        | measurement.Measurement
+        | measurement_set.MeasurementSet
+        | experiment.Experiment
+        | experiment_set.ExperimentSet
+        | object
+    ):
         """Apply this per-dataset transform to the provided target dataset.
 
         Parameters
@@ -110,11 +112,9 @@ class DatasetTransform(transform.Transform, ABC):
         result = self._apply(target, **kwargs)
         return result
 
-
-    def _apply_to_measurement(self,
-                              target: measurement.Measurement,
-                              **kwargs) \
-            -> Union[None, measurement.Measurement]:
+    def _apply_to_measurement(
+        self, target: measurement.Measurement, **kwargs
+    ) -> None | measurement.Measurement:
         """Apply this transform to the provided target measurement.
 
         This transform is applied on a per-dataset basis, so to apply it
@@ -137,14 +137,12 @@ class DatasetTransform(transform.Transform, ABC):
             The data collection produced by transforming the target.
         # TODO - support other return types
         """
-        results: List = []
-        for i, target_dataset in enumerate(target.datasets):
-
-            return_value = self._apply_to_dataset(target=target_dataset,
-                                                  **kwargs)
+        results: list = []
+        for _i, target_dataset in enumerate(target.datasets):
+            return_value = self._apply_to_dataset(target=target_dataset, **kwargs)
             if return_value is None:
                 results.append(target_dataset)
-            elif isinstance(return_value, List):  # list of datasets or measurements
+            elif isinstance(return_value, list):  # list of datasets or measurements
                 results.extend(return_value)
             else:
                 results.append(return_value)
@@ -152,20 +150,17 @@ class DatasetTransform(transform.Transform, ABC):
         if all(isinstance(result, dataset.Dataset) for result in results):
             target.datasets = results
         elif all(isinstance(result, measurement.Measurement) for result in results):
-            return measurement_set.MeasurementSet(measurements=results,
-                                                  merge_redundant=False)
+            return measurement_set.MeasurementSet(measurements=results, merge_redundant=False)
         else:
             raise TypeError(
-                f"Result of transform not supported: "
-                f"DatasetTransform cannot return {results}"
+                f"Result of transform not supported: DatasetTransform cannot return {results}"
             )
 
         return target
 
-    def _apply_to_measurement_set(self,
-                                  target: measurement_set.MeasurementSet,
-                                  **kwargs) \
-            -> Union[None, measurement_set.MeasurementSet]:
+    def _apply_to_measurement_set(
+        self, target: measurement_set.MeasurementSet, **kwargs
+    ) -> None | measurement_set.MeasurementSet:
         """Apply this transform to the provided target measurement set.
 
         This transform is applied on a per-dataset basis, so to apply it to
@@ -195,10 +190,7 @@ class DatasetTransform(transform.Transform, ABC):
         """
         results = []
         for measurement_ in target.measurements:
-            return_value = self._apply_to_measurement(
-                target=measurement_,
-                **kwargs
-            )
+            return_value = self._apply_to_measurement(target=measurement_, **kwargs)
             if isinstance(return_value, measurement.Measurement):
                 results.append(return_value)
             elif return_value is None:
@@ -208,14 +200,15 @@ class DatasetTransform(transform.Transform, ABC):
             target.measurements = results
             return target
 
-    def _apply_to_experiment(self,
-                             target: experiment.Experiment,
-                             **kwargs) \
-            -> Union[dataset.Dataset,
-                     measurement.Measurement,
-                     measurement_set.MeasurementSet,
-                     experiment.Experiment,
-                     experiment_set.ExperimentSet]:
+    def _apply_to_experiment(
+        self, target: experiment.Experiment, **kwargs
+    ) -> (
+        dataset.Dataset
+        | measurement.Measurement
+        | measurement_set.MeasurementSet
+        | experiment.Experiment
+        | experiment_set.ExperimentSet
+    ):
         """Apply this transform to the provided target experiment.
 
         An experiment is a tidy, consistent measurement set where all
@@ -232,13 +225,15 @@ class DatasetTransform(transform.Transform, ABC):
         """
         return self._apply_to_measurement_set(target)
 
-    def _apply_to_experiment_set(self,
-                                 target: experiment_set.ExperimentSet,
-                                 **kwargs) -> Union[dataset.Dataset,
-                                                    measurement.Measurement,
-                                                    measurement_set.MeasurementSet,
-                                                    experiment.Experiment,
-                                                    experiment_set.ExperimentSet]:
+    def _apply_to_experiment_set(
+        self, target: experiment_set.ExperimentSet, **kwargs
+    ) -> (
+        dataset.Dataset
+        | measurement.Measurement
+        | measurement_set.MeasurementSet
+        | experiment.Experiment
+        | experiment_set.ExperimentSet
+    ):
         """Apply this transform to the provided target experiment set.
 
         See _apply_to_experiment for reasoning behind deferring to
@@ -251,16 +246,17 @@ class DatasetTransform(transform.Transform, ABC):
         """
         return self._apply_to_measurement_set(target, **kwargs)
 
-    def visualize(self,  # analog of apply_to
-                  target: Union[dataset.Dataset,
-                                measurement.Measurement,
-                                measurement_set.MeasurementSet,
-                                experiment.Experiment,
-                                experiment_set.ExperimentSet],
-                  make_copy: bool = True,
-                  total_figsize: Tuple[int, int] = None,
-                  **kwargs) -> Tuple[matplotlib.figure.Figure,
-                                     matplotlib.axes.Axes]:
+    def visualize(
+        self,  # analog of apply_to
+        target: dataset.Dataset
+        | measurement.Measurement
+        | measurement_set.MeasurementSet
+        | experiment.Experiment
+        | experiment_set.ExperimentSet,
+        make_copy: bool = True,
+        total_figsize: tuple[int, int] = None,
+        **kwargs,
+    ) -> tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]:
         """Represent and present the effect of this dataset transform to facilitate understanding.
 
         Can we just by default visualize pre- and post- application?
@@ -294,13 +290,13 @@ class DatasetTransform(transform.Transform, ABC):
                     for dataset_ in replicate_measurement.datasets:
                         f, a = self._visualize_dataset(dataset_, total_figsize, **kwargs)
         else:
-            raise ValueError(f"{self.__class__.__name__} cannot visualize self on object of type {type(target)}.")
+            raise ValueError(
+                f"{self.__class__.__name__} cannot visualize self on object of type {type(target)}."
+            )
 
-    def _visualize_dataset(self,
-                           target: dataset.Dataset,
-                           total_figsize: Tuple[int],
-                           **kwargs) -> Tuple[matplotlib.figure.Figure,
-                                              matplotlib.axes.Axes]:
+    def _visualize_dataset(
+        self, target: dataset.Dataset, total_figsize: tuple[int], **kwargs
+    ) -> tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]:
         """Visualize the action of this transform on a dataset.
 
         Parameters
@@ -330,6 +326,6 @@ class DatasetTransform(transform.Transform, ABC):
 
         return f, a
 
-    def _visualize_measurement(self, target: measurement.Measurement, **kwargs) -> Tuple[matplotlib.figure.Figure,
-                                                                                         matplotlib.axes.Axes]:
-        ...
+    def _visualize_measurement(
+        self, target: measurement.Measurement, **kwargs
+    ) -> tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]: ...

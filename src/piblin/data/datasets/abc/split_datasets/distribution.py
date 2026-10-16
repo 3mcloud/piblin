@@ -1,9 +1,9 @@
-from typing import List
-import numpy as np
 import matplotlib.axes
+import numpy as np
+
 import piblin.data.datasets.abc.split_datasets.one_dimensional_dataset as one_dimensional_dataset
-from piblin.data.datasets.abc.split_datasets.two_dimensional_dataset import TwoDimensionalDataset
 from piblin.data.datasets.abc.split_datasets.one_dimensional_dataset import OneDimensionalDataset
+from piblin.data.datasets.abc.split_datasets.two_dimensional_dataset import TwoDimensionalDataset
 
 
 class Distribution(one_dimensional_dataset.OneDimensionalDataset):
@@ -16,17 +16,15 @@ class Distribution(one_dimensional_dataset.OneDimensionalDataset):
     ----------
     datasets : List of Dataset
     """
+
     DEFAULT_X_NAME: str = "Bin Centers"
     """The default name for the independent variable."""
     DEFAULT_Y_NAME: str = "Counts"
     """The default name for the dependent variable."""
 
-    def __init__(self,
-                 datasets: List = None,
-                 name: str = "",
-                 bins: int = 10,
-                 density=None,
-                 source=None):
+    def __init__(
+        self, datasets: list = None, name: str = "", bins: int = 10, density=None, source=None
+    ):
 
         if datasets is None:
             self._datasets = []
@@ -35,13 +33,15 @@ class Distribution(one_dimensional_dataset.OneDimensionalDataset):
 
         independent_variable_data, dependent_variable_data = self.__compute_variables(bins, density)
 
-        super().__init__(dependent_variable_data=dependent_variable_data,
-                         dependent_variable_names=["Counts"],
-                         dependent_variable_units=["None"],
-                         independent_variable_data=[independent_variable_data],
-                         independent_variable_names=[name],
-                         independent_variable_units=[self._determine_unit(self._datasets)],
-                         source=source)
+        super().__init__(
+            dependent_variable_data=dependent_variable_data,
+            dependent_variable_names=["Counts"],
+            dependent_variable_units=["None"],
+            independent_variable_data=[independent_variable_data],
+            independent_variable_names=[name],
+            independent_variable_units=[self._determine_unit(self._datasets)],
+            source=source,
+        )
 
     def __compute_variables(self, bins, density):
         if all(isinstance(x, OneDimensionalDataset) for x in self._datasets):
@@ -61,9 +61,9 @@ class Distribution(one_dimensional_dataset.OneDimensionalDataset):
         """Determine the unit of this distribution's independent variables."""
         units = []
         for dataset in datasets:
-            if type(dataset) == OneDimensionalDataset:
+            if type(dataset) is OneDimensionalDataset:
                 units.append(dataset.unit)
-            elif type(dataset) == TwoDimensionalDataset:
+            elif type(dataset) is TwoDimensionalDataset:
                 units.append(dataset.dependent_variable_unit)
         if len(set(units)) == 1:
             unit = units[0]
@@ -83,9 +83,7 @@ class Distribution(one_dimensional_dataset.OneDimensionalDataset):
     def counts(self) -> np.ndarray:
         return self._dependent_variable_data
 
-    def _plot_on_axes(self,
-                      axes: matplotlib.axes.Axes,
-                      **axes_plotting_kwargs):
+    def _plot_on_axes(self, axes: matplotlib.axes.Axes, **axes_plotting_kwargs):
         """Plot this histogram on the given matplotlib axes.
 
         Parameters
@@ -93,11 +91,13 @@ class Distribution(one_dimensional_dataset.OneDimensionalDataset):
         axes : matplotlib.axes.Axes
             The axes on which to plot this histogram.
         """
-        if 'marker' in axes_plotting_kwargs.keys():
-            del axes_plotting_kwargs['marker']
+        if "marker" in axes_plotting_kwargs.keys():
+            del axes_plotting_kwargs["marker"]
         args = []
-        axes.bar(self.bins,
-                 self.counts,
-                 label=f"{self.y_name} ({self.dependent_variable_unit})",
-                 *args,
-                 **axes_plotting_kwargs)
+        axes.bar(
+            self.bins,
+            self.counts,
+            *args,
+            label=f"{self.y_name} ({self.dependent_variable_unit})",
+            **axes_plotting_kwargs,
+        )

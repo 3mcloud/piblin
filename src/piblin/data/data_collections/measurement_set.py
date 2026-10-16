@@ -1,17 +1,24 @@
 """
 Module: MeasurementSet - Collections of scientific measurements.
 """
-import copy
-import collections.abc
-from typing import Callable, Tuple, List, Set, Dict, Union
 
+import collections.abc
+import copy
+from collections.abc import Callable
+from typing import TYPE_CHECKING
+
+import matplotlib.axes
+import matplotlib.colors
+import matplotlib.figure
 import numpy as np
 import numpy.typing
 from matplotlib import pyplot as plt
-import matplotlib.axes
-import matplotlib.figure
-import matplotlib.colors
+
 import piblin.data.data_collections.measurement as measurement_
+
+if TYPE_CHECKING:
+    import piblin.data
+    import piblin.transform.modify.interpolate as interpolate_
 
 
 class MeasurementSet(collections.abc.MutableSequence):
@@ -181,17 +188,16 @@ class MeasurementSet(collections.abc.MutableSequence):
     visualize_on_multiple_plots()
         Visualize the measurement datasets on individual plots.
     """
-    def __init__(self,
-                 measurements: List[measurement_.Measurement] = None,
-                 merge_redundant: bool = True):
+
+    def __init__(
+        self, measurements: list[measurement_.Measurement] = None, merge_redundant: bool = True
+    ):
 
         if measurements is None:
             self.__measurements = []
         else:
-
             if not isinstance(measurements, list):
-                raise ValueError(f"Measurements are not a list: "
-                                 f"{measurements}")
+                raise ValueError(f"Measurements are not a list: {measurements}")
 
             if not measurements:
                 self.__measurements = []
@@ -199,15 +205,12 @@ class MeasurementSet(collections.abc.MutableSequence):
                 self.__measurements = measurements
             else:
                 if merge_redundant:
-                    self.__measurements = \
-                        self.__combine_measurements(measurements)
+                    self.__measurements = self.__combine_measurements(measurements)
                 else:
                     self.__measurements = measurements
 
     @classmethod
-    def from_single_measurement(cls,
-                                measurement: measurement_.Measurement) -> \
-            "MeasurementSet":
+    def from_single_measurement(cls, measurement: measurement_.Measurement) -> "MeasurementSet":
         """Create a measurement set from one measurement.
 
         Parameters
@@ -219,10 +222,10 @@ class MeasurementSet(collections.abc.MutableSequence):
 
     @classmethod
     def from_measurement_sets(
-            cls,
-            measurement_sets: List["MeasurementSet"],
-            merge_redundant: bool = True,
-            ) -> "MeasurementSet":
+        cls,
+        measurement_sets: list["MeasurementSet"],
+        merge_redundant: bool = True,
+    ) -> "MeasurementSet":
         """Create a single combined measurement set from multiple.
 
         Parameters
@@ -242,7 +245,9 @@ class MeasurementSet(collections.abc.MutableSequence):
         return cls(all_measurements, merge_redundant=merge_redundant)
 
     @classmethod
-    def __combine_measurements(cls, measurements: List[measurement_.Measurement]) -> List[measurement_.Measurement]:
+    def __combine_measurements(
+        cls, measurements: list[measurement_.Measurement]
+    ) -> list[measurement_.Measurement]:
         """Combine a set of measurements.
 
         Given any set of measurements, relationships may exist between them
@@ -292,13 +297,11 @@ class MeasurementSet(collections.abc.MutableSequence):
         # combine all measurements with each unique set of conditions by combining their datasets and details
         combined_measurements = []
         for unique_condition in unique_dicts_of_conditions:
-
             datasets = []
             combined_details = {}
             conflicting_detail_names = set()
             for measurement in measurements:
                 if measurement.conditions == unique_condition:
-
                     datasets.extend(measurement.datasets)
 
                     if not combined_details:
@@ -309,19 +312,24 @@ class MeasurementSet(collections.abc.MutableSequence):
                                 combined_details[key] = value
                             elif combined_details[key] != value:
                                 conflicting_detail_names.add(key)
-                                print(f"Warning: Detail with name {key} has differing values for merged measurements."
-                                      f"\n\tConsider using the `merge_redundant=False` parameter to the read function.")
+                                print(
+                                    f"Warning: Detail with name {key} has differing values for merged measurements."
+                                    f"\n\tConsider using the `merge_redundant=False` parameter to the read function."
+                                )
                                 del combined_details[key]
 
-            combined_measurements.append(measurement_.Measurement(datasets=datasets,
-                                                                  conditions=unique_condition,
-                                                                  details=combined_details))
+            combined_measurements.append(
+                measurement_.Measurement(
+                    datasets=datasets, conditions=unique_condition, details=combined_details
+                )
+            )
 
         return combined_measurements
 
     @classmethod
-    def combine(cls, measurement_sets: List["MeasurementSet"], merge_redundant: bool = True) \
-            -> "MeasurementSet":
+    def combine(
+        cls, measurement_sets: list["MeasurementSet"], merge_redundant: bool = True
+    ) -> "MeasurementSet":
         """Alias for from_measurement_sets."""
         return cls.from_measurement_sets(measurement_sets, merge_redundant=merge_redundant)
 
@@ -342,14 +350,13 @@ class MeasurementSet(collections.abc.MutableSequence):
             a single multipoint dataset.
         """
         for measurement in self.measurements:
-            measurement.combine_zerod_datasets(x_name=x_name,
-                                               y_name=y_name,
-                                               merge_datasets=merge_datasets)
+            measurement.combine_zerod_datasets(
+                x_name=x_name, y_name=y_name, merge_datasets=merge_datasets
+            )
 
-    def combine_multi_zerod_datasets(self,
-                                     x_name: str,
-                                     y_names: List[str] = None,
-                                     merge_datasets: bool = True) -> None:
+    def combine_multi_zerod_datasets(
+        self, x_name: str, y_names: list[str] = None, merge_datasets: bool = True
+    ) -> None:
         """Perform combination of 0D datasets on a per-measurement basis.
 
         Parameters
@@ -363,9 +370,10 @@ class MeasurementSet(collections.abc.MutableSequence):
             a single multipoint dataset.
         """
         for measurement in self.measurements:
-            measurement.combine_multi_zerod_datasets(x_name=x_name,
-                                                     y_names=y_names,
-                                                     merge_datasets=merge_datasets)
+            measurement.combine_multi_zerod_datasets(
+                x_name=x_name, y_names=y_names, merge_datasets=merge_datasets
+            )
+
     def combine_oned_datasets(self, x_name: str, y_name: str):
         """Combine multiple one-dimensional datasets.
 
@@ -383,9 +391,7 @@ class MeasurementSet(collections.abc.MutableSequence):
         for measurement in self.measurements:
             measurement.combine_oned_datasets(x_name=x_name, y_name=y_name)
 
-    def split_by_dataset_indices(self,
-                                 dataset_indices: List[Set[int]]) \
-            -> List["MeasurementSet"]:
+    def split_by_dataset_indices(self, dataset_indices: list[set[int]]) -> list["MeasurementSet"]:
         """Split this measurement set up by dataset indices.
 
         This split works by splitting each measurement in the set by
@@ -396,51 +402,50 @@ class MeasurementSet(collections.abc.MutableSequence):
             for dataset_index in measurement_indices:
                 if dataset_index >= max(self.num_datasets):
                     raise IndexError(
-                        f"Provided index not present in any measurement: "
-                        f"{dataset_index}"
+                        f"Provided index not present in any measurement: {dataset_index}"
                     )
 
-        split_measurements = [measurement.split_by_dataset_indices(
-            dataset_indices=dataset_indices,
-            conditions_to_remove=None,
-            conditions_to_add=None,
-            allow_empty_measurements=True)
-            for measurement in self.measurements]
+        split_measurements = [
+            measurement.split_by_dataset_indices(
+                dataset_indices=dataset_indices,
+                conditions_to_remove=None,
+                conditions_to_add=None,
+                allow_empty_measurements=True,
+            )
+            for measurement in self.measurements
+        ]
 
         measurement_sets = []
         for i in range(len(dataset_indices)):
-            measurements = [measurement[i]
-                            for measurement in split_measurements]
+            measurements = [measurement[i] for measurement in split_measurements]
             measurement_sets.append(type(self)(measurements=measurements))
 
         return measurement_sets
 
-    def split_by_condition_name(self,
-                                condition_name) -> List["MeasurementSet"]:
+    def split_by_condition_name(self, condition_name) -> list["MeasurementSet"]:
 
-        unique_values: Set = set()
+        unique_values: set = set()
         for measurement in self.measurements:
             unique_values.add(measurement.conditions[condition_name])
         list(unique_values).sort()
 
         measurement_sets = []
         for unique_value in unique_values:
-            measurements = \
-                [measurement
-                 for measurement in self.measurements
-                 if measurement.conditions[condition_name] == unique_value]
+            measurements = [
+                measurement
+                for measurement in self.measurements
+                if measurement.conditions[condition_name] == unique_value
+            ]
 
             measurement_sets.append(
-                self.__class__(measurements=measurements,
-                               merge_redundant=False)
+                self.__class__(measurements=measurements, merge_redundant=False)
             )
 
         return measurement_sets
 
     def split_by_dataset_independent_variable_name(
-            self,
-            independent_variable_name: str) \
-            -> Tuple["MeasurementSet", "MeasurementSet"]:
+        self, independent_variable_name: str
+    ) -> tuple["MeasurementSet", "MeasurementSet"]:
         """Split this measurement set into two measurement sets by dataset
         independent variable name.
 
@@ -463,19 +468,17 @@ class MeasurementSet(collections.abc.MutableSequence):
             independent variable name.
         """
 
-        measurements_with_independent_variable_name: \
-            List[measurement_.Measurement] = []
+        measurements_with_independent_variable_name: list[measurement_.Measurement] = []
 
-        measurements_without_independent_variable_name: \
-            List[measurement_.Measurement] = []
+        measurements_without_independent_variable_name: list[measurement_.Measurement] = []
 
         for measurement in self.measurements:
-            measurement_with_independent_variable_name, \
-                measurement_without_independent_variable_name = \
-                measurement.split_by_dataset_independent_variable_name(
-                    independent_variable_name=independent_variable_name,
-                    allow_empty_measurements=True
-                )
+            (
+                measurement_with_independent_variable_name,
+                measurement_without_independent_variable_name,
+            ) = measurement.split_by_dataset_independent_variable_name(
+                independent_variable_name=independent_variable_name, allow_empty_measurements=True
+            )
 
             if measurement_with_independent_variable_name.datasets:
                 measurements_with_independent_variable_name.append(
@@ -487,20 +490,15 @@ class MeasurementSet(collections.abc.MutableSequence):
                     measurement_without_independent_variable_name
                 )
 
-        return \
-            self.__class__(
-                measurements=measurements_with_independent_variable_name,
-                merge_redundant=False
-            ), \
-            self.__class__(
-                measurements=measurements_without_independent_variable_name,
-                merge_redundant=False
-            )
+        return self.__class__(
+            measurements=measurements_with_independent_variable_name, merge_redundant=False
+        ), self.__class__(
+            measurements=measurements_without_independent_variable_name, merge_redundant=False
+        )
 
     def split_by_dataset_independent_variable_names(
-            self,
-            independent_variable_names: List[str]
-    ) -> Tuple["MeasurementSet", "MeasurementSet"]:
+        self, independent_variable_names: list[str]
+    ) -> tuple["MeasurementSet", "MeasurementSet"]:
         """Split this measurement set into two measurement sets by dataset
         independent variable names.
 
@@ -525,28 +523,23 @@ class MeasurementSet(collections.abc.MutableSequence):
         measurements_with_names = []
         measurements_without_names = []
         for measurement in self.measurements:
-            measurement_with_names, \
-                measurement_without_names = \
-                measurement.split_by_dataset_independent_variable_names(
-                    independent_variable_names
-                )
+            measurement_with_names, measurement_without_names = (
+                measurement.split_by_dataset_independent_variable_names(independent_variable_names)
+            )
 
             if measurement_with_names.datasets:
-                measurements_with_names.append(
-                    measurement_with_names
-                )
+                measurements_with_names.append(measurement_with_names)
 
             if measurement_without_names.datasets:
-                measurements_without_names.append(
-                    measurement_without_names
-                )
+                measurements_without_names.append(measurement_without_names)
 
-        return self.__class__(measurements=measurements_with_names), \
-            self.__class__(measurements=measurements_without_names)
+        return self.__class__(measurements=measurements_with_names), self.__class__(
+            measurements=measurements_without_names
+        )
 
     def split_by_dataset_dependent_variable_name(
-            self,
-            dependent_variable_name: str) -> List["Measurement"]:
+        self, dependent_variable_name: str
+    ) -> list["measurement_.Measurement"]:
         """Split this measurement into multiple measurements based on
         dataset dependent variable names.
 
@@ -562,18 +555,17 @@ class MeasurementSet(collections.abc.MutableSequence):
         all_matching_measurements = []
         all_non_matching_measurements = []
         for measurement in self.measurements:
-            matching_measurements, non_matching_measurements = \
-                measurement.split_by_dataset_dependent_variable_name(
-                    dependent_variable_name
-                )
+            matching_measurements, non_matching_measurements = (
+                measurement.split_by_dataset_dependent_variable_name(dependent_variable_name)
+            )
 
             all_matching_measurements.append(matching_measurements)
             all_non_matching_measurements.append(non_matching_measurements)
 
-        return [self.__class__(measurements=all_matching_measurements,
-                               merge_redundant=False),
-                self.__class__(measurements=all_non_matching_measurements,
-                               merge_redundant=False)]
+        return [
+            self.__class__(measurements=all_matching_measurements, merge_redundant=False),
+            self.__class__(measurements=all_non_matching_measurements, merge_redundant=False),
+        ]
 
     def combine_datasets(self, dataset_indices=None) -> None:
         """Combine the datasets at the given indices for all measurements.
@@ -627,9 +619,8 @@ class MeasurementSet(collections.abc.MutableSequence):
     #     return cls(measurements)
 
     def to_consistent_measurement_set(
-            self,
-            dataset_indices_to_retain: List[int] = None,
-            make_copy=True):
+        self, dataset_indices_to_retain: list[int] = None, make_copy=True
+    ):
         """Convert the set of measurements to a consistent measurement set.
 
         If this measurement set is not already consistent, datasets will
@@ -652,8 +643,7 @@ class MeasurementSet(collections.abc.MutableSequence):
             The consistent measurement set converted from this measurement
             set.
         """
-        from piblin.data.data_collections.consistent_measurement_set \
-            import ConsistentMeasurementSet
+        from piblin.data.data_collections.consistent_measurement_set import ConsistentMeasurementSet
 
         if self.num_measurements == 0:
             return ConsistentMeasurementSet(self.measurements)
@@ -679,21 +669,19 @@ class MeasurementSet(collections.abc.MutableSequence):
                 )
                 num_datasets_deleted += 1
 
-        for delete_dataset_at_index, \
-                dataset_index in zip(delete_datasets_at_index,
-                                     dataset_indices_to_retain):
+        for delete_dataset_at_index, dataset_index in zip(
+            delete_datasets_at_index, dataset_indices_to_retain
+        ):
             if delete_dataset_at_index:
                 edited_measurement_set.remove_all_datasets_at_index(
                     dataset_index - num_datasets_deleted
                 )
                 num_datasets_deleted += 1
 
-        return \
-            ConsistentMeasurementSet(edited_measurement_set.measurements, merge_redundant=False)
+        return ConsistentMeasurementSet(edited_measurement_set.measurements, merge_redundant=False)
 
     def to_tidy_measurement_set(
-            self,
-            interpolation_transforms: List["interpolate_.Interpolate1D"] = None
+        self, interpolation_transforms: list["interpolate_.Interpolate1D"] = None
     ):
         """Convert this set of measurements to a tidy measurement set.
 
@@ -710,55 +698,56 @@ class MeasurementSet(collections.abc.MutableSequence):
         interpolation_transforms : list of Interpolate
             The interpolation old_transforms to use on the datasets.
         """
-        from piblin.data.data_collections.tidy_measurement_set \
-            import TidyMeasurementSet
+        from piblin.data.data_collections.tidy_measurement_set import TidyMeasurementSet
 
         if self.is_tidy:
-            return TidyMeasurementSet(self.measurements,
-                                      merge_redundant=False)
+            return TidyMeasurementSet(self.measurements, merge_redundant=False)
 
         consistent_measurement_set = self.to_consistent_measurement_set()
 
         # this should be in consistent measurement set class
         if consistent_measurement_set.is_tidy:
             return TidyMeasurementSet(
-                consistent_measurement_set.measurements,
-                merge_redundant=False
+                consistent_measurement_set.measurements, merge_redundant=False
             )
 
         # for each dataset in each of the consistent measurements
-        dataset_index_range = range(
-            consistent_measurement_set.num_datasets
-        )
+        dataset_index_range = range(consistent_measurement_set.num_datasets)
         for dataset_index in dataset_index_range:
-
             # make sure there is an interpolation transform that can be applied
             if not self._has_common_independent_variables_at_index(dataset_index):
                 if interpolation_transforms is None:
-                    if consistent_measurement_set.datasets_at_index(dataset_index)[0].number_of_independent_dimensions == 1:
-
+                    if (
+                        consistent_measurement_set.datasets_at_index(dataset_index)[
+                            0
+                        ].number_of_independent_dimensions
+                        == 1
+                    ):
                         import piblin.transform.modify.interpolate as interpolate_
-                        interpolate = interpolate_.Interpolate1D.from_measurement_set_datasets(consistent_measurement_set,
-                                                                                               dataset_index)
+
+                        interpolate = interpolate_.Interpolate1D.from_measurement_set_datasets(
+                            consistent_measurement_set, dataset_index
+                        )
                     else:
-                        raise NotImplementedError("Auto-interpolation is only implemented for 1D datasets.")
+                        raise NotImplementedError(
+                            "Auto-interpolation is only implemented for 1D datasets."
+                        )
                 else:
                     interpolate = interpolation_transforms[dataset_index]
 
                 # apply it to the current dataset for all measurements
                 for measurement in consistent_measurement_set.measurements:
-                    interpolate.apply_to(measurement.datasets[dataset_index],
-                                         make_copy=False)
+                    interpolate.apply_to(measurement.datasets[dataset_index], make_copy=False)
 
-        return TidyMeasurementSet(consistent_measurement_set.measurements,
-                                  merge_redundant=False)
+        return TidyMeasurementSet(consistent_measurement_set.measurements, merge_redundant=False)
 
-    def flatten(self,
-                force_tidiness: bool = False,
-                include_unshared_conditions: bool = False,
-                include_equal_conditions: bool = False,
-                default_value: object = None) \
-            -> Tuple[List[str], List[List[object]]]:
+    def flatten(
+        self,
+        force_tidiness: bool = False,
+        include_unshared_conditions: bool = False,
+        include_equal_conditions: bool = False,
+        default_value: object = None,
+    ) -> tuple[list[str], list[list[object]]]:
         """Convert the set of measurements to a flat dataset.
 
         In most cases of interest, a flattened measurement set will be
@@ -798,26 +787,21 @@ class MeasurementSet(collections.abc.MutableSequence):
 
         """
         if (not self.is_tidy and force_tidiness) or self.is_tidy:
-
             tidy_measurement_set = self.to_tidy_measurement_set()
 
-            metadata_headers, metadata_values = \
-                tidy_measurement_set.flatten_metadata(
-                    include_unshared_conditions=include_unshared_conditions,
-                    include_equal_conditions=include_equal_conditions,
-                    default_value=default_value
-                )
+            metadata_headers, metadata_values = tidy_measurement_set.flatten_metadata(
+                include_unshared_conditions=include_unshared_conditions,
+                include_equal_conditions=include_equal_conditions,
+                default_value=default_value,
+            )
 
-            data_header, data_values = \
-                tidy_measurement_set.flatten_datasets()
+            data_header, data_values = tidy_measurement_set.flatten_datasets()
 
             column_headers = metadata_headers
             column_headers.extend(data_header)
 
             flat_data = []
-            for metadata_value, data_value in zip(metadata_values,
-                                                  data_values):
-
+            for metadata_value, data_value in zip(metadata_values, data_values):
                 all_data = metadata_value + list(data_value)
 
                 if len(column_headers) != len(all_data):
@@ -832,22 +816,19 @@ class MeasurementSet(collections.abc.MutableSequence):
             return column_headers, flat_data
 
         elif not self.is_tidy and not force_tidiness:
-
             metadata_headers, metadata_values = self.flatten_metadata(
                 include_unshared_conditions=include_unshared_conditions,
                 include_equal_conditions=include_equal_conditions,
-                default_value=default_value
+                default_value=default_value,
             )
 
             data_headers, data_values = self.flatten_datasets()
 
             flat_headers = []
             flat_data = []
-            for metadata_value, \
-                    data_header, \
-                    data_value in zip(metadata_values,
-                                      data_headers,
-                                      data_values):
+            for metadata_value, data_header, data_value in zip(
+                metadata_values, data_headers, data_values
+            ):
                 column_headers = metadata_headers + data_header
 
                 all_data = metadata_value + list(data_value)
@@ -863,9 +844,9 @@ class MeasurementSet(collections.abc.MutableSequence):
 
             return flat_headers, flat_data
 
-    def flatten_datasets(self,
-                         force_tidiness=True) \
-            -> Tuple[List[numpy.typing.NDArray], List[List[object]]]:
+    def flatten_datasets(
+        self, force_tidiness=True
+    ) -> tuple[list[numpy.typing.NDArray], list[list[object]]]:
         """Flatten the datasets of this measurement set.
 
         It is unclear if this is useful to anyone, but it is kept here for
@@ -894,11 +875,12 @@ class MeasurementSet(collections.abc.MutableSequence):
 
         return all_headers, all_values
 
-    def flatten_metadata(self,
-                         include_unshared_conditions: bool = False,
-                         include_equal_conditions: bool = False,
-                         default_value: object = None) \
-            -> Tuple[List[str], List[List[object]]]:
+    def flatten_metadata(
+        self,
+        include_unshared_conditions: bool = False,
+        include_equal_conditions: bool = False,
+        default_value: object = None,
+    ) -> tuple[list[str], list[list[object]]]:
         """Convert the measurement metadata to a set of rows.
 
         Each measurement can be flattened by a call to measurement.flatten.
@@ -950,18 +932,17 @@ class MeasurementSet(collections.abc.MutableSequence):
         rows = []
         for measurement in self.measurements:
             _, row = measurement.flatten_metadata(
-                condition_names=column_headers,
-                default_value=default_value
+                condition_names=column_headers, default_value=default_value
             )
             rows.append(row)
 
         return column_headers, rows
 
     def to_tabular_measurement_set(
-            self,
-            include_unshared_conditions: bool = False,
-            include_equal_conditions: bool = False,
-            default_value: object = None
+        self,
+        include_unshared_conditions: bool = False,
+        include_equal_conditions: bool = False,
+        default_value: object = None,
     ) -> "piblin.data.TabularMeasurementSet":
         """Convert this set of a measurements to a tabular dataset.
 
@@ -995,23 +976,24 @@ class MeasurementSet(collections.abc.MutableSequence):
         """
         n_metadata_columns = self._num_metadata_keys(
             include_unshared_conditions=include_unshared_conditions,
-            include_equal_conditions=include_equal_conditions
+            include_equal_conditions=include_equal_conditions,
         )
 
         headers, columns = self.flatten(
             force_tidiness=True,
             include_unshared_conditions=include_unshared_conditions,
             include_equal_conditions=include_equal_conditions,
-            default_value=default_value
+            default_value=default_value,
         )
 
         import piblin.data.data_collections.tabular_measurement_set
+
         return piblin.data.data_collections.tabular_measurement_set.TabularMeasurementSet(
             data=columns,
             n_metadata_columns=n_metadata_columns,
             column_headers=headers,
             dataset_types=self.dataset_types,
-            dataset_end_indices=self.dataset_lengths
+            dataset_end_indices=self.dataset_lengths,
         )
 
     def to_xarray(self, merge_dependent_data: bool = False):
@@ -1036,8 +1018,7 @@ class MeasurementSet(collections.abc.MutableSequence):
         """
         measurements = []
         for n, measurement in enumerate(self.measurements):
-            ds = measurement.to_xarray(
-                merge_dependent_data=merge_dependent_data)
+            ds = measurement.to_xarray(merge_dependent_data=merge_dependent_data)
             ds = ds.assign_coords(measurement=n)
             measurements.append(ds)
         return measurements
@@ -1046,13 +1027,13 @@ class MeasurementSet(collections.abc.MutableSequence):
     def from_xarray(cls, xr_data) -> "MeasurementSet":
         """Create a measurement set from an xarray dataset."""
         import xarray as xr
+
         from piblin.data.data_collections.measurement import Measurement
 
         if not isinstance(xr_data, (list, tuple)) or not all(
-                isinstance(ds, xr.Dataset) for ds in xr_data):
-            raise ValueError(
-                "`xr_data` should be a list of xarray Datasets."
-            )
+            isinstance(ds, xr.Dataset) for ds in xr_data
+        ):
+            raise ValueError("`xr_data` should be a list of xarray Datasets.")
 
         measurements = []
         for ds in xr_data:
@@ -1064,12 +1045,12 @@ class MeasurementSet(collections.abc.MutableSequence):
         return cls(measurements)
 
     @property
-    def measurements(self) -> List[measurement_.Measurement]:
+    def measurements(self) -> list[measurement_.Measurement]:
         """The collected measurements."""
         return self.__measurements
 
     @measurements.setter
-    def measurements(self, measurements: List[measurement_.Measurement]):
+    def measurements(self, measurements: list[measurement_.Measurement]):
         self.__measurements = measurements
 
     @property
@@ -1078,41 +1059,36 @@ class MeasurementSet(collections.abc.MutableSequence):
         return len(self.measurements)
 
     @property
-    def datasets(self) -> List[List[object]]:
+    def datasets(self) -> list[list[object]]:
         return [measurement.datasets for measurement in self.measurements]
 
     @property
-    def num_datasets(self) -> List[int]:
+    def num_datasets(self) -> list[int]:
         """The number of datasets in each measurement of the set."""
-        return [len(measurement.datasets)
-                for measurement in self.measurements]
+        return [len(measurement.datasets) for measurement in self.measurements]
 
     @property
     def max_num_datasets(self) -> int:
         return max(self.num_datasets)
 
     @property
-    def dataset_types(self) -> List[List[type]]:
+    def dataset_types(self) -> list[list[type]]:
         """The types of datasets in each measurement of this set."""
-        return [measurement.dataset_types
-                for measurement in self.measurements]
+        return [measurement.dataset_types for measurement in self.measurements]
 
     @property
-    def dataset_lengths(self) -> List[List[int]]:
+    def dataset_lengths(self) -> list[list[int]]:
         """The lengths of datasets in each measurement of the set."""
-        return [measurement.dataset_lengths
-                for measurement in self.measurements]
+        return [measurement.dataset_lengths for measurement in self.measurements]
 
     @property
-    def dataset_independent_variable_data(self) -> List[List[np.ndarray]]:
-        return [measurement.dataset_independent_variable_data
-                for measurement in self.measurements]
+    def dataset_independent_variable_data(self) -> list[list[np.ndarray]]:
+        return [measurement.dataset_independent_variable_data for measurement in self.measurements]
 
     @property
     def is_tidy(self) -> bool:
         """Determine if this measurement set is tidy."""
-        return self.is_consistent & \
-            self._has_common_independent_variables()
+        return self.is_consistent & self._has_common_independent_variables()
 
     @property
     def is_consistent(self) -> bool:
@@ -1123,30 +1099,33 @@ class MeasurementSet(collections.abc.MutableSequence):
         bool
             Whether this measurement set is consistent.
         """
-        return self._has_consistent_num_datasets() & \
-            self._has_consistent_dataset_types() & \
-            self._has_consistent_dataset_dependent_variable_names() & \
-            self._has_consistent_dataset_dependent_variable_units() & \
-            self._has_consistent_dataset_independent_variable_names() & \
-            self._has_consistent_dataset_independent_variable_units()
+        return (
+            self._has_consistent_num_datasets()
+            & self._has_consistent_dataset_types()
+            & self._has_consistent_dataset_dependent_variable_names()
+            & self._has_consistent_dataset_dependent_variable_units()
+            & self._has_consistent_dataset_independent_variable_names()
+            & self._has_consistent_dataset_independent_variable_units()
+        )
 
     @property
     def consistency_str(self):
         """Create a string description of consistency properties."""
-        return \
-            f"Consistent number of datasets?:\t" \
-            f"{self._has_consistent_num_datasets()}" \
-            f"\nConsistent types of dataset?:\t" \
-            f"{self._has_consistent_dataset_types()}" \
-            f"\nConsistent dep. var. names?:\t" \
-            f"{self._has_consistent_dataset_dependent_variable_names()}" \
-            f"\nConsistent dep. var. units?:\t" \
-            f"{self._has_consistent_dataset_dependent_variable_units()}" \
-            f"\nConsistent ind. var. names?:" \
-            f"\t{self._has_consistent_dataset_independent_variable_names()}" \
-            f"\nConsistent ind. var. units?:\t" \
-            f"{self._has_consistent_dataset_independent_variable_units()}" \
+        return (
+            f"Consistent number of datasets?:\t"
+            f"{self._has_consistent_num_datasets()}"
+            f"\nConsistent types of dataset?:\t"
+            f"{self._has_consistent_dataset_types()}"
+            f"\nConsistent dep. var. names?:\t"
+            f"{self._has_consistent_dataset_dependent_variable_names()}"
+            f"\nConsistent dep. var. units?:\t"
+            f"{self._has_consistent_dataset_dependent_variable_units()}"
+            f"\nConsistent ind. var. names?:"
+            f"\t{self._has_consistent_dataset_independent_variable_names()}"
+            f"\nConsistent ind. var. units?:\t"
+            f"{self._has_consistent_dataset_independent_variable_units()}"
             f"\n"
+        )
 
     def _has_consistent_num_datasets(self) -> bool:
         """Check if the measurements have a consistent number of datasets.
@@ -1186,12 +1165,10 @@ class MeasurementSet(collections.abc.MutableSequence):
         if self.num_measurements == 0:
             return True
 
-        dataset_types = [type(dataset)
-                         for dataset in self.measurements[0].datasets]
+        dataset_types = [type(dataset) for dataset in self.measurements[0].datasets]
 
         for measurement in self.measurements[1:]:
-            if [type(dataset) for dataset in measurement.datasets] != \
-                    dataset_types:
+            if [type(dataset) for dataset in measurement.datasets] != dataset_types:
                 return False
 
         return True
@@ -1208,14 +1185,14 @@ class MeasurementSet(collections.abc.MutableSequence):
         if self.num_measurements == 0:
             return True
 
-        dataset_dependent_variable_names = \
-            [dataset.dependent_variable_names
-             for dataset in self.measurements[0].datasets]
+        dataset_dependent_variable_names = [
+            dataset.dependent_variable_names for dataset in self.measurements[0].datasets
+        ]
 
         for measurement in self.measurements[1:]:
-            if [dataset.dependent_variable_names
-                for dataset in measurement.datasets] != \
-                    dataset_dependent_variable_names:
+            if [
+                dataset.dependent_variable_names for dataset in measurement.datasets
+            ] != dataset_dependent_variable_names:
                 return False
 
         return True
@@ -1232,14 +1209,14 @@ class MeasurementSet(collections.abc.MutableSequence):
         if self.num_measurements == 0:
             return True
 
-        dataset_dependent_variable_units = \
-            [dataset.dependent_variable_units
-             for dataset in self.measurements[0].datasets]
+        dataset_dependent_variable_units = [
+            dataset.dependent_variable_units for dataset in self.measurements[0].datasets
+        ]
 
         for measurement in self.measurements[1:]:
-            if [dataset.dependent_variable_units
-                for dataset in measurement.datasets] != \
-                    dataset_dependent_variable_units:
+            if [
+                dataset.dependent_variable_units for dataset in measurement.datasets
+            ] != dataset_dependent_variable_units:
                 return False
 
         return True
@@ -1256,14 +1233,14 @@ class MeasurementSet(collections.abc.MutableSequence):
         if self.num_measurements == 0:
             return True
 
-        dataset_independent_variable_names = \
-            [dataset.independent_variable_names
-             for dataset in self.measurements[0].datasets]
+        dataset_independent_variable_names = [
+            dataset.independent_variable_names for dataset in self.measurements[0].datasets
+        ]
 
         for measurement in self.measurements[1:]:
-            if [dataset.independent_variable_names
-                for dataset in measurement.datasets] != \
-                    dataset_independent_variable_names:
+            if [
+                dataset.independent_variable_names for dataset in measurement.datasets
+            ] != dataset_independent_variable_names:
                 return False
 
         return True
@@ -1280,14 +1257,14 @@ class MeasurementSet(collections.abc.MutableSequence):
         if self.num_measurements == 0:
             return True
 
-        dataset_independent_variable_units = \
-            [dataset.independent_variable_units
-             for dataset in self.measurements[0].datasets]
+        dataset_independent_variable_units = [
+            dataset.independent_variable_units for dataset in self.measurements[0].datasets
+        ]
 
         for measurement in self.measurements[1:]:
-            if [dataset.independent_variable_units
-                for dataset in measurement.datasets] != \
-                    dataset_independent_variable_units:
+            if [
+                dataset.independent_variable_units for dataset in measurement.datasets
+            ] != dataset_independent_variable_units:
                 return False
 
         return True
@@ -1312,7 +1289,7 @@ class MeasurementSet(collections.abc.MutableSequence):
 
         dataset_type = type(self.measurements[0].datasets[dataset_index])
         for measurement in self.measurements[1:]:
-            if type(measurement.datasets[dataset_index]) != dataset_type:
+            if type(measurement.datasets[dataset_index]) is not dataset_type:
                 return False
 
         return True
@@ -1361,8 +1338,12 @@ class MeasurementSet(collections.abc.MutableSequence):
         for measurement in self.measurements[1:]:
             dataset = measurement.datasets[dataset_index]
             for independent_index in range(dataset.number_of_independent_dimensions):
-                if not np.array_equal(dataset.independent_variable_data[independent_index],
-                                      self.measurements[0].datasets[dataset_index].independent_variable_data[independent_index]):
+                if not np.array_equal(
+                    dataset.independent_variable_data[independent_index],
+                    self.measurements[0]
+                    .datasets[dataset_index]
+                    .independent_variable_data[independent_index],
+                ):
                     return False
 
         return True
@@ -1400,7 +1381,7 @@ class MeasurementSet(collections.abc.MutableSequence):
             if measurement.num_datasets < index - 1:
                 raise IndexError("No dataset at required index.")
 
-            measurement.datasets = measurement.datasets[0:index] + measurement.datasets[index+1:]
+            measurement.datasets = measurement.datasets[0:index] + measurement.datasets[index + 1 :]
 
     def _has_consistent_dataset_lengths(self) -> bool:
         """Check whether this set of measurements have consistent dataset end indices.
@@ -1416,9 +1397,9 @@ class MeasurementSet(collections.abc.MutableSequence):
                 return False
         return True
 
-    def _num_metadata_keys(self,
-                           include_unshared_conditions: bool,
-                           include_equal_conditions: bool) -> int:
+    def _num_metadata_keys(
+        self, include_unshared_conditions: bool, include_equal_conditions: bool
+    ) -> int:
         """Determine the number of metadata values given options.
 
         Parameters
@@ -1444,7 +1425,7 @@ class MeasurementSet(collections.abc.MutableSequence):
             return len(self.varying_shared_condition_names)
 
     @property
-    def all_condition_names(self) -> Set[str]:
+    def all_condition_names(self) -> set[str]:
         """All condition names present in at least one measurement.
 
         Returns
@@ -1454,7 +1435,7 @@ class MeasurementSet(collections.abc.MutableSequence):
         """
         return self.__compute_all_condition_names()
 
-    def __compute_all_condition_names(self) -> Set[str]:
+    def __compute_all_condition_names(self) -> set[str]:
         """Determine names of conditions defined for at least one measurement.
 
         Returns
@@ -1469,11 +1450,11 @@ class MeasurementSet(collections.abc.MutableSequence):
         return set.union(*[measurement.condition_names for measurement in self.measurements])
 
     @property
-    def shared_condition_names(self) -> Set[str]:
+    def shared_condition_names(self) -> set[str]:
         """The condition names shared by all measurements."""
         return self.__compute_shared_condition_names()
 
-    def __compute_shared_condition_names(self) -> Set[str]:
+    def __compute_shared_condition_names(self) -> set[str]:
         """Determine the names of conditions defined for all measurements.
 
         In order for a particular condition to be used to organize a set of
@@ -1492,11 +1473,11 @@ class MeasurementSet(collections.abc.MutableSequence):
         return set.intersection(*[measurement.condition_names for measurement in self.measurements])
 
     @property
-    def unshared_condition_names(self) -> Set[str]:
+    def unshared_condition_names(self) -> set[str]:
         """The condition names not shared by all measurements."""
         return self.__compute_unshared_condition_names()
 
-    def __compute_unshared_condition_names(self) -> Set[str]:
+    def __compute_unshared_condition_names(self) -> set[str]:
         """Find condition metadata names not present in all measurements.
 
         In addition to seeing shared and equal conditions, a user may be
@@ -1513,11 +1494,11 @@ class MeasurementSet(collections.abc.MutableSequence):
         return self.all_condition_names.difference(self.shared_condition_names)
 
     @property
-    def equal_shared_condition_names(self) -> Set[str]:
+    def equal_shared_condition_names(self) -> set[str]:
         """The shared condition names with the same value in all measurements."""
         return self.__compute_equal_shared_condition_names()
 
-    def __compute_equal_shared_condition_names(self) -> Set[str]:
+    def __compute_equal_shared_condition_names(self) -> set[str]:
         """Determine the set of condition names equal for all measurements.
 
         If a condition name is present for all measurements and has the same
@@ -1531,21 +1512,23 @@ class MeasurementSet(collections.abc.MutableSequence):
         """
         equal_shared_condition_names = set()
         for shared_condition_name in self.shared_condition_names:
-
-            if all([measurement.conditions[shared_condition_name] ==
-                    self.measurements[0].conditions[shared_condition_name]
-                    for measurement in self.measurements]):
-
+            if all(
+                [
+                    measurement.conditions[shared_condition_name]
+                    == self.measurements[0].conditions[shared_condition_name]
+                    for measurement in self.measurements
+                ]
+            ):
                 equal_shared_condition_names.add(shared_condition_name)
 
         return equal_shared_condition_names
 
     @property
-    def varying_shared_condition_names(self) -> Set[str]:
+    def varying_shared_condition_names(self) -> set[str]:
         """The condition names shared by all measurements with varying values."""
         return self.__compute_varying_shared_condition_names()
 
-    def __compute_varying_shared_condition_names(self) -> Set[str]:
+    def __compute_varying_shared_condition_names(self) -> set[str]:
         """Compute the set of shared conditions with varying values.
 
         These conditions are the ones of interest for comparing measurements.
@@ -1561,11 +1544,11 @@ class MeasurementSet(collections.abc.MutableSequence):
         return self.shared_condition_names.difference(self.equal_shared_condition_names)
 
     @property
-    def equal_shared_conditions(self) -> Dict[str, object]:
+    def equal_shared_conditions(self) -> dict[str, object]:
         """The condition names shared by all measurements with equal values."""
         return self.__compute_equal_shared_conditions()
 
-    def __compute_equal_shared_conditions(self) -> Dict[str, object]:
+    def __compute_equal_shared_conditions(self) -> dict[str, object]:
         """Create a dictionary of shared, equal conditions.
 
         Returns
@@ -1573,19 +1556,21 @@ class MeasurementSet(collections.abc.MutableSequence):
         equal_conditions : dict (str -> value)
             A dictionary containing names and values of equal conditions.
         """
-        return {name: self.measurements[0].conditions[name]
-                for name in self.equal_shared_condition_names}
+        return {
+            name: self.measurements[0].conditions[name]
+            for name in self.equal_shared_condition_names
+        }
 
     @property
-    def conditions(self) -> Dict[str, object]:
+    def conditions(self) -> dict[str, object]:
         return self.equal_shared_conditions
 
     @property
-    def varying_shared_conditions(self) -> Dict[str, List[object]]:
+    def varying_shared_conditions(self) -> dict[str, list[object]]:
         """The conditions shared by all measurements with varying values."""
         return self.__compute_varying_shared_conditions()
 
-    def __compute_varying_shared_conditions(self) -> Dict[str, List[object]]:
+    def __compute_varying_shared_conditions(self) -> dict[str, list[object]]:
         """Create a dictionary of shared, varying conditions.
 
         Returns
@@ -1593,8 +1578,10 @@ class MeasurementSet(collections.abc.MutableSequence):
         varying_conditions : dict (str -> list)
             A dictionary containing names and all values of shared conditions.
         """
-        return {name: [measurement.conditions[name] for measurement in self.measurements]
-                for name in self.varying_shared_condition_names}
+        return {
+            name: [measurement.conditions[name] for measurement in self.measurements]
+            for name in self.varying_shared_condition_names
+        }
 
     @property
     def has_varying_shared_conditions(self) -> bool:
@@ -1602,11 +1589,11 @@ class MeasurementSet(collections.abc.MutableSequence):
         return len(self.varying_shared_condition_names) != 0
 
     @property
-    def all_detail_names(self) -> Set[str]:
+    def all_detail_names(self) -> set[str]:
         """All detail names present in at least one measurement."""
         return self.__compute_all_detail_names()
 
-    def __compute_all_detail_names(self) -> Set[str]:
+    def __compute_all_detail_names(self) -> set[str]:
         """Determine all detail names present in at least one measurement.
 
         Returns
@@ -1620,11 +1607,11 @@ class MeasurementSet(collections.abc.MutableSequence):
         return set.union(*[measurement.detail_names for measurement in self.measurements])
 
     @property
-    def shared_detail_names(self) -> Set[str]:
+    def shared_detail_names(self) -> set[str]:
         """The detail names shared by all measurements."""
         return self.__compute_shared_detail_names()
 
-    def __compute_shared_detail_names(self) -> Set[str]:
+    def __compute_shared_detail_names(self) -> set[str]:
         """Determine the set of detail names shared by all measurements.
 
         Returns
@@ -1637,11 +1624,11 @@ class MeasurementSet(collections.abc.MutableSequence):
         return set.intersection(*[measurement.detail_names for measurement in self.measurements])
 
     @property
-    def unshared_detail_names(self) -> Set[str]:
+    def unshared_detail_names(self) -> set[str]:
         """The detail names not shared by all measurements."""
         return self.__compute_unshared_detail_names()
 
-    def __compute_unshared_detail_names(self) -> Set[str]:
+    def __compute_unshared_detail_names(self) -> set[str]:
         """Find condition metadata names not present in all measurements.
 
         In addition to seeing shared and equal conditions, a user may be
@@ -1655,11 +1642,11 @@ class MeasurementSet(collections.abc.MutableSequence):
         return self.all_detail_names.difference(self.shared_detail_names)
 
     @property
-    def equal_shared_detail_names(self) -> Set[str]:
+    def equal_shared_detail_names(self) -> set[str]:
         """The detail names with the same value in all measurements."""
         return self.__compute_equal_shared_detail_names()
 
-    def __compute_equal_shared_detail_names(self) -> Set[str]:
+    def __compute_equal_shared_detail_names(self) -> set[str]:
         """Determine the set of condition names equal for all measurements.
 
         Returns
@@ -1669,12 +1656,10 @@ class MeasurementSet(collections.abc.MutableSequence):
         """
         equal_condition_names = set()
         for condition_name in self.__compute_shared_detail_names():
-
             is_equal = True
             value = self.measurements[0].details[condition_name]
 
             for measurement in self.measurements[1:]:
-
                 if measurement.details[condition_name] != value:
                     is_equal = False
                     break
@@ -1685,11 +1670,11 @@ class MeasurementSet(collections.abc.MutableSequence):
         return equal_condition_names
 
     @property
-    def varying_shared_detail_names(self) -> Set[str]:
+    def varying_shared_detail_names(self) -> set[str]:
         """The detail names shared by all measurements without the same value."""
         return self.__compute_varying_shared_detail_names()
 
-    def __compute_varying_shared_detail_names(self) -> Set[str]:
+    def __compute_varying_shared_detail_names(self) -> set[str]:
         """Compute the names of shared details with differing values across measurements.
 
         Returns
@@ -1700,15 +1685,15 @@ class MeasurementSet(collections.abc.MutableSequence):
         return self.shared_detail_names - self.equal_shared_detail_names
 
     @property
-    def details(self) -> Dict[str, object]:
+    def details(self) -> dict[str, object]:
         return self.equal_shared_details
 
     @property
-    def equal_shared_details(self) -> Dict[str, object]:
+    def equal_shared_details(self) -> dict[str, object]:
         """The details shared by all measurements with the same value."""
         return self.__compute_equal_shared_details()
 
-    def __compute_equal_shared_details(self) -> Dict[str, object]:
+    def __compute_equal_shared_details(self) -> dict[str, object]:
         """Create a dictionary of common and equal details.
 
         Returns
@@ -1758,7 +1743,7 @@ class MeasurementSet(collections.abc.MutableSequence):
         for measurement in self.measurements:
             measurement.condition_to_detail(condition_name)
 
-    def conditions_to_details(self, condition_names: List[str]) -> None:
+    def conditions_to_details(self, condition_names: list[str]) -> None:
         """Convert a set of conditions to details for all measurements.
 
         Parameters
@@ -1785,7 +1770,7 @@ class MeasurementSet(collections.abc.MutableSequence):
         for measurement in self.measurements:
             measurement.detail_to_condition(detail_name)
 
-    def details_to_conditions(self, detail_names: List[str]) -> None:
+    def details_to_conditions(self, detail_names: list[str]) -> None:
         """Convert a set of details to conditions for all measurements.
 
         Parameters
@@ -1809,7 +1794,7 @@ class MeasurementSet(collections.abc.MutableSequence):
         for measurement in self.measurements:
             measurement.add_condition(name, value)
 
-    def add_equal_shared_conditions(self, names: List[str], values: List[object]) -> None:
+    def add_equal_shared_conditions(self, names: list[str], values: list[object]) -> None:
         """Add conditions with specified values to all measurements.
 
         Parameters
@@ -1822,7 +1807,7 @@ class MeasurementSet(collections.abc.MutableSequence):
         for measurement in self.measurements:
             measurement.add_conditions(names, values)
 
-    def add_varying_shared_condition(self, name: str, values: List[object]) -> None:
+    def add_varying_shared_condition(self, name: str, values: list[object]) -> None:
         """Add a condition with different values for each measurement.
 
         Parameters
@@ -1838,7 +1823,7 @@ class MeasurementSet(collections.abc.MutableSequence):
         for measurement, value in zip(self.measurements, values):
             measurement.add_condition(name, value)
 
-    def add_varying_shared_conditions(self, names: List[str], values: List[List[object]]) -> None:
+    def add_varying_shared_conditions(self, names: list[str], values: list[list[object]]) -> None:
         """Add conditions with different values for each measurement.
 
         Parameters
@@ -1868,7 +1853,7 @@ class MeasurementSet(collections.abc.MutableSequence):
         for measurement in self.measurements:
             measurement.remove_condition(name)
 
-    def remove_conditions(self, names: List[str]) -> None:
+    def remove_conditions(self, names: list[str]) -> None:
         """Remove conditions from all measurements.
 
         Parameters
@@ -1892,7 +1877,7 @@ class MeasurementSet(collections.abc.MutableSequence):
         for measurement in self.measurements:
             measurement.add_detail(name, value)
 
-    def add_equal_shared_details(self, names: List[str], values: List[object]) -> None:
+    def add_equal_shared_details(self, names: list[str], values: list[object]) -> None:
         """Add details with specified values to all measurements.
 
         Parameters
@@ -1905,7 +1890,7 @@ class MeasurementSet(collections.abc.MutableSequence):
         for measurement in self.measurements:
             measurement.add_details(names, values)
 
-    def add_varying_shared_detail(self, name: str, values: List[object]) -> None:
+    def add_varying_shared_detail(self, name: str, values: list[object]) -> None:
         """Add a detail with a specific value for each measurement.
 
         Parameters
@@ -1918,7 +1903,7 @@ class MeasurementSet(collections.abc.MutableSequence):
         for measurement, value in zip(self.measurements, values):
             measurement.add_detail(name, value)
 
-    def add_varying_shared_details(self, names: List[str], values: List[List[object]]) -> None:
+    def add_varying_shared_details(self, names: list[str], values: list[list[object]]) -> None:
         """Add details with varying values for each measurement.
 
         Parameters
@@ -1942,7 +1927,7 @@ class MeasurementSet(collections.abc.MutableSequence):
         for measurement in self.measurements:
             measurement.remove_detail(name)
 
-    def remove_details(self, names: List[str]) -> None:
+    def remove_details(self, names: list[str]) -> None:
         """Remove details from all measurements.
 
         Parameters
@@ -1963,7 +1948,7 @@ class MeasurementSet(collections.abc.MutableSequence):
         """
         del self.measurements[index]
 
-    def remove_measurements(self, measurements: List[measurement_.Measurement]):
+    def remove_measurements(self, measurements: list[measurement_.Measurement]):
         """Remove specific measurements from this set.
 
         Parameters
@@ -1982,7 +1967,9 @@ class MeasurementSet(collections.abc.MutableSequence):
         name : str
             The name of the condition.
         """
-        measurements_to_remove = [measurement for measurement in self if measurement.has_condition_name(name)]
+        measurements_to_remove = [
+            measurement for measurement in self if measurement.has_condition_name(name)
+        ]
         self.remove_measurements(measurements_to_remove)
 
     def remove_measurements_without_condition_name(self, name: str) -> None:
@@ -1993,7 +1980,9 @@ class MeasurementSet(collections.abc.MutableSequence):
         name : str
             The name of the condition.
         """
-        measurements_to_remove = [measurement for measurement in self if not measurement.has_condition_name(name)]
+        measurements_to_remove = [
+            measurement for measurement in self if not measurement.has_condition_name(name)
+        ]
         self.remove_measurements(measurements_to_remove)
 
     def remove_measurements_with_condition(self, name: str, value: object) -> None:
@@ -2006,8 +1995,11 @@ class MeasurementSet(collections.abc.MutableSequence):
         value : object
             The value of the condition which will result in removal of a measurement.
         """
-        measurements_to_remove = \
-            [measurement for measurement in self.measurements if measurement.conditions[name] == value]
+        measurements_to_remove = [
+            measurement
+            for measurement in self.measurements
+            if measurement.conditions[name] == value
+        ]
         self.remove_measurements(measurements_to_remove)
 
     def remove_measurements_without_condition(self, name: str, value: object) -> None:
@@ -2020,11 +2012,16 @@ class MeasurementSet(collections.abc.MutableSequence):
         value : variable
             The value of the condition.
         """
-        measurements_to_remove = \
-            [measurement for measurement in self.measurements if measurement.conditions[name] != value]
+        measurements_to_remove = [
+            measurement
+            for measurement in self.measurements
+            if measurement.conditions[name] != value
+        ]
         self.remove_measurements(measurements_to_remove)
 
-    def remove_measurements_by_condition_test(self, name: str, test: Callable[[object], bool]) -> None:
+    def remove_measurements_by_condition_test(
+        self, name: str, test: Callable[[object], bool]
+    ) -> None:
         """Remove measurements from this set with a test on a condition's values.
 
         The measurement-editing test methods above are only able to check for
@@ -2046,12 +2043,15 @@ class MeasurementSet(collections.abc.MutableSequence):
         test : function(variable) -> bool
             A test that returns true if a measurement is to be removed.
         """
-        measurements_to_remove = \
-            [measurement for measurement in self.measurements if test(measurement.conditions[name])]
+        measurements_to_remove = [
+            measurement for measurement in self.measurements if test(measurement.conditions[name])
+        ]
 
         self.remove_measurements(measurements_to_remove)
 
-    def remove_measurements_by_conditions_test(self, names: list, test: Callable[[List[object]], bool]) -> None:
+    def remove_measurements_by_conditions_test(
+        self, names: list, test: Callable[[list[object]], bool]
+    ) -> None:
         """Remove measurements from this set with a test on conditions' values.
 
         More complex tests require multiple conditions. This can be achieved
@@ -2102,9 +2102,9 @@ class MeasurementSet(collections.abc.MutableSequence):
         """
         return self.measurements[0].datasets[0].create_color_map(len(self.measurements))
 
-    def compute_figure_size(self,
-                            expand_datasets: bool,
-                            expand_measurements: bool) -> Tuple[int, int]:
+    def compute_figure_size(
+        self, expand_datasets: bool, expand_measurements: bool
+    ) -> tuple[int, int]:
         """Compute an appropriate size for the complete figure.
 
         If a single plot has been requested, then the figure will
@@ -2121,7 +2121,9 @@ class MeasurementSet(collections.abc.MutableSequence):
         figsize = [0, 0]
 
         for measurement in self.measurements:
-            measurement_figsize = measurement.compute_matplotlib_figure_size(expand_datasets=expand_datasets)
+            measurement_figsize = measurement.compute_matplotlib_figure_size(
+                expand_datasets=expand_datasets
+            )
 
             if measurement_figsize[0] > figsize[0]:
                 figsize[0] = measurement_figsize[0]
@@ -2149,23 +2151,23 @@ class MeasurementSet(collections.abc.MutableSequence):
 
         return title[:-2]
 
-    def _validate_figsize(self,
-                          figsize: Tuple[int],
-                          expand_datasets: bool,
-                          expand_measurements: bool) -> Tuple[int]:
+    def _validate_figsize(
+        self, figsize: tuple[int], expand_datasets: bool, expand_measurements: bool
+    ) -> tuple[int]:
         """Assess and potentially create a size for the complete figure."""
         if figsize is None:
             figsize = self.compute_figure_size(expand_datasets, expand_measurements)
 
         return figsize
 
-    def _setup_fig_and_axes(self,
-                            axes: Union[matplotlib.axes.Axes, List[matplotlib.axes.Axes]] = None,
-                            expand_datasets: bool = True,
-                            expand_measurements: bool = True,
-                            total_figsize: tuple = None,
-                            title: str = None) -> Tuple[matplotlib.figure.Figure,
-                                                        Union[matplotlib.axes.Axes, List[matplotlib.axes.Axes]]]:
+    def _setup_fig_and_axes(
+        self,
+        axes: matplotlib.axes.Axes | list[matplotlib.axes.Axes] = None,
+        expand_datasets: bool = True,
+        expand_measurements: bool = True,
+        total_figsize: tuple = None,
+        title: str = None,
+    ) -> tuple[matplotlib.figure.Figure, matplotlib.axes.Axes | list[matplotlib.axes.Axes]]:
         """Validate/prepare a figure and axes for plotting this measurement set.
 
         Parameters
@@ -2191,33 +2193,24 @@ class MeasurementSet(collections.abc.MutableSequence):
         title = self._validate_title(title)
 
         if axes is None:  # create
-
-            total_figsize = self._validate_figsize(total_figsize,
-                                                   expand_datasets,
-                                                   expand_measurements)
+            total_figsize = self._validate_figsize(
+                total_figsize, expand_datasets, expand_measurements
+            )
 
             if expand_measurements:
-
                 if expand_datasets:
-                    fig, axes = plt.subplots(self.num_measurements,
-                                             self.max_num_datasets,
-                                             figsize=total_figsize)
+                    fig, axes = plt.subplots(
+                        self.num_measurements, self.max_num_datasets, figsize=total_figsize
+                    )
 
                 elif not expand_datasets:
-                    fig, axes = plt.subplots(self.num_measurements,
-                                             1,
-                                             figsize=total_figsize)
+                    fig, axes = plt.subplots(self.num_measurements, 1, figsize=total_figsize)
 
             elif not expand_measurements:
-
                 if expand_datasets:
-                    fig, axes = plt.subplots(1,
-                                             self.max_num_datasets,
-                                             figsize=total_figsize)
+                    fig, axes = plt.subplots(1, self.max_num_datasets, figsize=total_figsize)
                 elif not expand_datasets:
-                    fig, axes = plt.subplots(1,
-                                             1,
-                                             figsize=total_figsize)
+                    fig, axes = plt.subplots(1, 1, figsize=total_figsize)
             fig.suptitle(title)
 
         else:
@@ -2238,16 +2231,20 @@ class MeasurementSet(collections.abc.MutableSequence):
         """
         color_maps = []
         for dataset_type in self.dataset_types:
-            color_maps.append(iter(dataset_type.DEFAULT_COLOR_MAP(np.linspace(0, 1, self.num_measurements))))
+            color_maps.append(
+                iter(dataset_type.DEFAULT_COLOR_MAP(np.linspace(0, 1, self.num_measurements)))
+            )
 
         return color_maps
 
-    def visualize_on_multiple_plots(self,
-                                    fig: matplotlib.figure.Figure,
-                                    axes: List[matplotlib.axes.Axes],
-                                    expand_datasets: bool = True,
-                                    expand_measurements: bool = True,
-                                    **plot_kwargs) -> None:
+    def visualize_on_multiple_plots(
+        self,
+        fig: matplotlib.figure.Figure,
+        axes: list[matplotlib.axes.Axes],
+        expand_datasets: bool = True,
+        expand_measurements: bool = True,
+        **plot_kwargs,
+    ) -> None:
         """Visualize the measurement datasets on individual plots.
 
         Parameters
@@ -2263,61 +2260,62 @@ class MeasurementSet(collections.abc.MutableSequence):
             Whether to plot each measurement on its own row of axes objects.
         """
         if self.num_measurements == 1:
-            self.measurements[0].visualize(axes=axes,
-                                           expand_datasets=expand_datasets,
-                                           include_text=False,
-                                           **plot_kwargs)
+            self.measurements[0].visualize(
+                axes=axes, expand_datasets=expand_datasets, include_text=False, **plot_kwargs
+            )
             return
 
         if expand_measurements:
-
             if expand_datasets:  # num_measurements x num_datasets
-
-                for i, (axis, measurement) in enumerate(zip(axes, self.measurements)):
-                    measurement.visualize(axes=axis,
-                                          expand_datasets=expand_datasets,
-                                          include_text=False,
-                                          **plot_kwargs)
+                for axis, measurement in zip(axes, self.measurements):
+                    measurement.visualize(
+                        axes=axis,
+                        expand_datasets=expand_datasets,
+                        include_text=False,
+                        **plot_kwargs,
+                    )
 
                     if expand_datasets and measurement.num_datasets < self.max_num_datasets:
                         if len(axis) != measurement.num_datasets:
-                            for dataset_axis in axis[measurement.num_datasets:]:
+                            for dataset_axis in axis[measurement.num_datasets :]:
                                 fig.delaxes(dataset_axis)
 
                 return
 
             elif not expand_datasets:  # num_measurements x 1
-
                 for i, (axis, measurement) in enumerate(zip(axes, self.measurements)):
-                    measurement.visualize(axes=axis,
-                                          expand_datasets=expand_datasets,
-                                          include_text=False,
-                                          dataset_colors=self.dataset_colors[i],
-                                          **plot_kwargs)
+                    measurement.visualize(
+                        axes=axis,
+                        expand_datasets=expand_datasets,
+                        include_text=False,
+                        dataset_colors=self.dataset_colors[i],
+                        **plot_kwargs,
+                    )
 
         elif not expand_measurements:
-
             if expand_datasets:  # 1 x num_measurements
-
                 for i, measurement in enumerate(self.measurements):
-                    measurement.visualize(axes=axes,
-                                          expand_datasets=expand_datasets,
-                                          include_text=False,
-                                          dataset_colors=self.dataset_colors[i],
-                                          **plot_kwargs)
+                    measurement.visualize(
+                        axes=axes,
+                        expand_datasets=expand_datasets,
+                        include_text=False,
+                        dataset_colors=self.dataset_colors[i],
+                        **plot_kwargs,
+                    )
 
             elif not expand_datasets:  # 1 x 1
-
                 for i, measurement in enumerate(self.measurements):
-                    measurement.visualize(axes=axes,
-                                          expand_datasets=expand_datasets,
-                                          include_text=False,
-                                          dataset_colors=self.dataset_colors[i],
-                                          **plot_kwargs)
+                    measurement.visualize(
+                        axes=axes,
+                        expand_datasets=expand_datasets,
+                        include_text=False,
+                        dataset_colors=self.dataset_colors[i],
+                        **plot_kwargs,
+                    )
                 return
 
     @property
-    def dataset_colors(self) -> List[List[np.ndarray]]:
+    def dataset_colors(self) -> list[list[np.ndarray]]:
         """Determine the colors for plotting this measurement set's datasets.
 
         For an inconsistent measurement set the package defaults to using the
@@ -2361,15 +2359,16 @@ class MeasurementSet(collections.abc.MutableSequence):
                 return False
         return True
 
-    def visualize(self,
-                  axes: matplotlib.axes.Axes or List[matplotlib.axes.Axes] = None,
-                  expand_datasets: bool = True,
-                  expand_measurements: bool = True,
-                  include_text: bool = True,
-                  figure_title: str = None,
-                  total_figsize: Tuple[int] = None,
-                  **plot_kwargs) -> Tuple[matplotlib.figure.Figure,
-                                          matplotlib.axes.Axes]:
+    def visualize(
+        self,
+        axes: matplotlib.axes.Axes or list[matplotlib.axes.Axes] = None,
+        expand_datasets: bool = True,
+        expand_measurements: bool = True,
+        include_text: bool = True,
+        figure_title: str = None,
+        total_figsize: tuple[int] = None,
+        **plot_kwargs,
+    ) -> tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]:
         """Create a visual representation of this set of measurements.
 
         This method should tabulate metadata independent of the dataset types.
@@ -2414,17 +2413,21 @@ class MeasurementSet(collections.abc.MutableSequence):
                 print("Warning: Datasets are not collapsible.")
                 expand_datasets = True
 
-        fig, axes = self._setup_fig_and_axes(axes=axes,
-                                             expand_datasets=expand_datasets,
-                                             expand_measurements=expand_measurements,
-                                             total_figsize=total_figsize,
-                                             title=figure_title)
+        fig, axes = self._setup_fig_and_axes(
+            axes=axes,
+            expand_datasets=expand_datasets,
+            expand_measurements=expand_measurements,
+            total_figsize=total_figsize,
+            title=figure_title,
+        )
 
-        self.visualize_on_multiple_plots(fig=fig,
-                                         axes=axes,
-                                         expand_datasets=expand_datasets,
-                                         expand_measurements=expand_measurements,
-                                         **plot_kwargs)
+        self.visualize_on_multiple_plots(
+            fig=fig,
+            axes=axes,
+            expand_datasets=expand_datasets,
+            expand_measurements=expand_measurements,
+            **plot_kwargs,
+        )
 
         return fig, axes
 
@@ -2442,8 +2445,7 @@ class MeasurementSet(collections.abc.MutableSequence):
             for i, measurement in enumerate(self.measurements):
                 str_rep += "Measurement " + str(i) + "\t"
                 for key in self.varying_shared_condition_names:
-                    str_rep += key + "=" + \
-                               str(measurement.conditions[key]) + "\t"
+                    str_rep += key + "=" + str(measurement.conditions[key]) + "\t"
                 str_rep += "\n"
 
             str_rep += "\n"
@@ -2460,9 +2462,15 @@ class MeasurementSet(collections.abc.MutableSequence):
             for key in self.unshared_condition_names:
                 for i, measurement in enumerate(self.measurements):
                     if key in measurement.conditions.keys():
-                        str_rep += "Measurement " + str(i) + "\t" + key + \
-                                   " = " + \
-                                   str(measurement.conditions[key]) + "\n"
+                        str_rep += (
+                            "Measurement "
+                            + str(i)
+                            + "\t"
+                            + key
+                            + " = "
+                            + str(measurement.conditions[key])
+                            + "\n"
+                        )
 
             str_rep += "\n"
 
@@ -2499,9 +2507,15 @@ class MeasurementSet(collections.abc.MutableSequence):
             for key in self.unshared_detail_names:
                 for i, measurement in enumerate(self.measurements):
                     if key in measurement.details.keys():
-                        str_rep += "Measurement " + str(i) + "\t" + key + \
-                                   " = " + \
-                                   str(measurement.details[key]) + "\n"
+                        str_rep += (
+                            "Measurement "
+                            + str(i)
+                            + "\t"
+                            + key
+                            + " = "
+                            + str(measurement.details[key])
+                            + "\n"
+                        )
         return str_rep
 
     def __len__(self) -> int:
@@ -2569,7 +2583,7 @@ class MeasurementSet(collections.abc.MutableSequence):
         """Comparison based on magnitudes is purposely not defined."""
         return NotImplemented
 
-    def to_pandas(self, with_cralds_class: bool=True, concat: bool = False):
+    def to_pandas(self, with_cralds_class: bool = True, concat: bool = False):
         """Converts MeasurementSet into a Pandas DataFrame.
 
         Parameters

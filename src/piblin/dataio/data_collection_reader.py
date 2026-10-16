@@ -8,29 +8,30 @@ Classes
 -------
 MeasurementSetReader - Read measurements from files and directories thereof.
 """
-import json
+
 import csv
+import json
 import pathlib
-from base64 import b64decode, b64encode
+from base64 import b64decode
 from pathlib import Path
-from typing import List, Dict, Union
+
+import piblin.data.data_collections.consistent_measurement_set as consistent_measurement_set_
+import piblin.data.data_collections.data_collection_factory as measurement_set_factory
+import piblin.data.data_collections.experiment_set as experiment_set_
+import piblin.data.data_collections.measurement_set as measurement_set_
+import piblin.data.data_collections.tabular_measurement_set as tb
+import piblin.data.data_collections.tidy_measurement_set as tidy_measurement_set_
+import piblin.dataio.metadata_converter as filename_metadata
 from piblin.dataio.fileio import list_files_in_directory
 from piblin.dataio.fileio.autodetect import potential_file_readers_by_extension
 from piblin.dataio.fileio.read import FileParsingException
-import piblin.dataio.metadata_converter as filename_metadata
-import piblin.data.data_collections.measurement_set as measurement_set_
-import piblin.data.data_collections.consistent_measurement_set as consistent_measurement_set_
-import piblin.data.data_collections.tidy_measurement_set as tidy_measurement_set_
-import piblin.data.data_collections.tabular_measurement_set as tb
-import piblin.data.data_collections.experiment_set as experiment_set_
-import piblin.data.data_collections.data_collection_factory as measurement_set_factory
 
 
 class UnsupportedFileSubtypeError(Exception):
     """Raised when the subtype of a specific file extension cannot be read."""
 
 
-class DataCollectionReader(object):
+class DataCollectionReader:
     """Read measurements from files and directories thereof.
 
     Parameters
@@ -45,28 +46,36 @@ class DataCollectionReader(object):
         If provided `metadata_converter` is not an instance of `MetadataConverter`
         class or a callable function.
     """
+
     __DIRECTORY_METADATA_FILENAME = "shared_metadata.json"
 
     def __init__(self, metadata_converter: filename_metadata.MetadataConverter = None):
 
         if metadata_converter is None:
             self.__metadata_converter = filename_metadata.MetadataConverter()
-        elif isinstance(metadata_converter, filename_metadata.MetadataConverter) or callable(metadata_converter):
+        elif isinstance(metadata_converter, filename_metadata.MetadataConverter) or callable(
+            metadata_converter
+        ):
             self.__metadata_converter = metadata_converter
         else:
-            raise TypeError("`metadata_converter` must be an instance of `MetadataConverter` or a callable function")
+            raise TypeError(
+                "`metadata_converter` must be an instance of `MetadataConverter` or a callable function"
+            )
 
-    def from_filepath(self,
-                      filepath: str,
-                      parse_filename_metadata: bool = False,
-                      to_experiments: bool = True,
-                      minimize_hierarchy: bool = False,
-                      merge_redundant: bool = True,
-                      **read_kwargs) -> \
-            Union[measurement_set_.MeasurementSet,
-                  consistent_measurement_set_.ConsistentMeasurementSet,
-                  tidy_measurement_set_.TidyMeasurementSet,
-                  experiment_set_.ExperimentSet]:
+    def from_filepath(
+        self,
+        filepath: str,
+        parse_filename_metadata: bool = False,
+        to_experiments: bool = True,
+        minimize_hierarchy: bool = False,
+        merge_redundant: bool = True,
+        **read_kwargs,
+    ) -> (
+        measurement_set_.MeasurementSet
+        | consistent_measurement_set_.ConsistentMeasurementSet
+        | tidy_measurement_set_.TidyMeasurementSet
+        | experiment_set_.ExperimentSet
+    ):
         """Read measurements from a file at a given filepath.
 
         Reading a file requires automatic determination of the particular
@@ -99,7 +108,8 @@ class DataCollectionReader(object):
         UnsupportedFileSubtypeError
             When no potential file reader is able to read the given file.
         """
-        def __parse_filename_metadata(parse_filename_metadata_: bool) -> Dict:
+
+        def __parse_filename_metadata(parse_filename_metadata_: bool) -> dict:
             """Extract external metadata from the filename.
 
             Parameters
@@ -121,7 +131,7 @@ class DataCollectionReader(object):
             else:
                 return {}
 
-        def __parse_metadata_file(filepath_: pathlib.Path) -> Dict:
+        def __parse_metadata_file(filepath_: pathlib.Path) -> dict:
             """Extract external metadata from the supporting metadata file.
 
             Parameters
@@ -135,24 +145,30 @@ class DataCollectionReader(object):
                 Any metadata present in the supporting metadata file.
 
             """
-            metadata_filepath = filepath_.parent.joinpath(filepath_.parent / f"{filepath_.name}.json")
+            metadata_filepath = filepath_.parent.joinpath(
+                filepath_.parent / f"{filepath_.name}.json"
+            )
             if metadata_filepath.is_file():
                 with open(metadata_filepath) as json_file:
                     try:
                         data = json.load(json_file)
-                        base64_data = bytes(data["Base64 metadata"][1:], 'utf-8')
-                        base64_data_decoded = json.loads(b64decode(base64_data).decode('utf-8'))
+                        base64_data = bytes(data["Base64 metadata"][1:], "utf-8")
+                        base64_data_decoded = json.loads(b64decode(base64_data).decode("utf-8"))
                         return base64_data_decoded
-                    except json.decoder.JSONDecodeError:
-                        raise ValueError(f"Decode error for .json file: {metadata_filepath}")
+                    except json.decoder.JSONDecodeError as err:
+                        raise ValueError(
+                            f"Decode error for .json file: {metadata_filepath}"
+                        ) from err
             else:
                 metadata_filepath = filepath_.parent.joinpath(filepath_.stem + ".json")
                 if metadata_filepath.is_file():
                     with open(metadata_filepath) as json_file:
                         try:
                             return json.load(json_file)
-                        except json.decoder.JSONDecodeError:
-                            raise ValueError(f"Decode error for .json file: {metadata_filepath}")
+                        except json.decoder.JSONDecodeError as err:
+                            raise ValueError(
+                                f"Decode error for .json file: {metadata_filepath}"
+                            ) from err
                 else:
                     return {}
 
@@ -165,14 +181,15 @@ class DataCollectionReader(object):
 
         potential_file_readers = potential_file_readers_by_extension(extension[1:])
         if len(potential_file_readers) == 0:
-            raise UnsupportedFileSubtypeError(f"No cralds file reader can parse files with the extension {extension}")
+            raise UnsupportedFileSubtypeError(
+                f"No cralds file reader can parse files with the extension {extension}"
+            )
 
         measurements = measurement_set_.MeasurementSet(merge_redundant=merge_redundant)
         error_messages = []
         for file_reader in potential_file_readers:
             try:
-                measurements = \
-                    file_reader().data_from_filepath(str(filepath), **read_kwargs)
+                measurements = file_reader().data_from_filepath(str(filepath), **read_kwargs)
 
                 for measurement in measurements.measurements:
                     for filename_key, filename_value in external_details.items():
@@ -181,22 +198,27 @@ class DataCollectionReader(object):
                 break
 
             except FileParsingException as file_parsing_exception:
-
-                error_messages.append(f"{file_reader.__module__}.{file_reader.__name__}: "
-                                      f"{repr(file_parsing_exception)}")
+                error_messages.append(
+                    f"{file_reader.__module__}.{file_reader.__name__}: "
+                    f"{repr(file_parsing_exception)}"
+                )
                 if file_reader is potential_file_readers[-1]:
-                    message = f"No appropriate file reader was found for {filepath} " \
-                                    f"with extension {extension[1:]}\n"
+                    message = (
+                        f"No appropriate file reader was found for {filepath} "
+                        f"with extension {extension[1:]}\n"
+                    )
                     message += "File Parsing Exceptions:\n"
                     for error_message in error_messages:
                         message += f"{error_message}\n"
 
-                    raise UnsupportedFileSubtypeError(message)
+                    raise UnsupportedFileSubtypeError(message) from file_parsing_exception
 
-        return measurement_set_factory.DataCollectionFactory.from_measurements(measurements.measurements,
-                                                                               to_experiments=to_experiments,
-                                                                               minimize_hierarchy=minimize_hierarchy,
-                                                                               merge_redundant=merge_redundant)
+        return measurement_set_factory.DataCollectionFactory.from_measurements(
+            measurements.measurements,
+            to_experiments=to_experiments,
+            minimize_hierarchy=minimize_hierarchy,
+            merge_redundant=merge_redundant,
+        )
 
     @staticmethod
     def parse_directory_metadata(directory: str):
@@ -212,28 +234,35 @@ class DataCollectionReader(object):
         dict
             A dictionary containing directory metadata.
         """
-        directory_metadata_filepath = Path(directory).joinpath(DataCollectionReader.__DIRECTORY_METADATA_FILENAME)
+        directory_metadata_filepath = Path(directory).joinpath(
+            DataCollectionReader.__DIRECTORY_METADATA_FILENAME
+        )
         if directory_metadata_filepath.is_file():
             with open(directory_metadata_filepath) as json_file:
                 try:
                     return json.load(json_file)
-                except json.decoder.JSONDecodeError:
-                    raise ValueError(f"Decode error for directory .json file: {directory_metadata_filepath}")
+                except json.decoder.JSONDecodeError as err:
+                    raise ValueError(
+                        f"Decode error for directory .json file: {directory_metadata_filepath}"
+                    ) from err
         else:
             return {}
 
-    def from_directory(self,
-                       directory: str,
-                       recursive: bool = False,
-                       parse_filename_metadata: bool = False,
-                       to_experiments: bool = True,
-                       minimize_hierarchy=False,
-                       merge_redundant: bool = True,
-                       **read_kwargs) -> \
-            Union[measurement_set_.MeasurementSet,
-                  consistent_measurement_set_.ConsistentMeasurementSet,
-                  tidy_measurement_set_.TidyMeasurementSet,
-                  experiment_set_.ExperimentSet]:
+    def from_directory(
+        self,
+        directory: str,
+        recursive: bool = False,
+        parse_filename_metadata: bool = False,
+        to_experiments: bool = True,
+        minimize_hierarchy=False,
+        merge_redundant: bool = True,
+        **read_kwargs,
+    ) -> (
+        measurement_set_.MeasurementSet
+        | consistent_measurement_set_.ConsistentMeasurementSet
+        | tidy_measurement_set_.TidyMeasurementSet
+        | experiment_set_.ExperimentSet
+    ):
         """Read a set of measurements from all files in a given directory.
 
         This method uses the from_filepath method of this class.
@@ -263,9 +292,9 @@ class DataCollectionReader(object):
         measurements = []
         for filepath in list_files_in_directory(directory, recursive=recursive):
             if Path(filepath).suffix != ".json":
-                file_measurements = self.from_filepath(filepath,
-                                                       parse_filename_metadata,
-                                                       **read_kwargs)
+                file_measurements = self.from_filepath(
+                    filepath, parse_filename_metadata, **read_kwargs
+                )
 
                 measurements.extend(file_measurements.measurements)
 
@@ -273,25 +302,30 @@ class DataCollectionReader(object):
             for key, value in directory_metadata.items():
                 measurement.add_detail(key, value)
 
-        return measurement_set_factory.DataCollectionFactory.from_measurements(measurements,
-                                                                               to_experiments=to_experiments,
-                                                                               minimize_hierarchy=minimize_hierarchy,
-                                                                               merge_redundant=merge_redundant)
+        return measurement_set_factory.DataCollectionFactory.from_measurements(
+            measurements,
+            to_experiments=to_experiments,
+            minimize_hierarchy=minimize_hierarchy,
+            merge_redundant=merge_redundant,
+        )
 
-    def from_directory_with_extension(self,
-                                      directory: str,
-                                      extension: str,
-                                      recursive: bool = False,
-                                      case_sensitive: bool = False,
-                                      parse_filename_metadata: bool = False,
-                                      to_experiments: bool = True,
-                                      minimize_hierarchy: bool = False,
-                                      merge_redundant: bool = True,
-                                      **read_kwargs) -> \
-            Union[measurement_set_.MeasurementSet,
-                  consistent_measurement_set_.ConsistentMeasurementSet,
-                  tidy_measurement_set_.TidyMeasurementSet,
-                  experiment_set_.ExperimentSet]:
+    def from_directory_with_extension(
+        self,
+        directory: str,
+        extension: str,
+        recursive: bool = False,
+        case_sensitive: bool = False,
+        parse_filename_metadata: bool = False,
+        to_experiments: bool = True,
+        minimize_hierarchy: bool = False,
+        merge_redundant: bool = True,
+        **read_kwargs,
+    ) -> (
+        measurement_set_.MeasurementSet
+        | consistent_measurement_set_.ConsistentMeasurementSet
+        | tidy_measurement_set_.TidyMeasurementSet
+        | experiment_set_.ExperimentSet
+    ):
         """Read all files in a given directory with a given extension.
 
         Parameters
@@ -321,16 +355,11 @@ class DataCollectionReader(object):
         directory_metadata = self.parse_directory_metadata(directory)
 
         measurements = []
-        for filepath in list_files_in_directory(directory,
-                                                extension,
-                                                case_sensitive,
-                                                recursive):
-
+        for filepath in list_files_in_directory(directory, extension, case_sensitive, recursive):
             if Path(filepath).suffix != ".json":
-
-                file_measurements = self.from_filepath(filepath,
-                                                       parse_filename_metadata,
-                                                       **read_kwargs)
+                file_measurements = self.from_filepath(
+                    filepath, parse_filename_metadata, **read_kwargs
+                )
 
                 measurements.extend(file_measurements.measurements)
 
@@ -338,25 +367,30 @@ class DataCollectionReader(object):
             for key, value in directory_metadata.items():
                 measurement.add_detail(key, value)
 
-        return measurement_set_factory.DataCollectionFactory.from_measurements(measurements,
-                                                                               to_experiments=to_experiments,
-                                                                               minimize_hierarchy=minimize_hierarchy,
-                                                                               merge_redundant=merge_redundant)
+        return measurement_set_factory.DataCollectionFactory.from_measurements(
+            measurements,
+            to_experiments=to_experiments,
+            minimize_hierarchy=minimize_hierarchy,
+            merge_redundant=merge_redundant,
+        )
 
-    def from_directories(self,
-                         directories: List[str],
-                         extension: str,
-                         recursive: bool = False,
-                         case_sensitive: bool = False,
-                         parse_filename_metadata: bool = False,
-                         to_experiments: bool = True,
-                         minimize_hierarchy: bool = False,
-                         merge_redundant: bool = True,
-                         **read_kwargs) -> \
-            Union[measurement_set_.MeasurementSet,
-                  consistent_measurement_set_.ConsistentMeasurementSet,
-                  tidy_measurement_set_.TidyMeasurementSet,
-                  experiment_set_.ExperimentSet]:
+    def from_directories(
+        self,
+        directories: list[str],
+        extension: str,
+        recursive: bool = False,
+        case_sensitive: bool = False,
+        parse_filename_metadata: bool = False,
+        to_experiments: bool = True,
+        minimize_hierarchy: bool = False,
+        merge_redundant: bool = True,
+        **read_kwargs,
+    ) -> (
+        measurement_set_.MeasurementSet
+        | consistent_measurement_set_.ConsistentMeasurementSet
+        | tidy_measurement_set_.TidyMeasurementSet
+        | experiment_set_.ExperimentSet
+    ):
         """Read all files in given directories with a given extension.
 
         Parameters
@@ -385,30 +419,37 @@ class DataCollectionReader(object):
         """
         measurements = measurement_set_.MeasurementSet(merge_redundant=merge_redundant)
         for directory in directories:
-            directory_measurements = self.from_directory_with_extension(directory,
-                                                                        extension,
-                                                                        recursive,
-                                                                        case_sensitive,
-                                                                        parse_filename_metadata,
-                                                                        **read_kwargs)
+            directory_measurements = self.from_directory_with_extension(
+                directory,
+                extension,
+                recursive,
+                case_sensitive,
+                parse_filename_metadata,
+                **read_kwargs,
+            )
             measurements.extend(directory_measurements.measurements)
 
-        return measurement_set_factory.DataCollectionFactory.from_measurements(measurements.measurements,
-                                                                               to_experiments=to_experiments,
-                                                                               minimize_hierarchy=minimize_hierarchy,
-                                                                               merge_redundant=merge_redundant)
+        return measurement_set_factory.DataCollectionFactory.from_measurements(
+            measurements.measurements,
+            to_experiments=to_experiments,
+            minimize_hierarchy=minimize_hierarchy,
+            merge_redundant=merge_redundant,
+        )
 
-    def from_file_list(self,
-                       filelist: List[str],
-                       parse_filename_metadata: bool = False,
-                       to_experiments: bool = True,
-                       minimize_hierarchy: bool = False,
-                       merge_redundant: bool = True,
-                       **read_kwargs) -> \
-            Union[measurement_set_.MeasurementSet,
-                  consistent_measurement_set_.ConsistentMeasurementSet,
-                  tidy_measurement_set_.TidyMeasurementSet,
-                  experiment_set_.ExperimentSet]:
+    def from_file_list(
+        self,
+        filelist: list[str],
+        parse_filename_metadata: bool = False,
+        to_experiments: bool = True,
+        minimize_hierarchy: bool = False,
+        merge_redundant: bool = True,
+        **read_kwargs,
+    ) -> (
+        measurement_set_.MeasurementSet
+        | consistent_measurement_set_.ConsistentMeasurementSet
+        | tidy_measurement_set_.TidyMeasurementSet
+        | experiment_set_.ExperimentSet
+    ):
         """Read all measurements in a list of files.
 
         Parameters
@@ -432,36 +473,40 @@ class DataCollectionReader(object):
         measurements = []
         for filepath in filelist:
             if Path(filepath).suffix != ".json":
-
                 file_measurements = self.from_filepath(
                     filepath=filepath,
                     parse_filename_metadata=parse_filename_metadata,
                     to_experiments=to_experiments,
                     minimize_hierarchy=minimize_hierarchy,
                     merge_redundant=merge_redundant,
-                    **read_kwargs)
+                    **read_kwargs,
+                )
 
                 measurements.extend(file_measurements.measurements)
 
-        return measurement_set_factory.DataCollectionFactory\
-            .from_measurements(measurements=measurements,
-                               to_experiments=to_experiments,
-                               minimize_hierarchy=minimize_hierarchy,
-                               merge_redundant=merge_redundant)
+        return measurement_set_factory.DataCollectionFactory.from_measurements(
+            measurements=measurements,
+            to_experiments=to_experiments,
+            minimize_hierarchy=minimize_hierarchy,
+            merge_redundant=merge_redundant,
+        )
 
     @staticmethod
-    def from_tabular_data_filepath(filepath: str,
-                                   n_metadata_columns: int = 0,
-                                   dataset_types: List = None,
-                                   dataset_end_indices: List[int] = None,
-                                   to_experiments: bool = True,
-                                   minimize_hierarchy: bool = False,
-                                   merge_redundant: bool = True,
-                                   **read_kwargs) -> \
-            Union[measurement_set_.MeasurementSet,
-                  consistent_measurement_set_.ConsistentMeasurementSet,
-                  tidy_measurement_set_.TidyMeasurementSet,
-                  experiment_set_.ExperimentSet]:
+    def from_tabular_data_filepath(
+        filepath: str,
+        n_metadata_columns: int = 0,
+        dataset_types: list = None,
+        dataset_end_indices: list[int] = None,
+        to_experiments: bool = True,
+        minimize_hierarchy: bool = False,
+        merge_redundant: bool = True,
+        **read_kwargs,
+    ) -> (
+        measurement_set_.MeasurementSet
+        | consistent_measurement_set_.ConsistentMeasurementSet
+        | tidy_measurement_set_.TidyMeasurementSet
+        | experiment_set_.ExperimentSet
+    ):
         """Read a spreadsheet-like data table as a measurement set.
 
         Each column has a header and values of that property for each
@@ -499,14 +544,17 @@ class DataCollectionReader(object):
             for row in csv_reader:
                 data.append(row)
 
-        tabular_dataset = tb.TabularMeasurementSet(data,
-                                                   n_metadata_columns=n_metadata_columns,
-                                                   column_headers=None,
-                                                   dataset_types=dataset_types,
-                                                   dataset_end_indices=dataset_end_indices)
+        tabular_dataset = tb.TabularMeasurementSet(
+            data,
+            n_metadata_columns=n_metadata_columns,
+            column_headers=None,
+            dataset_types=dataset_types,
+            dataset_end_indices=dataset_end_indices,
+        )
 
         return measurement_set_factory.DataCollectionFactory.from_measurements(
             tabular_dataset.to_measurement_set().measurements,
             to_experiments=to_experiments,
             minimize_hierarchy=minimize_hierarchy,
-            merge_redundant=merge_redundant)
+            merge_redundant=merge_redundant,
+        )

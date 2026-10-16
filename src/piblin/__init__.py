@@ -16,12 +16,15 @@ piblin.data - Represent analytical datasets and hierarchical collections thereof
 piblin.dataio - Read/write hierarchically structured collections of datasets to/from files.
 piblin.transform - Transform collections of datasets.
 """
+
 import numpy as np
 
-np.set_printoptions(threshold=0,
-                    precision=4,
-                    edgeitems=2,
-                    suppress=True,
-                    linewidth=10000,
-                    sign="+",
-                    floatmode="fixed")
+np.set_printoptions(
+    threshold=0,
+    precision=4,
+    edgeitems=2,
+    suppress=True,
+    linewidth=10000,
+    sign="+",
+    floatmode="fixed",
+)

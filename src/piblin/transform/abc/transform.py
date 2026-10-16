@@ -1,17 +1,16 @@
 import copy
-from typing import Union, List, Tuple
 from abc import ABC, abstractmethod
+
 import matplotlib.axes
 import matplotlib.figure
 import matplotlib.pyplot as plt
 
-import piblin.transform.pipeline as pipeline
-import piblin.data.datasets.abc.dataset as dataset
-import piblin.data.data_collections.measurement as measurement
-import piblin.data.data_collections.measurement_set as measurement_set
 import piblin.data.data_collections.experiment as experiment
 import piblin.data.data_collections.experiment_set as experiment_set
-import piblin.data.data_collections.data_collection_factory as data_collection_factory
+import piblin.data.data_collections.measurement as measurement
+import piblin.data.data_collections.measurement_set as measurement_set
+import piblin.data.datasets.abc.dataset as dataset
+import piblin.transform.pipeline as pipeline
 
 
 class Transform(ABC):
@@ -81,13 +80,11 @@ class Transform(ABC):
     visualize
         Represent and present the effect of this transform.
     """
+
     APPLY_TYPE = object
     """The type to which this transform's _apply method may be applied."""
 
-    def __init__(self,
-                 data_independent_parameters: List[object] = None,
-                 *args,
-                 **kwargs):
+    def __init__(self, data_independent_parameters: list[object] = None, *args, **kwargs):
 
         if data_independent_parameters is None:
             self._data_independent_parameters = []
@@ -98,39 +95,33 @@ class Transform(ABC):
         self._is_frozen = False
 
     @property
-    def data_independent_parameters(self) -> List[object]:
+    def data_independent_parameters(self) -> list[object]:
         """Externally-specified parameters for this transform."""
         return self._data_independent_parameters
 
     @data_independent_parameters.setter
-    def data_independent_parameters(
-            self,
-            data_independent_parameters: List[object]
-    ) -> None:
+    def data_independent_parameters(self, data_independent_parameters: list[object]) -> None:
         """Set the externally-specified parameters for this transform."""
         self._data_independent_parameters = data_independent_parameters
 
     @property
-    def data_dependent_parameters(self) -> List[object]:
+    def data_dependent_parameters(self) -> list[object]:
         """Data-dependent parameters for this transform."""
         return self._data_dependent_parameters
 
     @data_dependent_parameters.setter
-    def data_dependent_parameters(
-            self,
-            data_dependent_parameters: List[object]
-    ) -> None:
+    def data_dependent_parameters(self, data_dependent_parameters: list[object]) -> None:
         """Set the data-dependent parameters for this transform."""
         self._data_dependent_parameters = data_dependent_parameters
 
     def compute_data_dependent_parameters(
-            self,
-            parameter_source: Union[dataset.Dataset,
-                                    measurement.Measurement,
-                                    measurement_set.MeasurementSet,
-                                    experiment.Experiment,
-                                    experiment_set.ExperimentSet]
-    ) -> List[object]:
+        self,
+        parameter_source: dataset.Dataset
+        | measurement.Measurement
+        | measurement_set.MeasurementSet
+        | experiment.Experiment
+        | experiment_set.ExperimentSet,
+    ) -> list[object]:
         """Compute the data-dependent parameters of this transform.
 
         Parameters
@@ -159,17 +150,22 @@ class Transform(ABC):
         """Permit re-computation of the data-dependent parameters."""
         self.is_frozen = False
 
-    def apply_to(self, target: Union[dataset.Dataset,
-                                     measurement.Measurement,
-                                     measurement_set.MeasurementSet,
-                                     experiment.Experiment,
-                                     experiment_set.ExperimentSet],
-                 make_copy: bool = True,
-                 **kwargs) -> Union[dataset.Dataset,
-                                    measurement.Measurement,
-                                    measurement_set.MeasurementSet,
-                                    experiment.Experiment,
-                                    experiment_set.ExperimentSet]:
+    def apply_to(
+        self,
+        target: dataset.Dataset
+        | measurement.Measurement
+        | measurement_set.MeasurementSet
+        | experiment.Experiment
+        | experiment_set.ExperimentSet,
+        make_copy: bool = True,
+        **kwargs,
+    ) -> (
+        dataset.Dataset
+        | measurement.Measurement
+        | measurement_set.MeasurementSet
+        | experiment.Experiment
+        | experiment_set.ExperimentSet
+    ):
         """Apply this transform to a target.
 
         This is the entry and exit point for an individual transform.
@@ -198,10 +194,9 @@ class Transform(ABC):
         # experiment and then apply to all datasets in that experiment.
         if not self.is_frozen:
             # TODO - figure out why this method can't just update self
-            self.data_dependent_parameters = \
-                self.compute_data_dependent_parameters(
-                    parameter_source=target
-                )
+            self.data_dependent_parameters = self.compute_data_dependent_parameters(
+                parameter_source=target
+            )
         # one workaround to this is to choose the Transform subclass based
         # on the most complex of either the type of data collection that
         # the transform is applied to, or the type of data collection from
@@ -219,43 +214,37 @@ class Transform(ABC):
             target = copy.deepcopy(target)
 
         if isinstance(target, dataset.Dataset):
-            return_value = self._apply_to_dataset(target,
-                                                  **kwargs)
+            return_value = self._apply_to_dataset(target, **kwargs)
 
             # TODO - apply_to_dataset should be dealing with this - _apply_to_dataset cannot return a list
-            if isinstance(return_value, List):
+            if isinstance(return_value, list):
                 target = measurement.Measurement(datasets=return_value)
             elif return_value is not None:
                 target = return_value
 
         elif isinstance(target, measurement.Measurement):
-            result = self._apply_to_measurement(target,
-                                                **kwargs)
+            result = self._apply_to_measurement(target, **kwargs)
             if result:
                 target = result
 
         elif isinstance(target, experiment.Experiment):
-            result = self._apply_to_experiment(target,
-                                               **kwargs)
+            result = self._apply_to_experiment(target, **kwargs)
             if result:
                 target = result
 
         elif isinstance(target, experiment_set.ExperimentSet):
-            result = self._apply_to_experiment_set(target,
-                                                   **kwargs)
+            result = self._apply_to_experiment_set(target, **kwargs)
             if result:
                 target = result
 
         elif isinstance(target, measurement_set.MeasurementSet):
-            result = self._apply_to_measurement_set(target,
-                                                    **kwargs)
+            result = self._apply_to_measurement_set(target, **kwargs)
             if result:
                 target = result
 
         else:
             target_type = type(target)
-            raise TypeError(f"Provided target cannot be transformed: "
-                            f"{target_type}")
+            raise TypeError(f"Provided target cannot be transformed: {target_type}")
 
         if isinstance(target, experiment_set.ExperimentSet):
             target._update_experiments()
@@ -264,94 +253,98 @@ class Transform(ABC):
 
     @abstractmethod
     def _apply_to_dataset(
-            self,
-            target: dataset.Dataset,
-            **kwargs
-    ) -> Union[None,
-               dataset.Dataset,
-               measurement.Measurement,
-               measurement_set.MeasurementSet,
-               experiment.Experiment,
-               experiment_set.ExperimentSet,
-               object]:
+        self, target: dataset.Dataset, **kwargs
+    ) -> (
+        None
+        | dataset.Dataset
+        | measurement.Measurement
+        | measurement_set.MeasurementSet
+        | experiment.Experiment
+        | experiment_set.ExperimentSet
+        | object
+    ):
         """Apply this transform to a target dataset."""
         ...
 
     @abstractmethod
     def _apply_to_measurement(
-            self,
-            target: measurement.Measurement,
-            **kwargs
-    ) -> Union[None,
-               dataset.Dataset,
-               measurement.Measurement,
-               measurement_set.MeasurementSet,
-               experiment.Experiment,
-               experiment_set.ExperimentSet,
-               object]:
+        self, target: measurement.Measurement, **kwargs
+    ) -> (
+        None
+        | dataset.Dataset
+        | measurement.Measurement
+        | measurement_set.MeasurementSet
+        | experiment.Experiment
+        | experiment_set.ExperimentSet
+        | object
+    ):
         """Apply this transform to a target measurement."""
         ...
 
     @abstractmethod
     def _apply_to_measurement_set(
-            self,
-            target: measurement_set.MeasurementSet,
-            **kwargs
-    ) -> Union[None,
-               dataset.Dataset,
-               measurement.Measurement,
-               measurement_set.MeasurementSet,
-               experiment.Experiment,
-               experiment_set.ExperimentSet,
-               object]:
+        self, target: measurement_set.MeasurementSet, **kwargs
+    ) -> (
+        None
+        | dataset.Dataset
+        | measurement.Measurement
+        | measurement_set.MeasurementSet
+        | experiment.Experiment
+        | experiment_set.ExperimentSet
+        | object
+    ):
         """Apply this transform to a target measurement set."""
         ...
 
     @abstractmethod
     def _apply_to_experiment(
-            self,
-            target: experiment.Experiment,
-            **kwargs
-    ) -> Union[None,
-               dataset.Dataset,
-               measurement.Measurement,
-               measurement_set.MeasurementSet,
-               experiment.Experiment,
-               experiment_set.ExperimentSet,
-               object]:
+        self, target: experiment.Experiment, **kwargs
+    ) -> (
+        None
+        | dataset.Dataset
+        | measurement.Measurement
+        | measurement_set.MeasurementSet
+        | experiment.Experiment
+        | experiment_set.ExperimentSet
+        | object
+    ):
         """Apply this transform to a target experiment."""
         ...
 
     @abstractmethod
     def _apply_to_experiment_set(
-            self,
-            target: experiment_set.ExperimentSet,
-            **kwargs
-    ) -> Union[None,
-               dataset.Dataset,
-               measurement.Measurement,
-               measurement_set.MeasurementSet,
-               experiment.Experiment,
-               experiment_set.ExperimentSet,
-               object]:
+        self, target: experiment_set.ExperimentSet, **kwargs
+    ) -> (
+        None
+        | dataset.Dataset
+        | measurement.Measurement
+        | measurement_set.MeasurementSet
+        | experiment.Experiment
+        | experiment_set.ExperimentSet
+        | object
+    ):
         """Apply this transform to a target experiment set."""
         ...
 
     @abstractmethod
-    def _apply(self,
-               target: Union[dataset.Dataset,
-                             measurement.Measurement,
-                             measurement_set.MeasurementSet,
-                             experiment.Experiment,
-                             experiment_set.ExperimentSet],
-               **kwargs) -> Union[None,
-                                  dataset.Dataset,
-                                  List[dataset.Dataset],
-                                  measurement.Measurement,
-                                  measurement_set.MeasurementSet,
-                                  experiment.Experiment,
-                                  experiment_set.ExperimentSet,
-                                  object]:
+    def _apply(
+        self,
+        target: dataset.Dataset
+        | measurement.Measurement
+        | measurement_set.MeasurementSet
+        | experiment.Experiment
+        | experiment_set.ExperimentSet,
+        **kwargs,
+    ) -> (
+        None
+        | dataset.Dataset
+        | list[dataset.Dataset]
+        | measurement.Measurement
+        | measurement_set.MeasurementSet
+        | experiment.Experiment
+        | experiment_set.ExperimentSet
+        | object
+    ):
         """Apply this transform to a target data collection.
 
         This method will use any externally-specified or data-dependent
@@ -369,11 +362,14 @@ class Transform(ABC):
         ...
 
     @classmethod
-    def _is_applicable_to(cls, target: Union[dataset.Dataset,
-                                             measurement.Measurement,
-                                             measurement_set.MeasurementSet,
-                                             experiment.Experiment,
-                                             experiment_set.ExperimentSet]) -> bool:
+    def _is_applicable_to(
+        cls,
+        target: dataset.Dataset
+        | measurement.Measurement
+        | measurement_set.MeasurementSet
+        | experiment.Experiment
+        | experiment_set.ExperimentSet,
+    ) -> bool:
         """Determine whether this transform's _apply method is applicable to the target.
 
         Parameters
@@ -386,16 +382,18 @@ class Transform(ABC):
         else:
             return True
 
-    def __call__(self, target: Union[dataset.Dataset,
-                                     measurement.Measurement,
-                                     measurement_set.MeasurementSet,
-                                     experiment.Experiment, experiment_set.ExperimentSet],
-                 make_copy: bool = True,
-                 **kwargs):
+    def __call__(
+        self,
+        target: dataset.Dataset
+        | measurement.Measurement
+        | measurement_set.MeasurementSet
+        | experiment.Experiment
+        | experiment_set.ExperimentSet,
+        make_copy: bool = True,
+        **kwargs,
+    ):
         """See documentation of the apply_to method."""
-        return self.apply_to(target=target,
-                             make_copy=make_copy,
-                             **kwargs)
+        return self.apply_to(target=target, make_copy=make_copy, **kwargs)
 
     def __add__(self, other: "Transform") -> pipeline.Pipeline:
         """Add this transform to another to create a pipeline."""
@@ -411,27 +409,27 @@ class Transform(ABC):
 
     def __repr__(self) -> str:
         """Create an eval()-able representation of this transform."""
-        str_rep = (f"{self.__class__.__name__}"
-                   f"(data_independent_parameters=[")
+        str_rep = f"{self.__class__.__name__}(data_independent_parameters=["
         for parameter in self.data_independent_parameters:
             str_rep += repr(parameter) + ", "
         return str_rep[:-2] + "])"
 
-    def visualize(self,
-                  target: Union[dataset.Dataset,
-                                measurement.Measurement,
-                                measurement_set.MeasurementSet,
-                                experiment.Experiment,
-                                experiment_set.ExperimentSet],
-                  make_copy: bool = True,
-                  **kwargs
-                  ) -> Tuple[
-        Union[dataset.Dataset,
-              measurement.Measurement,
-              measurement_set.MeasurementSet,
-              experiment.Experiment,
-              experiment_set.ExperimentSet],
-        Tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]
+    def visualize(
+        self,
+        target: dataset.Dataset
+        | measurement.Measurement
+        | measurement_set.MeasurementSet
+        | experiment.Experiment
+        | experiment_set.ExperimentSet,
+        make_copy: bool = True,
+        **kwargs,
+    ) -> tuple[
+        dataset.Dataset
+        | measurement.Measurement
+        | measurement_set.MeasurementSet
+        | experiment.Experiment
+        | experiment_set.ExperimentSet,
+        tuple[matplotlib.figure.Figure, matplotlib.axes.Axes],
     ]:
         """Represent and present the effect of this transform to facilitate understanding.
 
@@ -446,9 +444,7 @@ class Transform(ABC):
         make_copy : bool
             Whether to make a copy of the target before manipulating it.
         """
-        transformed_target = self.apply_to(target=target,
-                                           make_copy=make_copy,
-                                           **kwargs)
+        transformed_target = self.apply_to(target=target, make_copy=make_copy, **kwargs)
 
         fig, axes = plt.subplots()
 

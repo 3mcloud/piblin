@@ -1,9 +1,10 @@
 import pytest
-from piblin.data.data_collections.measurement import Measurement
+
 from piblin.data.data_collections.experiment_set import ExperimentSet
+from piblin.data.data_collections.measurement import Measurement
+from piblin.data.datasets.abc.split_datasets.one_dimensional_dataset import OneDimensionalDataset
 from piblin.data.datasets.abc.split_datasets.two_dimensional_dataset import TwoDimensionalDataset
 from piblin.data.datasets.abc.split_datasets.zero_dimensional_dataset import ZeroDimensionalDataset
-from piblin.data.datasets.abc.split_datasets.one_dimensional_dataset import OneDimensionalDataset
 
 
 @pytest.fixture()
@@ -17,15 +18,13 @@ def experiment_set_one_scalar():
 def experiment_set_two_scalars():
     dataset_a = ZeroDimensionalDataset.create(value=0)
     dataset_b = ZeroDimensionalDataset.create(value=0)
-    measurement = Measurement(datasets=[dataset_a,
-                                        dataset_b])
+    measurement = Measurement(datasets=[dataset_a, dataset_b])
     return ExperimentSet(measurements=[measurement])
 
 
 @pytest.fixture()
 def experiment_set_one_oned_dataset():
-    dataset = OneDimensionalDataset.create(x_values=[0],
-                                           y_values=[0])
+    dataset = OneDimensionalDataset.create(x_values=[0], y_values=[0])
 
     measurement = Measurement(datasets=[dataset])
     return ExperimentSet(measurements=[measurement])
@@ -34,11 +33,9 @@ def experiment_set_one_oned_dataset():
 @pytest.fixture()
 def experiment_set_two_oned_dataset():
 
-    dataset_a = OneDimensionalDataset.create(x_values=[0],
-                                             y_values=[0])
+    dataset_a = OneDimensionalDataset.create(x_values=[0], y_values=[0])
 
-    dataset_b = OneDimensionalDataset.create(x_values=[0],
-                                             y_values=[0])
+    dataset_b = OneDimensionalDataset.create(x_values=[0], y_values=[0])
 
     measurement = Measurement(datasets=[dataset_a, dataset_b])
     return ExperimentSet(measurements=[measurement])
@@ -46,9 +43,7 @@ def experiment_set_two_oned_dataset():
 
 @pytest.fixture()
 def experiment_set_one_twod_dataset():
-    dataset = TwoDimensionalDataset.create(x_values=[0],
-                                           y_values=[0],
-                                           z_values=[[1]])
+    dataset = TwoDimensionalDataset.create(x_values=[0], y_values=[0], z_values=[[1]])
 
     measurement = Measurement(datasets=[dataset])
     return ExperimentSet(measurements=[measurement])
@@ -56,16 +51,15 @@ def experiment_set_one_twod_dataset():
 
 @pytest.fixture()
 def experiment_set_one_twod_dataset_two_values():
-    dataset = TwoDimensionalDataset.create(x_values=[0, 1],
-                                           y_values=[0, 1],
-                                           z_values=[[1, 1], [1, 1]])
+    dataset = TwoDimensionalDataset.create(
+        x_values=[0, 1], y_values=[0, 1], z_values=[[1, 1], [1, 1]]
+    )
 
     measurement = Measurement(datasets=[dataset])
     return ExperimentSet(measurements=[measurement])
 
 
-def test_for_independent_variables(experiment_set_one_scalar,
-                                   experiment_set_two_scalars):
+def test_for_independent_variables(experiment_set_one_scalar, experiment_set_two_scalars):
 
     with pytest.raises(ValueError):
         experiment_set_one_scalar.independent_variable_to_condition("")
@@ -107,6 +101,7 @@ def test_for_correct_independent_variable_twod(experiment_set_one_twod_dataset):
 def test_error_on_multipoint_dataset(experiment_set_one_twod_dataset_two_values):
     with pytest.raises(ValueError):
         experiment_set_one_twod_dataset_two_values.independent_variable_to_condition("")
+
 
 #
 # # import pytest

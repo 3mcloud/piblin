@@ -10,38 +10,38 @@ Functions
 -------
 from_pandas: Converts pandas DataFrame into cralds MeasurementSet
 """
+
+import importlib
 from copy import deepcopy
-from typing import Union, Any, Dict, List, Tuple, Optional
 from dataclasses import dataclass
 from functools import reduce
-import importlib
+from typing import Any
 
 import numpy as np
 
 try:
     import pandas as pd
-except ImportError:
-    raise ImportError("pandas must be installed to use convertor.")
+except ImportError as err:
+    raise ImportError("pandas must be installed to use convertor.") from err
 
-from piblin.data.datasets.abc.split_datasets.zero_dimensional_dataset import ZeroDimensionalDataset
-from piblin.data.data_collections.measurement import Measurement
 from piblin.data.data_collections.experiment import Experiment
-from piblin.data.data_collections.measurement_set import MeasurementSet
 from piblin.data.data_collections.experiment_set import ExperimentSet
+from piblin.data.data_collections.measurement import Measurement
+from piblin.data.data_collections.measurement_set import MeasurementSet
 from piblin.data.datasets.abc.dataset import Dataset
+from piblin.data.datasets.abc.split_datasets.zero_dimensional_dataset import ZeroDimensionalDataset
 
 
 @dataclass
 class DataSetHolder:
     """Convivence dataclass to hold information extracted from Datasets"""
+
     data: pd.DataFrame
     dep_name: str
     ind_name: str
 
 
-def _process_dataset(
-    dataset: Dataset, **kwargs: Dict[str, Union[str, float, int]]
-) -> DataSetHolder:
+def _process_dataset(dataset: Dataset, **kwargs: dict[str, str | float | int]) -> DataSetHolder:
     """Converts a single dataset into a DataSetHolder
 
     Parameters
@@ -65,9 +65,13 @@ def _process_dataset(
         dep_data = dataset.dependent_variable_data.item()
         data_rows = pd.DataFrame([{"cralds_cls": tech, **kwargs, dep_name[0]: dep_data}])
     else:
-        independent_data = dict(zip(dataset.independent_variable_names, dataset.independent_variable_data))
+        independent_data = dict(
+            zip(dataset.independent_variable_names, dataset.independent_variable_data)
+        )
         if isinstance(dataset.dependent_variable_data, list):
-            dependent_data = dict(zip(dataset.dependent_variable_names, dataset.dependent_variable_data))
+            dependent_data = dict(
+                zip(dataset.dependent_variable_names, dataset.dependent_variable_data)
+            )
         else:
             dependent_data = {dataset.dependent_variable_names[0]: dataset.dependent_variable_data}
         ind_name = dataset.independent_variable_names
@@ -79,8 +83,8 @@ def _process_dataset(
 
 
 def _process_measurement(
-    measurement: Measurement
-) -> Tuple[List[DataSetHolder], List[str], Dict[str, Any]]:
+    measurement: Measurement,
+) -> tuple[list[DataSetHolder], list[str], dict[str, Any]]:
     """Processes a single measurement into intermediate objects.
 
     Parameters
@@ -96,17 +100,18 @@ def _process_measurement(
         measurement conditions with values incompatible with pandas,
         respectively.
     """
+
     def attempt_pandas(test_item):
         try:
             df = pd.Series(test_item)
             return df.shape[0] == 1
-        except:
+        except Exception:
             return False
 
     conditions_details = deepcopy(measurement.conditions)
     conditions_details.update(deepcopy(measurement.details))
     # Need a better test for non-Pandas compatible objects
-    # This filters not enough stuff, 
+    # This filters not enough stuff,
     str_numeric_conds = {}
     other_conds = {}
     for k, v in conditions_details.items():
@@ -122,8 +127,8 @@ def _process_measurement(
 
 
 def _process_measurement_set(
-    measurement_set: MeasurementSet
-) -> Tuple[List[List[Dict[str, Any]]], List[List[str]], List[Dict[str, Any]]]:
+    measurement_set: MeasurementSet,
+) -> tuple[list[list[dict[str, Any]]], list[list[str]], list[dict[str, Any]]]:
     """Processes a MeasurmentSet into intermediate objects.
 
     Parameters
@@ -143,8 +148,7 @@ def _process_measurement_set(
     all_conditions = []
     all_other = []
     for measurement in measurement_set.measurements:
-        measure_rows, conditions, details = \
-            _process_measurement(measurement)
+        measure_rows, conditions, details = _process_measurement(measurement)
         data_rows.append(measure_rows)
         all_conditions.append(conditions)
         all_other.append(details)
@@ -152,12 +156,10 @@ def _process_measurement_set(
 
 
 def _to_pandas(
-    cralds_object: Union[
-        Dataset, Measurement, Experiment, MeasurementSet, ExperimentSet
-    ],
+    cralds_object: Dataset | Measurement | Experiment | MeasurementSet | ExperimentSet,
     with_cralds_class: bool = True,
     concat: bool = False,
-) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+) -> pd.DataFrame | list[pd.DataFrame]:
     """Converts a cralds data structure into a Pandas DataFrame.
 
     `_to_pandas` operates on all Dataset classes and organization classes
@@ -192,26 +194,28 @@ def _to_pandas(
     """
     try:
         import pandas as pd
-    except ImportError:
-        raise ImportError("pandas must be installed to use convertor.")
+    except ImportError as err:
+        raise ImportError("pandas must be installed to use convertor.") from err
 
     def create_df(
-        data: List[DataSetHolder],
-        conditions: Optional[List[str]] = None,
-        details: Optional[Dict[str, Any]] = None,
+        data: list[DataSetHolder],
+        conditions: list[str] | None = None,
+        details: dict[str, Any] | None = None,
     ):
         df = pd.concat([ds.data for ds in data], axis=0)
         ind_names = [ds.ind_name for ds in data if ds.ind_name is not None]
         if len(ind_names) > 1:
-            ind_names = list(set(reduce(lambda a,b: a + b, ind_names)))
+            ind_names = list(set(reduce(lambda a, b: a + b, ind_names)))
         elif len(ind_names) == 1:
             ind_names = ind_names[0]
 
         df.attrs = {
             "condition_columns": conditions,
             "details": details,
-            "dependent_variable_names": list(set(reduce(lambda a,b: a + b, [ds.dep_name for ds in data]))),
-            "independent_variable_names": ind_names
+            "dependent_variable_names": list(
+                set(reduce(lambda a, b: a + b, [ds.dep_name for ds in data]))
+            ),
+            "independent_variable_names": ind_names,
         }
         if not with_cralds_class:
             df = df.drop(columns="cralds_cls")
@@ -219,8 +223,7 @@ def _to_pandas(
 
     # DataFrame doesn't respect Experiment vs Measurement
     if isinstance(cralds_object, ExperimentSet):
-        cralds_object = cralds_object\
-            .to_measurement_set(expand_replicates=True)
+        cralds_object = cralds_object.to_measurement_set(expand_replicates=True)
     elif isinstance(cralds_object, Experiment):
         cralds_object = cralds_object.to_measurement_set()
 
@@ -228,17 +231,13 @@ def _to_pandas(
         data_rows = _process_dataset(cralds_object)
         df = create_df([data_rows])
     elif isinstance(cralds_object, Measurement):
-        data_rows, conditions, details = \
-            _process_measurement(cralds_object)
+        data_rows, conditions, details = _process_measurement(cralds_object)
         df = create_df(data_rows, conditions, details)
     elif isinstance(cralds_object, MeasurementSet):
-        data_rows, conditions, details = _process_measurement_set(
-            cralds_object
-        )
+        data_rows, conditions, details = _process_measurement_set(cralds_object)
         df = [
             create_df(data, cond, other_cond)
-            for data, cond, other_cond in
-            zip(data_rows, conditions, details)
+            for data, cond, other_cond in zip(data_rows, conditions, details)
         ]
         if concat:
             # merge attributes
@@ -250,15 +249,15 @@ def _to_pandas(
             ]:
                 attrs[k] = set().union(*[item.attrs[k] for item in df])
             # convert to
-            attrs["details"] = reduce(
-                lambda a, b: {**a, **b}, details
-            )
+            attrs["details"] = reduce(lambda a, b: {**a, **b}, details)
+
             # Need to add measurement id to dfs to differentiate
             # duplicate measurements when in DataFrame
             def add_measurement_id(dataframe, n):
                 dataframe["measurement_id"] = n
                 return dataframe
-            df = [add_measurement_id(df,n) for n, df in enumerate(df)]
+
+            df = [add_measurement_id(df, n) for n, df in enumerate(df)]
             df = pd.concat(df, ignore_index=True)
             df.attrs = attrs
             df.attrs["condition_columns"].update({"measurement_id"})
@@ -266,16 +265,12 @@ def _to_pandas(
 
 
 def from_pandas(
-    pandas_data: Union[
-        pd.DataFrame,
-        List[pd.DataFrame],
-        Dict[str, pd.DataFrame]
-    ],
-    dependent_variable_names: Union[str, List[str]] = None,
-    independent_variable_names: Union[str, List[str]] = None,
-    condition_columns: Union[str, List[str], Dict[str, Any]] = None,
-    details: Dict[str, Any] = None,
-    cralds_cls: Optional[Union[str, type]] = None,
+    pandas_data: pd.DataFrame | list[pd.DataFrame] | dict[str, pd.DataFrame],
+    dependent_variable_names: str | list[str] = None,
+    independent_variable_names: str | list[str] = None,
+    condition_columns: str | list[str] | dict[str, Any] = None,
+    details: dict[str, Any] = None,
+    cralds_cls: str | type | None = None,
 ) -> MeasurementSet:
     """Converts Pandas DataFrame into cralds MeasurementSet
 
@@ -339,8 +334,7 @@ def from_pandas(
         # Bit goofy but need to prefer keyword argument
         if dependent_variable_names is None:
             raise ValueError(
-                "No dependent_variable_name value was provided or defined"
-                " in DataFrame."
+                "No dependent_variable_name value was provided or defined in DataFrame."
             )
 
     if independent_variable_names is None:
@@ -348,28 +342,27 @@ def from_pandas(
         # Bit goofy but need to prefer keyword argument
         if independent_variable_names is None:
             raise ValueError(
-                "No independent_variable_names value was provided or defined"
-                " in DataFrame."
+                "No independent_variable_names value was provided or defined in DataFrame."
             )
 
     if isinstance(dependent_variable_names, str):
+
         def get_dep_name(columns):
             return dependent_variable_names
     else:
+
         def get_dep_name(columns):
-            dep_name = [
-                name for name in dependent_variable_names if name in columns
-            ]
+            dep_name = [name for name in dependent_variable_names if name in columns]
             return dep_name
 
     if isinstance(independent_variable_names, str):
+
         def get_ind_name(columns):
             return independent_variable_names
     else:
+
         def get_ind_name(columns):
-            ind_name = [
-                name for name in independent_variable_names if name in columns
-            ]
+            ind_name = [name for name in independent_variable_names if name in columns]
             return ind_name
 
     def create_measurement(data, dataset_class, conditions):
@@ -383,7 +376,7 @@ def from_pandas(
         ind_data = [row for row in ind_data.astype(float).T]
         # data can contain duplicate measurements so explicitly process
         # row-wise
-        module_str, _, class_str = dataset_class.rpartition('.')
+        module_str, _, class_str = dataset_class.rpartition(".")
         dataset_class = getattr(importlib.import_module(module_str), class_str)
         if "ZeroDimensional" in dataset_class.__name__:
             cralds_data = dataset_class(

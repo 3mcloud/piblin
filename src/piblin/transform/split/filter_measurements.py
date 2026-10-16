@@ -1,4 +1,5 @@
-from typing import Callable
+from collections.abc import Callable
+
 from piblin.data.data_collections import measurement as measurement_
 from piblin.data.data_collections import measurement_set as measurement_set_
 from piblin.transform.abc.measurement_set_transform import MeasurementSetTransform
@@ -17,6 +18,7 @@ class FilterMeasurements(MeasurementSetTransform):
     function : Callable
         The function to be used in the filter.
     """
+
     def __init__(self, function: Callable[[measurement_.Measurement], bool]):
         super().__init__(data_independent_parameters=[function])
 
@@ -26,9 +28,9 @@ class FilterMeasurements(MeasurementSetTransform):
     def function(self):
         return self._function
 
-    def _apply(self,
-               target: measurement_set_.MeasurementSet,
-               **kwargs) -> measurement_set_.MeasurementSet:
+    def _apply(
+        self, target: measurement_set_.MeasurementSet, **kwargs
+    ) -> measurement_set_.MeasurementSet:
         """Apply the filter builtin to a target measurement set.
 
 

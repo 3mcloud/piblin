@@ -1,9 +1,10 @@
-from typing import List, Set, Tuple
 import re
-import numpy as np
-import numpy.typing
+
 import matplotlib.axes
 import matplotlib.figure
+import numpy as np
+import numpy.typing
+
 import piblin.data.datasets.abc.split_datasets as split_datasets
 import piblin.data.datasets.abc.unambiguous_datasets.unambiguous_dataset as unambiguous_dataset
 
@@ -34,14 +35,14 @@ class ZeroDimensionalDataset(split_datasets.SplitDataset):
     """The default name for the dependent variable."""
 
     def __init__(
-            self,
-            dependent_variable_data: numpy.typing.ArrayLike,
-            dependent_variable_names: List[str] = None,
-            dependent_variable_units: List[str] = None,
-            independent_variable_data: List[numpy.typing.ArrayLike] = None,
-            independent_variable_names: List[str] = None,
-            independent_variable_units: List[str] = None,
-            source: str = None
+        self,
+        dependent_variable_data: numpy.typing.ArrayLike,
+        dependent_variable_names: list[str] = None,
+        dependent_variable_units: list[str] = None,
+        independent_variable_data: list[numpy.typing.ArrayLike] = None,
+        independent_variable_names: list[str] = None,
+        independent_variable_units: list[str] = None,
+        source: str = None,
     ):
 
         if dependent_variable_names == [None]:
@@ -49,37 +50,29 @@ class ZeroDimensionalDataset(split_datasets.SplitDataset):
 
         if independent_variable_names is not None:
             if independent_variable_names:
-                raise ValueError(
-                    "0D dataset cannot have independent labels."
-                )
+                raise ValueError("0D dataset cannot have independent labels.")
             else:
                 independent_variable_names = None
 
         if independent_variable_units is not None:
             if independent_variable_units:
-                raise ValueError(
-                    "0D dataset cannot have independent units."
-                )
+                raise ValueError("0D dataset cannot have independent units.")
             else:
                 independent_variable_units = None
 
         if independent_variable_data is not None:
             if independent_variable_data:
-                raise ValueError(
-                    "0D dataset cannot have independent data."
-                )
+                raise ValueError("0D dataset cannot have independent data.")
             else:
                 independent_variable_data = None
-        
+
         if not isinstance(dependent_variable_data, np.ndarray):
             dependent_variable_data = np.array(dependent_variable_data)
 
         dependent_variable_data = np.squeeze(dependent_variable_data)
-        
+
         if len(dependent_variable_data.shape) != 0:
-            raise ValueError(
-                "`dependent_variable_data` must be a scalar value"
-            )
+            raise ValueError("`dependent_variable_data` must be a scalar value")
 
         super().__init__(
             dependent_variable_data=dependent_variable_data,
@@ -88,15 +81,13 @@ class ZeroDimensionalDataset(split_datasets.SplitDataset):
             independent_variable_data=independent_variable_data,
             independent_variable_names=independent_variable_names,
             independent_variable_units=independent_variable_units,
-            source=source
+            source=source,
         )
 
     @classmethod
-    def create(cls,
-               value: np.typing.ArrayLike,
-               label: str = None,
-               unit: str = None,
-               source: str = None) -> "ZeroDimensionalDataset":
+    def create(
+        cls, value: np.typing.ArrayLike, label: str = None, unit: str = None, source: str = None
+    ) -> "ZeroDimensionalDataset":
         """Create a 0D dataset from a value and label.
 
         The scalar class helps resolve an amibiguity in the
@@ -131,37 +122,38 @@ class ZeroDimensionalDataset(split_datasets.SplitDataset):
 
         value = np.squeeze(value)
 
-        return cls(dependent_variable_data=value,
-                   dependent_variable_names=[label],
-                   dependent_variable_units=[unit],
-                   independent_variable_data=None,
-                   independent_variable_names=None,
-                   independent_variable_units=None,
-                   source=source)
+        return cls(
+            dependent_variable_data=value,
+            dependent_variable_names=[label],
+            dependent_variable_units=[unit],
+            independent_variable_data=None,
+            independent_variable_names=None,
+            independent_variable_units=None,
+            source=source,
+        )
 
     @property
-    def data(self) -> Set[Tuple[Tuple, Tuple]]:
+    def data(self) -> set[tuple[tuple, tuple]]:
         """The set of data points of this split dataset."""
         return set(((self.value,), ()))
 
     @property
-    def variable_names(self) -> Tuple[Tuple[str], Tuple[str]]:
+    def variable_names(self) -> tuple[tuple[str], tuple[str]]:
         """The names of the dependent and independent variables."""
         return (self.name,), ()
 
     @property
-    def variable_units(self) -> Tuple[Tuple[str], Tuple[str]]:
+    def variable_units(self) -> tuple[tuple[str], tuple[str]]:
         """The units of the dependent and independent variables."""
         return (self.unit,), ()
 
-    def to_unambiguous_dataset(self) -> \
-            unambiguous_dataset.UnambiguousDataset:
+    def to_unambiguous_dataset(self) -> unambiguous_dataset.UnambiguousDataset:
         """Convert this to an unambiguous dataset."""
         return unambiguous_dataset.UnambiguousDataset(
             data=self.data,
             variable_names=self.variable_names,
             variable_units=self.variable_units,
-            source=self.source
+            source=self.source,
         )
 
     @property
@@ -169,7 +161,7 @@ class ZeroDimensionalDataset(split_datasets.SplitDataset):
         """Return a single-line human-readable representation."""
         return f"{self.name} = {self.value} {self.unit}"
 
-    def _encode_column_labels(self) -> List[str]:
+    def _encode_column_labels(self) -> list[str]:
         """A label for this zero-dimensional dataset."""
         return [f"{self.name}({self.unit})"]
 
@@ -213,7 +205,7 @@ class ZeroDimensionalDataset(split_datasets.SplitDataset):
         self.dependent_variable_units[0] = unit
 
     @property
-    def independent_variable_data(self) -> List[np.ndarray]:
+    def independent_variable_data(self) -> list[np.ndarray]:
         """The values of independent variables along each axis.
 
         By definition the zero-dimensional dataset has no independent
@@ -222,7 +214,7 @@ class ZeroDimensionalDataset(split_datasets.SplitDataset):
         return []
 
     @property
-    def independent_variable_names(self) -> List[str]:
+    def independent_variable_names(self) -> list[str]:
         """The names of the independent variables.
 
         By definition the zero-dimensional dataset has no independent
@@ -240,9 +232,7 @@ class ZeroDimensionalDataset(split_datasets.SplitDataset):
         return 0
 
     @staticmethod
-    def compute_average(
-            datasets: List["ZeroDimensionalDataset"]
-    ) -> "ZeroDimensionalDataset":
+    def compute_average(datasets: list["ZeroDimensionalDataset"]) -> "ZeroDimensionalDataset":
         """Compute the average of a set of scalars.
 
         Parameters
@@ -263,24 +253,17 @@ class ZeroDimensionalDataset(split_datasets.SplitDataset):
         for dataset in datasets[1:]:
             if dataset.label != label:
                 labels = [dataset.label for dataset in datasets]
-                raise ValueError(
-                    f"Inconsistent labels for 0D datasets: {labels}"
-                )
+                raise ValueError(f"Inconsistent labels for 0D datasets: {labels}")
             if dataset.unit != unit:
                 units = [dataset.unit for dataset in datasets]
-                raise ValueError(
-                    f"Inconsistent units for 0D datasets: {units}"
-                )
+                raise ValueError(f"Inconsistent units for 0D datasets: {units}")
 
         return ZeroDimensionalDataset.create(
-            value=np.mean(np.array([dataset.value for dataset in datasets])),
-            label=label,
-            unit=unit)
+            value=np.mean(np.array([dataset.value for dataset in datasets])), label=label, unit=unit
+        )
 
     @staticmethod
-    def compute_variation(
-            datasets: List["ZeroDimensionalDataset"]
-    ) -> "ZeroDimensionalDataset":
+    def compute_variation(datasets: list["ZeroDimensionalDataset"]) -> "ZeroDimensionalDataset":
         """Compute the variation across a set of scalars.
 
         Parameters
@@ -301,26 +284,17 @@ class ZeroDimensionalDataset(split_datasets.SplitDataset):
         for dataset in datasets[1:]:
             if dataset.label != label:
                 labels = [dataset.label for dataset in datasets]
-                raise ValueError(
-                    f"Inconsistent labels for 0D datasets: {labels}"
-                )
+                raise ValueError(f"Inconsistent labels for 0D datasets: {labels}")
             if dataset.unit != unit:
                 units = [dataset.unit for dataset in datasets]
-                raise ValueError(
-                    f"Inconsistent units for 0D datasets: {units}"
-                )
+                raise ValueError(f"Inconsistent units for 0D datasets: {units}")
 
         return ZeroDimensionalDataset.create(
-            value=np.std(np.array([dataset.value
-                                   for dataset in datasets])),
-            label=label,
-            unit=unit
+            value=np.std(np.array([dataset.value for dataset in datasets])), label=label, unit=unit
         )
-    
+
     @classmethod
-    def unflatten(cls,
-                  column_labels: List[str],
-                  values: np.ndarray) -> "ZeroDimensionalDataset":
+    def unflatten(cls, column_labels: list[str], values: np.ndarray) -> "ZeroDimensionalDataset":
         """Turn the provided column labels and values into a dataset.
 
         Parameters
@@ -345,24 +319,20 @@ class ZeroDimensionalDataset(split_datasets.SplitDataset):
             values = np.array(values)
 
         values = np.squeeze(values)
-        
+
         if len(values.shape) != 0:
             raise ValueError("`values` must be a scalar value")
 
         all_coords = []
         for label in column_labels:
-
             variable_split_pattern = re.compile(variable_split_regex)
             match = variable_split_pattern.match(label)
             if match is not None:
                 dep_label = match.group(1)
             else:
-                raise ValueError(
-                    f"No match for split: {label}, {variable_split_regex}"
-                )
+                raise ValueError(f"No match for split: {label}, {variable_split_regex}")
 
-            dependent_variable_label_pattern = \
-                re.compile(dependent_variable_label_regex)
+            dependent_variable_label_pattern = re.compile(dependent_variable_label_regex)
 
             match = dependent_variable_label_pattern.match(dep_label)
             if match is not None:
@@ -405,20 +375,22 @@ class ZeroDimensionalDataset(split_datasets.SplitDataset):
         else:
             dependent_variable_data = values.reshape(new_shape)
 
-        return cls(dependent_variable_data=dependent_variable_data,
-                   dependent_variable_names=[dependent_variable_name],
-                   dependent_variable_units=[dependent_variable_unit],
-                   independent_variable_data=independent_variable_data,
-                   independent_variable_names=names,
-                   independent_variable_units=units,
-                   source=None)
+        return cls(
+            dependent_variable_data=dependent_variable_data,
+            dependent_variable_names=[dependent_variable_name],
+            dependent_variable_units=[dependent_variable_unit],
+            independent_variable_data=independent_variable_data,
+            independent_variable_names=names,
+            independent_variable_units=units,
+            source=None,
+        )
 
     @classmethod
     def unflatten_dependent_variables(cls, values: np.ndarray):
         pass
 
     @staticmethod
-    def decode_column_labels(column_labels: List[str]):
+    def decode_column_labels(column_labels: list[str]):
         pass
 
     @property
@@ -444,9 +416,7 @@ class ZeroDimensionalDataset(split_datasets.SplitDataset):
         """The units of the dependent variables."""
         return self._dependent_variable_units
 
-    def _plot_on_axes(self,
-                      axes: matplotlib.axes.Axes,
-                      **axes_plotting_kwargs) -> None:
+    def _plot_on_axes(self, axes: matplotlib.axes.Axes, **axes_plotting_kwargs) -> None:
         """Plot this scalar on a given axes with the specified kwargs.
 
         This method will place a single point on a scatter plot for the
@@ -462,21 +432,22 @@ class ZeroDimensionalDataset(split_datasets.SplitDataset):
             Keywords which will be passed to the scatter method.
             Empty by default.
         """
-        axes.scatter(x=0,
-                     y=self.dependent_variable_data,
-                     cmap=None,
-                     norm=None,
-                     vmin=None,
-                     vmax=None,
-                     # alpha=None,
-                     plotnonfinite=False,
-                     data=None,
-                     **axes_plotting_kwargs)
+        axes.scatter(
+            x=0,
+            y=self.dependent_variable_data,
+            cmap=None,
+            norm=None,
+            vmin=None,
+            vmax=None,
+            # alpha=None,
+            plotnonfinite=False,
+            data=None,
+            **axes_plotting_kwargs,
+        )
 
-    def _plot_on_axes_with_variation(self,
-                                     axes: matplotlib.axes.Axes,
-                                     variation: "ZeroDimensionalDataset",
-                                     **plot_kwargs) -> None:
+    def _plot_on_axes_with_variation(
+        self, axes: matplotlib.axes.Axes, variation: "ZeroDimensionalDataset", **plot_kwargs
+    ) -> None:
         """Visualize the given variation in this dataset.
 
         This method will draw the dataset along with an error bar showing
@@ -492,10 +463,12 @@ class ZeroDimensionalDataset(split_datasets.SplitDataset):
             Keywords which will be passed to the scatter method.
             Empty by default.
         """
-        axes.errorbar(x=[self.label],
-                      y=self.value,
-                      yerr=self.value,  # TODO - check this
-                      **plot_kwargs)
+        axes.errorbar(
+            x=[self.label],
+            y=self.value,
+            yerr=self.value,  # TODO - check this
+            **plot_kwargs,
+        )
 
     def _label_axes(self, axes: matplotlib.axes.Axes) -> None:
         """Add labels to the given axes."""
@@ -511,8 +484,7 @@ class ZeroDimensionalDataset(split_datasets.SplitDataset):
         superclass to the default if not present in the keyword arguments
         passed to visualize.
         """
-        axes_plotting_kwargs = \
-            super()._validate_axes_plotting_kwargs(**axes_plotting_kwargs)
+        axes_plotting_kwargs = super()._validate_axes_plotting_kwargs(**axes_plotting_kwargs)
 
         if "c" in axes_plotting_kwargs:
             del axes_plotting_kwargs["c"]
@@ -533,8 +505,7 @@ class ZeroDimensionalDataset(split_datasets.SplitDataset):
         axes : matplotlib.axes.Axes
             The Axes object to apply the class style to.
         """
-        super(ZeroDimensionalDataset,
-              ZeroDimensionalDataset)._style_axes(axes=axes)
+        super(ZeroDimensionalDataset, ZeroDimensionalDataset)._style_axes(axes=axes)
 
         axes.xaxis.set_visible(False)
-        axes.spines['bottom'].set_visible(False)
+        axes.spines["bottom"].set_visible(False)

@@ -1,12 +1,13 @@
-import matplotlib.figure
-from typing import Union, List
 import collections.abc
 import copy
-import piblin.data.datasets.abc.dataset as dataset
-import piblin.data.data_collections.measurement as measurement
-import piblin.data.data_collections.measurement_set as measurement_set
+
+import matplotlib.figure
+
 import piblin.data.data_collections.experiment as experiment
 import piblin.data.data_collections.experiment_set as experiment_set
+import piblin.data.data_collections.measurement as measurement
+import piblin.data.data_collections.measurement_set as measurement_set
+import piblin.data.datasets.abc.dataset as dataset
 
 
 class Pipeline(collections.abc.MutableSequence):
@@ -42,7 +43,8 @@ class Pipeline(collections.abc.MutableSequence):
     supported, but multiplication is not as it is unlikely that the
     same single transform needs to be applied many times in succession.
     """
-    def __init__(self, transforms: List = None):
+
+    def __init__(self, transforms: list = None):
         super().__init__()
         if transforms is None:
             self.__transforms = []
@@ -57,14 +59,16 @@ class Pipeline(collections.abc.MutableSequence):
     def transforms(self):
         return self.__transforms
 
-    def apply_to(self,
-                 target: Union[dataset.Dataset,
-                               measurement.Measurement,
-                               measurement_set.MeasurementSet,
-                               experiment.Experiment,
-                               experiment_set.ExperimentSet],
-                 make_copy: bool = True,
-                 **kwargs):
+    def apply_to(
+        self,
+        target: dataset.Dataset
+        | measurement.Measurement
+        | measurement_set.MeasurementSet
+        | experiment.Experiment
+        | experiment_set.ExperimentSet,
+        make_copy: bool = True,
+        **kwargs,
+    ):
         """Apply this pipeline to the given target object.
 
         Parameters
@@ -87,20 +91,20 @@ class Pipeline(collections.abc.MutableSequence):
             target = copy.deepcopy(target)
 
         for transform in self.__transforms:
-            target = transform.apply_to(target,
-                                        make_copy=False,
-                                        **kwargs)
+            target = transform.apply_to(target, make_copy=False, **kwargs)
 
         return target
 
-    def __call__(self,
-                 target: Union[dataset.Dataset,
-                               measurement.Measurement,
-                               measurement_set.MeasurementSet,
-                               experiment.Experiment,
-                               experiment_set.ExperimentSet],
-                 make_copy: bool = True,
-                 **kwargs):
+    def __call__(
+        self,
+        target: dataset.Dataset
+        | measurement.Measurement
+        | measurement_set.MeasurementSet
+        | experiment.Experiment
+        | experiment_set.ExperimentSet,
+        make_copy: bool = True,
+        **kwargs,
+    ):
         return self.apply_to(target, make_copy, **kwargs)
 
     def __len__(self) -> int:
@@ -153,14 +157,16 @@ class Pipeline(collections.abc.MutableSequence):
             str_rep += repr(transform)
         return str_rep + "])"
 
-    def visualize(self,
-                  target: Union[dataset.Dataset,
-                                measurement.Measurement,
-                                measurement_set.MeasurementSet,
-                                experiment.Experiment,
-                                experiment_set.ExperimentSet],
-                  make_copy: bool = True,
-                  **kwargs):
+    def visualize(
+        self,
+        target: dataset.Dataset
+        | measurement.Measurement
+        | measurement_set.MeasurementSet
+        | experiment.Experiment
+        | experiment_set.ExperimentSet,
+        make_copy: bool = True,
+        **kwargs,
+    ):
         """Represent and present the effect of this pipeline to facilitate understanding.
 
         Applying a pipeline involves iterative application of a list of old_transforms. Each of these old_transforms has a
@@ -177,15 +183,13 @@ class Pipeline(collections.abc.MutableSequence):
         if make_copy:
             target = copy.deepcopy(target)
 
-        figures: List[matplotlib.figure.Figure] = []
+        figures: list[matplotlib.figure.Figure] = []
         axes = []
         for transform in self.__transforms:
             f, a = transform.visualize(copy.deepcopy(target), **kwargs)
             figures.append(f)
             axes.append(a)
 
-            target = transform.apply_to(target,
-                                        make_copy=False,
-                                        **kwargs)
+            target = transform.apply_to(target, make_copy=False, **kwargs)
 
         return target, figures, axes

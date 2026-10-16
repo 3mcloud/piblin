@@ -1,13 +1,15 @@
-from typing import Union, List, Set, Tuple
+from typing import Union
+
 import matplotlib.axes
-import matplotlib.lines
 import matplotlib.collections
+import matplotlib.lines
 import numpy as np
 import numpy.typing
-import piblin.data.datasets.roi as roi
+
 import piblin.data.datasets.abc.split_datasets as split_datasets
-import piblin.data.datasets.abc.unambiguous_datasets.unambiguous_dataset as unambiguous_dataset
 import piblin.data.datasets.abc.split_datasets.zero_dimensional_dataset as zero_dimensional_dataset
+import piblin.data.datasets.abc.unambiguous_datasets.unambiguous_dataset as unambiguous_dataset
+import piblin.data.datasets.roi as roi
 
 
 class OneDimensionalDataset(split_datasets.SplitDataset):
@@ -98,20 +100,21 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
     one_line_description -> str
         A single-line human-readable description of this dataset.
     """
+
     DEFAULT_X_NAME: str = "x"
     """The default name for the independent variable."""
     DEFAULT_Y_NAME: str = "y"
     """The default name for the dependent variable."""
 
     def __init__(
-            self,
-            dependent_variable_data: np.typing.ArrayLike,
-            dependent_variable_names: Union[str, List[str]] = None,
-            dependent_variable_units: Union[str, List[str]] = None,
-            independent_variable_data: List[np.typing.ArrayLike] = None,
-            independent_variable_names: List[str] = None,
-            independent_variable_units: List[str] = None,
-            source: str = None
+        self,
+        dependent_variable_data: np.typing.ArrayLike,
+        dependent_variable_names: str | list[str] = None,
+        dependent_variable_units: str | list[str] = None,
+        independent_variable_data: list[np.typing.ArrayLike] = None,
+        independent_variable_names: list[str] = None,
+        independent_variable_units: list[str] = None,
+        source: str = None,
     ):
 
         if independent_variable_names is None:
@@ -127,7 +130,7 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
             independent_variable_data=independent_variable_data,
             independent_variable_names=independent_variable_names,
             independent_variable_units=independent_variable_units,
-            source=source
+            source=source,
         )
 
         if self.number_of_independent_dimensions != 1:
@@ -136,19 +139,20 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
                 f"ndim={self.number_of_independent_dimensions}"
             )
 
-        if self.dependent_variable_data.shape[0] != \
-                len(self.independent_variable_data[0]):
+        if self.dependent_variable_data.shape[0] != len(self.independent_variable_data[0]):
             raise ValueError("Wrong length for independent variable data.")
 
     @classmethod
-    def create(cls,
-               y_values: numpy.typing.ArrayLike,
-               x_values: numpy.typing.ArrayLike = None,
-               x_name: str = None,
-               x_unit: str = None,
-               y_name: str = None,
-               y_unit: str = None,
-               source: str = None) -> "OneDimensionalDataset":
+    def create(
+        cls,
+        y_values: numpy.typing.ArrayLike,
+        x_values: numpy.typing.ArrayLike = None,
+        x_name: str = None,
+        x_unit: str = None,
+        y_name: str = None,
+        y_unit: str = None,
+        source: str = None,
+    ) -> "OneDimensionalDataset":
         """Construct an instance of the class from simple parameters.
 
         It is often simpler to consider a 1D dataset as a set of paired
@@ -201,18 +205,18 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
         else:
             dependent_variable_units = [y_unit]
 
-        return cls(dependent_variable_data=y_values,
-                   dependent_variable_names=dependent_variable_names,
-                   dependent_variable_units=dependent_variable_units,
-                   independent_variable_data=independent_variable_data,
-                   independent_variable_names=independent_variable_names,
-                   independent_variable_units=independent_variable_units,
-                   source=source)
+        return cls(
+            dependent_variable_data=y_values,
+            dependent_variable_names=dependent_variable_names,
+            dependent_variable_units=dependent_variable_units,
+            independent_variable_data=independent_variable_data,
+            independent_variable_names=independent_variable_names,
+            independent_variable_units=independent_variable_units,
+            source=source,
+        )
 
     @classmethod
-    def from_datasets(
-            cls, datasets: List["OneDimensionalDataset"]
-    ) -> "OneDimensionalDataset":
+    def from_datasets(cls, datasets: list["OneDimensionalDataset"]) -> "OneDimensionalDataset":
         """Create a dataset from a set of one-dimensional datasets.
 
         This method effectively merges multiple one-dimensional datasets
@@ -246,48 +250,79 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
             raise ValueError("Cannot combine datasets of different type.")
 
         target_independent_variable_names = datasets[0].independent_variable_names
-        if not all([dataset.independent_variable_names == target_independent_variable_names for dataset in datasets[1:]]):
+        if not all(
+            [
+                dataset.independent_variable_names == target_independent_variable_names
+                for dataset in datasets[1:]
+            ]
+        ):
             raise ValueError("Cannot combine datasets with different independent variable names")
 
         target_independent_variable_units = datasets[0].independent_variable_units
-        if not all([dataset.independent_variable_units == target_independent_variable_units for dataset in datasets[1:]]):
+        if not all(
+            [
+                dataset.independent_variable_units == target_independent_variable_units
+                for dataset in datasets[1:]
+            ]
+        ):
             raise ValueError("Cannot combine datasets with different independent variable units")
 
         target_dependent_variable_names = datasets[0].dependent_variable_names
-        if not all([dataset.dependent_variable_names == target_dependent_variable_names for dataset in datasets[1:]]):
+        if not all(
+            [
+                dataset.dependent_variable_names == target_dependent_variable_names
+                for dataset in datasets[1:]
+            ]
+        ):
             raise ValueError("Cannot combine datasets with different dependent variable names")
 
         target_dependent_variable_units = datasets[0].dependent_variable_units
-        if not all([dataset.dependent_variable_units == target_dependent_variable_units for dataset in datasets[1:]]):
+        if not all(
+            [
+                dataset.dependent_variable_units == target_dependent_variable_units
+                for dataset in datasets[1:]
+            ]
+        ):
             raise ValueError("Cannot combine datasets with different dependent variable units")
 
-        independent_variable_data = np.concatenate([dataset.independent_variable_data[0] for dataset in datasets])
-        dependent_variable_data = np.concatenate([dataset.dependent_variable_data for dataset in datasets])
+        independent_variable_data = np.concatenate(
+            [dataset.independent_variable_data[0] for dataset in datasets]
+        )
+        dependent_variable_data = np.concatenate(
+            [dataset.dependent_variable_data for dataset in datasets]
+        )
 
-        values, \
-            unique_values_indices, \
-            unique_value_counts = np.unique(independent_variable_data,
-                                            return_index=True,
-                                            return_counts=True)
+        values, unique_values_indices, unique_value_counts = np.unique(
+            independent_variable_data, return_index=True, return_counts=True
+        )
 
         duplicate_independent_variable_values = values[unique_value_counts > 1]
 
         summarized_dependent_variable_data = []
         for duplicate_independent_variable_value in duplicate_independent_variable_values:
-            indices_to_summarize = np.where(independent_variable_data == duplicate_independent_variable_value)[0]
-            summarized_dependent_variable_data.append(np.mean(dependent_variable_data[indices_to_summarize]))
+            indices_to_summarize = np.where(
+                independent_variable_data == duplicate_independent_variable_value
+            )[0]
+            summarized_dependent_variable_data.append(
+                np.mean(dependent_variable_data[indices_to_summarize])
+            )
 
-        indices_to_keep = [j for point_index, j in enumerate(unique_values_indices)
-                           if unique_value_counts[point_index] == 1]
+        indices_to_keep = [
+            j
+            for point_index, j in enumerate(unique_values_indices)
+            if unique_value_counts[point_index] == 1
+        ]
 
         independent_variable_data = independent_variable_data[indices_to_keep]
         dependent_variable_data = dependent_variable_data[indices_to_keep]
 
-        independent_variable_data = np.concatenate([independent_variable_data,
-                                                    np.array(duplicate_independent_variable_values)])
+        independent_variable_data = np.concatenate(
+            [independent_variable_data, np.array(duplicate_independent_variable_values)]
+        )
 
-        dependent_variable_data = np.concatenate([dependent_variable_data,
-                                                  np.array(summarized_dependent_variable_data)])
+        dependent_variable_data = np.concatenate(
+            [dependent_variable_data, np.array(summarized_dependent_variable_data)]
+        )
 
         args = independent_variable_data.argsort()
         independent_variable_data.sort()
@@ -299,13 +334,13 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
             dependent_variable_units=datasets[0].dependent_variable_units,
             independent_variable_data=[independent_variable_data],
             independent_variable_names=datasets[0].independent_variable_names,
-            independent_variable_units=datasets[0].independent_variable_units
+            independent_variable_units=datasets[0].independent_variable_units,
         )
 
     @staticmethod
     def from_zerod_datasets(
-            x_dataset: zero_dimensional_dataset.ZeroDimensionalDataset,
-            y_dataset: zero_dimensional_dataset.ZeroDimensionalDataset
+        x_dataset: zero_dimensional_dataset.ZeroDimensionalDataset,
+        y_dataset: zero_dimensional_dataset.ZeroDimensionalDataset,
     ) -> "OneDimensionalDataset":
         """Create a (single-point) one-dimensional dataset from two 0D datasets.
 
@@ -327,17 +362,21 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
         OneDimensionalDataset
             The single-point one-dimensional dataset made by combining the 0D datasets.
         """
-        return OneDimensionalDataset.create(x_values=[x_dataset.value],
-                                            x_name=x_dataset.name,
-                                            x_unit=x_dataset.unit,
-                                            y_values=[y_dataset.value],
-                                            y_name=y_dataset.name,
-                                            y_unit=y_dataset.unit)
+        return OneDimensionalDataset.create(
+            x_values=[x_dataset.value],
+            x_name=x_dataset.name,
+            x_unit=x_dataset.unit,
+            y_values=[y_dataset.value],
+            y_name=y_dataset.name,
+            y_unit=y_dataset.unit,
+        )
 
     @staticmethod
-    def from_multiple_zerod_datasets(x_datasets: List[zero_dimensional_dataset.ZeroDimensionalDataset],
-                                     y_datasets: List[zero_dimensional_dataset.ZeroDimensionalDataset],
-                                     merge_datasets: bool = True) -> Union["OneDimensionalDataset", List["OneDimensionalDataset"]]:
+    def from_multiple_zerod_datasets(
+        x_datasets: list[zero_dimensional_dataset.ZeroDimensionalDataset],
+        y_datasets: list[zero_dimensional_dataset.ZeroDimensionalDataset],
+        merge_datasets: bool = True,
+    ) -> Union["OneDimensionalDataset", list["OneDimensionalDataset"]]:
         """Create a one-dimensional dataset from two sets of 0D datasets.
 
         The datasets from which the x-values are drawn must have the same
@@ -361,16 +400,12 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
         x_names = [x_dataset.name for x_dataset in x_datasets]
         x_units = [x_dataset.unit for x_dataset in x_datasets]
         if not x_names[:-1] == x_names[1:] or not x_units[:-1] == x_units[1:]:
-            raise ValueError(
-                "Zero-dimensional datasets have inconsistent x-value names or units."
-            )
+            raise ValueError("Zero-dimensional datasets have inconsistent x-value names or units.")
 
         y_names = [y_dataset.name for y_dataset in y_datasets]
         y_units = [y_dataset.unit for y_dataset in y_datasets]
         if not y_names[:-1] == y_names[1:] or not y_units[:-1] == y_units[1:]:
-            raise ValueError(
-                "Zero-dimensional datasets have inconsistent y-value names."
-            )
+            raise ValueError("Zero-dimensional datasets have inconsistent y-value names.")
 
         single_point_datasets = [
             OneDimensionalDataset.from_zerod_datasets(x_dataset, y_dataset)
@@ -383,7 +418,7 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
             return single_point_datasets
 
     @property
-    def data(self) -> Set[Tuple[Tuple, Tuple]]:
+    def data(self) -> set[tuple[tuple, tuple]]:
         """The set of data points of this split dataset."""
         data = set()
         for x_value, y_value in zip(self.x_values, self.y_values):
@@ -392,24 +427,26 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
         return data
 
     @property
-    def variable_names(self) -> Tuple[Tuple[str], Tuple[str]]:
+    def variable_names(self) -> tuple[tuple[str], tuple[str]]:
         """The names of the dependent and independent variables."""
         return (self.y_name,), (self.x_name,)
 
     @property
-    def variable_units(self) -> Tuple[Tuple[str], Tuple[str]]:
+    def variable_units(self) -> tuple[tuple[str], tuple[str]]:
         """The units of the dependent and independent variables."""
         return (self.y_unit,), (self.x_unit,)
 
     # TODO - this can go to level up if data, variable_names, variable_units are abstract in SplitDataset
     def to_unambiguous_dataset(self) -> unambiguous_dataset.UnambiguousDataset:
         """Convert this one-dimensional split dataset to an unambiguous dataset."""
-        return unambiguous_dataset.UnambiguousDataset(data=self.data,
-                                                      variable_names=self.variable_names,
-                                                      variable_units=self.variable_units,
-                                                      source=self.source)
+        return unambiguous_dataset.UnambiguousDataset(
+            data=self.data,
+            variable_names=self.variable_names,
+            variable_units=self.variable_units,
+            source=self.source,
+        )
 
-    def split_by_callable(self, classifier: callable) -> List["OneDimensionalDataset"]:
+    def split_by_callable(self, classifier: callable) -> list["OneDimensionalDataset"]:
         """Split this dataset using a classifier for its points.
 
         Parameters
@@ -424,8 +461,9 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
         datasets : List of OneDimensionalDataset
             The split datasets computed using the classifier.
         """
-        classifications = [classifier(x_value, y_value) for x_value, y_value in
-                           zip(self.x_values, self.y_values)]
+        classifications = [
+            classifier(x_value, y_value) for x_value, y_value in zip(self.x_values, self.y_values)
+        ]
 
         unique_classifications = set(classifications)
         if None in unique_classifications:
@@ -435,18 +473,20 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
         for unique_classification in unique_classifications:
             x_values = []
             y_values = []
-            for x_value, y_value, classification in zip(self.x_values, self.y_values, classifications):
+            for x_value, y_value, classification in zip(
+                self.x_values, self.y_values, classifications
+            ):
                 if classification == unique_classification:
                     x_values.append(x_value)
                     y_values.append(y_value)
 
-            datasets.append(OneDimensionalDataset.create(x_values=x_values,
-                                                         y_values=y_values))
+            datasets.append(OneDimensionalDataset.create(x_values=x_values, y_values=y_values))
 
         return datasets
 
-    def split_by_independent_variable_regions(self,
-                                              split_regions: roi.CompoundRegion) -> List["OneDimensionalDataset"]:
+    def split_by_independent_variable_regions(
+        self, split_regions: roi.CompoundRegion
+    ) -> list["OneDimensionalDataset"]:
         """Split this dataset into multiple datasets using the specified independent variable regions.
 
         Parameters
@@ -456,7 +496,6 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
         """
         datasets = []
         for split_region in split_regions:
-
             x_values = []
             y_values = []
             for x_value, y_value in zip(self.x_values, self.y_values):
@@ -464,18 +503,22 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
                     x_values.append(x_value)
                     y_values.append(y_value)
 
-            datasets.append(OneDimensionalDataset.create(x_values=x_values,
-                                                         x_unit=self.x_unit,
-                                                         x_name=self.x_name,
-                                                         y_values=y_values,
-                                                         y_unit=self.y_unit,
-                                                         y_name=self.y_name))
+            datasets.append(
+                OneDimensionalDataset.create(
+                    x_values=x_values,
+                    x_unit=self.x_unit,
+                    x_name=self.x_name,
+                    y_values=y_values,
+                    y_unit=self.y_unit,
+                    y_name=self.y_name,
+                )
+            )
 
         return datasets
 
-    def value_at(self,
-                 independent_variable_value: Union[int, float, complex],
-                 single_value: bool = True):
+    def value_at(
+        self, independent_variable_value: int | float | complex, single_value: bool = True
+    ):
         """Determine the dependent variable value corresponding to a given independent variable value.
 
         Parameters
@@ -518,15 +561,20 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
                     return np.median(dependent_values)
 
         else:
-            if self.independent_variable_data[0].min() <= \
-                independent_variable_value <= \
-                    self.independent_variable_data[0].max():
-
-                return np.interp(independent_variable_value,
-                                 self.independent_variable_data[0],
-                                 self.dependent_variable_data)
+            if (
+                self.independent_variable_data[0].min()
+                <= independent_variable_value
+                <= self.independent_variable_data[0].max()
+            ):
+                return np.interp(
+                    independent_variable_value,
+                    self.independent_variable_data[0],
+                    self.dependent_variable_data,
+                )
             else:
-                raise ValueError("Cannot estimate dependent variable values outside defined region.")
+                raise ValueError(
+                    "Cannot estimate dependent variable values outside defined region."
+                )
 
     @property
     def dependent_variable_data(self) -> np.ndarray:
@@ -536,7 +584,9 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
     def dependent_variable_data(self, dependent_variable_data) -> None:
         dependent_variable_data = np.array(dependent_variable_data)
         if dependent_variable_data.shape != self.dependent_variable_data.shape:
-            raise ValueError(f"{dependent_variable_data.shape} != {self.dependent_variable_data.shape}")
+            raise ValueError(
+                f"{dependent_variable_data.shape} != {self.dependent_variable_data.shape}"
+            )
         else:
             self._dependent_variable_data = dependent_variable_data
 
@@ -557,21 +607,25 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
         self._dependent_variable_units[0] = dependent_variable_unit
 
     @property
-    def independent_variable_data(self) -> List[np.ndarray]:
+    def independent_variable_data(self) -> list[np.ndarray]:
         return self._independent_variable_data
 
     @independent_variable_data.setter
     def independent_variable_data(self, independent_variable_data: np.typing.ArrayLike) -> None:
         independent_variable_data = np.array(independent_variable_data)
         if independent_variable_data.shape != self.independent_variable_data[0].shape:
-            raise ValueError(f"New independent vars must be same shape. Old: {self.independent_variable_data[0].shape} New: {independent_variable_data.shape}")
+            raise ValueError(
+                f"New independent vars must be same shape. Old: {self.independent_variable_data[0].shape} New: {independent_variable_data.shape}"
+            )
 
         else:
             self._independent_variable_data = [independent_variable_data]
 
-    def update_data(self,
-                    dependent_variable_data: np.typing.ArrayLike,
-                    independent_variable_data: np.typing.ArrayLike):
+    def update_data(
+        self,
+        dependent_variable_data: np.typing.ArrayLike,
+        independent_variable_data: np.typing.ArrayLike,
+    ):
         """Update the x- and y- values simultaneously."""
         self._independent_variable_data[0] = np.array(independent_variable_data)
         self._dependent_variable_data = np.array(dependent_variable_data)
@@ -700,7 +754,7 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
     #     """
     #     return np.array(y_values)
 
-    def _encode_column_labels(self) -> List[str]:
+    def _encode_column_labels(self) -> list[str]:
         """Compute labels for the y-values of the dataset from x-values.
 
         The 1D dataset stores a pairwise relationship between the
@@ -722,6 +776,7 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
             column_labels.append(label)
 
         return column_labels
+
     #
     # @staticmethod
     # def decode_column_labels(column_labels: List[str]):
@@ -762,7 +817,7 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
         pass
 
     @staticmethod
-    def decode_column_labels(column_labels: List[str]):
+    def decode_column_labels(column_labels: list[str]):
         pass
 
     def __str__(self) -> str:
@@ -788,17 +843,14 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
         if "marker" not in axes_plotting_kwargs:
             axes_plotting_kwargs["marker"] = None
 
-        axes_plotting_kwargs = \
-            super()._validate_axes_plotting_kwargs(**axes_plotting_kwargs)
+        axes_plotting_kwargs = super()._validate_axes_plotting_kwargs(**axes_plotting_kwargs)
 
         if "linestyle" not in axes_plotting_kwargs.keys():
             axes_plotting_kwargs["linestyle"] = cls.DEFAULT_LINE_STYLE
 
         return axes_plotting_kwargs
 
-    def _plot_on_axes(self,
-                      axes: matplotlib.axes.Axes,
-                      **axes_plotting_kwargs) -> None:
+    def _plot_on_axes(self, axes: matplotlib.axes.Axes, **axes_plotting_kwargs) -> None:
         """Plot this 1D dataset on a given axes.
 
         Parameters
@@ -810,29 +862,27 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
         if "label" not in axes_plotting_kwargs.keys():
             axes_plotting_kwargs["label"] = f"{self.y_name} ({self.dependent_variable_unit})"
 
-        args = [self.x_values,
-                self.y_values]
+        args = [self.x_values, self.y_values]
 
         if len(self.dependent_variable_data) == 1:
             axes_plotting_kwargs["marker"] = self.DEFAULT_MARKER
-            axes.scatter(x=self.x_values[0],
-                         y=self.y_values[0],
-                         cmap=None,
-                         norm=None,
-                         plotnonfinite=False,
-                         data=None,
-                         **axes_plotting_kwargs)
+            axes.scatter(
+                x=self.x_values[0],
+                y=self.y_values[0],
+                cmap=None,
+                norm=None,
+                plotnonfinite=False,
+                data=None,
+                **axes_plotting_kwargs,
+            )
         else:
-            _: List[matplotlib.lines.Line2D] = axes.plot(*args,
-                                                         scalex=True,
-                                                         scaley=True,
-                                                         data=None,
-                                                         **axes_plotting_kwargs)
+            _: list[matplotlib.lines.Line2D] = axes.plot(
+                *args, scalex=True, scaley=True, data=None, **axes_plotting_kwargs
+            )
 
-    def _plot_on_axes_with_variation(self,
-                                     axes: matplotlib.axes.Axes,
-                                     variation,
-                                     **axes_plotting_kwargs) -> None:
+    def _plot_on_axes_with_variation(
+        self, axes: matplotlib.axes.Axes, variation, **axes_plotting_kwargs
+    ) -> None:
         """Visualize the given variation against this 1D dataset.
 
         The 1D dataset uses the fill_between method to visualize its variation.
@@ -848,8 +898,7 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
             Keywords which will be passed to the scatter method.
             Empty by default.
         """
-        self._plot_on_axes(axes=axes,
-                           **axes_plotting_kwargs)
+        self._plot_on_axes(axes=axes, **axes_plotting_kwargs)
 
         if "marker" in axes_plotting_kwargs:
             del axes_plotting_kwargs["marker"]
@@ -859,15 +908,16 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
 
         axes_plotting_kwargs["alpha"] = axes_plotting_kwargs["alpha"] / 4
 
-        _: matplotlib.collections.PolyCollection = \
-            axes.fill_between(x=self.x_values,
-                              y1=self.y_values + variation.dependent_variable_data,
-                              y2=self.y_values - variation.dependent_variable_data,
-                              where=None,
-                              interpolate=False,
-                              step=None,
-                              data=None,
-                              **axes_plotting_kwargs)
+        _: matplotlib.collections.PolyCollection = axes.fill_between(
+            x=self.x_values,
+            y1=self.y_values + variation.dependent_variable_data,
+            y2=self.y_values - variation.dependent_variable_data,
+            where=None,
+            interpolate=False,
+            step=None,
+            data=None,
+            **axes_plotting_kwargs,
+        )
 
     def _label_axes(self, axes: matplotlib.axes.Axes) -> None:
         """Add labels the axes on which this 1D dataset will be plotted.
@@ -881,9 +931,7 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
         axes.set_ylabel(self.y_label)
 
     @staticmethod
-    def compute_average(
-            datasets: List["OneDimensionalDataset"]
-    ) -> "OneDimensionalDataset":
+    def compute_average(datasets: list["OneDimensionalDataset"]) -> "OneDimensionalDataset":
         """Compute the average of a set of one-dimensional datasets.
 
         Parameters
@@ -899,7 +947,6 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
         if len(datasets) == 1:
             return datasets[0]
         else:
-
             representative_dataset = datasets[0]
 
             collected_data = [dataset.flatten_dependent_variables() for dataset in datasets]
@@ -914,13 +961,11 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
                 independent_variable_data=representative_dataset.independent_variable_data,
                 independent_variable_names=representative_dataset.independent_variable_names,
                 independent_variable_units=representative_dataset.independent_variable_units,
-                source="cralds averaging process"
+                source="cralds averaging process",
             )
 
     @staticmethod
-    def compute_variation(
-            datasets: List["OneDimensionalDataset"]
-    ) -> "OneDimensionalDataset":
+    def compute_variation(datasets: list["OneDimensionalDataset"]) -> "OneDimensionalDataset":
         """Compute the variation across a set of one-dimensional datasets.
 
         Parameters
@@ -935,14 +980,12 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
         """
         if len(datasets) == 1:
             return OneDimensionalDataset.create(
-                datasets[0].x_values,
-                np.zeros_like(datasets[0].y_values)
+                datasets[0].x_values, np.zeros_like(datasets[0].y_values)
             )
         else:
             representative_dataset = datasets[0]
 
-            collected_data = [dataset.flatten_dependent_variables()
-                              for dataset in datasets]
+            collected_data = [dataset.flatten_dependent_variables() for dataset in datasets]
             collected_data = np.array(collected_data).T
 
             dependent_variable_data = np.std(collected_data, axis=1)
@@ -954,7 +997,8 @@ class OneDimensionalDataset(split_datasets.SplitDataset):
                 independent_variable_data=representative_dataset.independent_variable_data,
                 independent_variable_names=representative_dataset.independent_variable_names,
                 independent_variable_units=representative_dataset.independent_variable_units,
-                source="cralds variation process")
+                source="cralds variation process",
+            )
 
     def one_line_str(self) -> str:
         """Create a single-line human-readable representation of this 1D dataset."""

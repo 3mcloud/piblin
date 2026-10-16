@@ -28,11 +28,10 @@ def dict_repr(dict_):
     """
     output = "{"
     for key, value in dict_.items():
-
-        key_str = "\"" + key + "\""
+        key_str = '"' + key + '"'
 
         if isinstance(value, str):
-            value_str = "\"" + value + "\""
+            value_str = '"' + value + '"'
         else:
             value_str = str(value)
 

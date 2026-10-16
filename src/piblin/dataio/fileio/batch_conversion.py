@@ -12,23 +12,26 @@ convert_directories - Read directories and write their contents to output files.
 All of these functions work by first calling the appropriate dataio function and then write the resulting experiment set
 out with each dataset in an individual .csv file.
 """
-from typing import List
-import os
+
 import copy
+import os
 from glob import glob
+
 import piblin.dataio as dataio
 
 
-def convert_file(filepath: str,
-                 output_directory: str = None,
-                 allow_overwrite: bool = False,
-                 flatten_to_single_file: bool = False,
-                 create_metadata_filenames: bool = True,
-                 suppress_condition_names: bool = False,
-                 suppress_replicate_index: bool = True,
-                 parse_filename_metadata: bool = False,
-                 details_to_include: List[str] = None,
-                 **read_kwargs) -> None:
+def convert_file(
+    filepath: str,
+    output_directory: str = None,
+    allow_overwrite: bool = False,
+    flatten_to_single_file: bool = False,
+    create_metadata_filenames: bool = True,
+    suppress_condition_names: bool = False,
+    suppress_replicate_index: bool = True,
+    parse_filename_metadata: bool = False,
+    details_to_include: list[str] = None,
+    **read_kwargs,
+) -> None:
     """Read a single file and write its contents to .csv files.
 
     Parameters
@@ -64,34 +67,40 @@ def convert_file(filepath: str,
     if details_to_include is None:
         details_to_include = []
 
-    experiment_set = dataio.read_file(filepath,
-                                      attempt_flatten=False,
-                                      parse_filename_metadata=parse_filename_metadata,
-                                      **read_kwargs)
+    experiment_set = dataio.read_file(
+        filepath,
+        attempt_flatten=False,
+        parse_filename_metadata=parse_filename_metadata,
+        **read_kwargs,
+    )
 
     if output_directory is None:
         output_directory = os.path.dirname(os.path.abspath(filepath))
 
-    __convert_experiment_set(experiment_set,
-                             output_directory,
-                             allow_overwrite,
-                             flatten_to_single_file,
-                             create_metadata_filenames,
-                             suppress_condition_names,
-                             suppress_replicate_index,
-                             details_to_include)
+    __convert_experiment_set(
+        experiment_set,
+        output_directory,
+        allow_overwrite,
+        flatten_to_single_file,
+        create_metadata_filenames,
+        suppress_condition_names,
+        suppress_replicate_index,
+        details_to_include,
+    )
 
 
-def convert_files(file_paths: List[str],
-                  output_directory: str = None,
-                  allow_overwrite: bool = False,
-                  flatten_to_single_file: bool = False,
-                  create_metadata_filenames: bool = True,
-                  suppress_condition_names: bool = False,
-                  suppress_replicate_index: bool = True,
-                  parse_filename_metadata: bool = False,
-                  details_to_include: List[str] = None,
-                  **read_kwargs) -> None:
+def convert_files(
+    file_paths: list[str],
+    output_directory: str = None,
+    allow_overwrite: bool = False,
+    flatten_to_single_file: bool = False,
+    create_metadata_filenames: bool = True,
+    suppress_condition_names: bool = False,
+    suppress_replicate_index: bool = True,
+    parse_filename_metadata: bool = False,
+    details_to_include: list[str] = None,
+    **read_kwargs,
+) -> None:
     """Read a set of files and write their contents to .csv files.
 
     Parameters
@@ -124,35 +133,39 @@ def convert_files(file_paths: List[str],
     details_to_include : list of str
         Names of details to include in created metadata filenames.
     """
-    experiment_set = dataio.read_files(file_paths,
-                                       parse_filename_metadata=parse_filename_metadata,
-                                       **read_kwargs)
+    experiment_set = dataio.read_files(
+        file_paths, parse_filename_metadata=parse_filename_metadata, **read_kwargs
+    )
     if output_directory is None:
         output_directory = os.path.dirname(os.path.commonprefix(file_paths))
 
-    __convert_experiment_set(experiment_set,
-                             output_directory,
-                             allow_overwrite,
-                             flatten_to_single_file,
-                             create_metadata_filenames,
-                             suppress_condition_names,
-                             suppress_replicate_index,
-                             details_to_include)
+    __convert_experiment_set(
+        experiment_set,
+        output_directory,
+        allow_overwrite,
+        flatten_to_single_file,
+        create_metadata_filenames,
+        suppress_condition_names,
+        suppress_replicate_index,
+        details_to_include,
+    )
 
 
-def convert_directory(directory: str,
-                      output_directory: bool = None,
-                      allow_overwrite: bool = False,
-                      flatten_to_single_file: bool = False,
-                      create_metadata_filenames: bool = True,
-                      suppress_condition_names: bool = False,
-                      suppress_replicate_index: bool = True,
-                      extension: str = None,
-                      recursive: bool = False,
-                      case_sensitive: bool = False,
-                      parse_filename_metadata: bool = False,
-                      details_to_include: List[str] = None,
-                      **read_kwargs) -> None:
+def convert_directory(
+    directory: str,
+    output_directory: bool = None,
+    allow_overwrite: bool = False,
+    flatten_to_single_file: bool = False,
+    create_metadata_filenames: bool = True,
+    suppress_condition_names: bool = False,
+    suppress_replicate_index: bool = True,
+    extension: str = None,
+    recursive: bool = False,
+    case_sensitive: bool = False,
+    parse_filename_metadata: bool = False,
+    details_to_include: list[str] = None,
+    **read_kwargs,
+) -> None:
     """Read a directory and write its contents to .csv files.
 
     Parameters
@@ -192,39 +205,45 @@ def convert_directory(directory: str,
     details_to_include : list of str
         Names of details to include in created metadata filenames.
     """
-    experiment_set = dataio.read_directory(directory,
-                                           extension=extension,
-                                           recursive=recursive,
-                                           case_sensitive=case_sensitive,
-                                           parse_filename_metadata=parse_filename_metadata,
-                                           **read_kwargs)
+    experiment_set = dataio.read_directory(
+        directory,
+        extension=extension,
+        recursive=recursive,
+        case_sensitive=case_sensitive,
+        parse_filename_metadata=parse_filename_metadata,
+        **read_kwargs,
+    )
 
     if output_directory is None:
         output_directory = directory
 
-    __convert_experiment_set(experiment_set,
-                             output_directory,
-                             allow_overwrite,
-                             flatten_to_single_file,
-                             create_metadata_filenames,
-                             suppress_condition_names,
-                             suppress_replicate_index,
-                             details_to_include)
+    __convert_experiment_set(
+        experiment_set,
+        output_directory,
+        allow_overwrite,
+        flatten_to_single_file,
+        create_metadata_filenames,
+        suppress_condition_names,
+        suppress_replicate_index,
+        details_to_include,
+    )
 
 
-def convert_directories(directories: List[str],
-                        output_directory: str = None,
-                        allow_overwrite: bool = False,
-                        flatten_to_single_file: bool = False,
-                        create_metadata_filenames: bool = True,
-                        suppress_condition_names: bool = False,
-                        suppress_replicate_index: bool = True,
-                        extension: str = None,
-                        recursive: bool = False,
-                        case_sensitive: bool = False,
-                        parse_filename_metadata: bool = False,
-                        details_to_include: List[str] = None,
-                        **read_kwargs) -> None:
+def convert_directories(
+    directories: list[str],
+    output_directory: str = None,
+    allow_overwrite: bool = False,
+    flatten_to_single_file: bool = False,
+    create_metadata_filenames: bool = True,
+    suppress_condition_names: bool = False,
+    suppress_replicate_index: bool = True,
+    extension: str = None,
+    recursive: bool = False,
+    case_sensitive: bool = False,
+    parse_filename_metadata: bool = False,
+    details_to_include: list[str] = None,
+    **read_kwargs,
+) -> None:
     """Read directories and write their contents to .csv files.
 
     Parameters
@@ -264,34 +283,40 @@ def convert_directories(directories: List[str],
     details_to_include : list of str
         Names of details to include in created metadata filenames.
     """
-    experiment_set = dataio.read_directories(directories,
-                                             extension=extension,
-                                             recursive=recursive,
-                                             case_sensitive=case_sensitive,
-                                             parse_filename_metadata=parse_filename_metadata,
-                                             **read_kwargs)
+    experiment_set = dataio.read_directories(
+        directories,
+        extension=extension,
+        recursive=recursive,
+        case_sensitive=case_sensitive,
+        parse_filename_metadata=parse_filename_metadata,
+        **read_kwargs,
+    )
 
     if output_directory is None:
         output_directory = os.path.dirname(os.path.commonprefix(directories))
 
-    __convert_experiment_set(experiment_set,
-                             output_directory,
-                             allow_overwrite,
-                             flatten_to_single_file,
-                             create_metadata_filenames,
-                             suppress_condition_names,
-                             suppress_replicate_index,
-                             details_to_include)
+    __convert_experiment_set(
+        experiment_set,
+        output_directory,
+        allow_overwrite,
+        flatten_to_single_file,
+        create_metadata_filenames,
+        suppress_condition_names,
+        suppress_replicate_index,
+        details_to_include,
+    )
 
 
-def __convert_experiment_set(experiment_set,
-                             output_directory: str,
-                             allow_overwrite: bool = False,
-                             flatten_to_single_file: bool = False,
-                             create_metadata_filenames: bool = True,
-                             suppress_condition_names: bool = False,
-                             suppress_replicate_index: bool = True,
-                             details_to_include: List[str] = None):
+def __convert_experiment_set(
+    experiment_set,
+    output_directory: str,
+    allow_overwrite: bool = False,
+    flatten_to_single_file: bool = False,
+    create_metadata_filenames: bool = True,
+    suppress_condition_names: bool = False,
+    suppress_replicate_index: bool = True,
+    details_to_include: list[str] = None,
+):
     """Convert an experiment set to a set of .csv files.
 
     Parameters
@@ -338,11 +363,13 @@ def __convert_experiment_set(experiment_set,
 
         return f"{head}{suffix}{extension}"
 
-    def create_output_filepath(create_metadata_filenames_: bool,
-                               filename_conditions_: List[str],
-                               suppress_condition_names_: bool,
-                               suppress_replicate_index_: bool,
-                               output_directory_: str):
+    def create_output_filepath(
+        create_metadata_filenames_: bool,
+        filename_conditions_: list[str],
+        suppress_condition_names_: bool,
+        suppress_replicate_index_: bool,
+        output_directory_: str,
+    ):
         """Create a filepath for a dataset to be output to.
 
         Parameters
@@ -367,7 +394,9 @@ def __convert_experiment_set(experiment_set,
                 if suppress_condition_names_:
                     output_filename += str(experiment.conditions[condition_name]) + "_"
                 else:
-                    output_filename += condition_name + "=" + str(experiment.conditions[condition_name]) + "_"
+                    output_filename += (
+                        condition_name + "=" + str(experiment.conditions[condition_name]) + "_"
+                    )
 
             if suppress_replicate_index_:
                 output_filename = output_filename[:-1] + ".csv"
@@ -381,12 +410,10 @@ def __convert_experiment_set(experiment_set,
         return output_filepath_
 
     if not flatten_to_single_file:
-
         for detail_name in details_to_include:
             experiment_set.detail_to_condition(detail_name)
 
         for experiment in experiment_set:
-
             filename_conditions = copy.deepcopy(experiment_set.equal_condition_names)
             filename_conditions.update(experiment_set.varying_conditions)
             filename_conditions -= set(details_to_include)
@@ -400,14 +427,15 @@ def __convert_experiment_set(experiment_set,
                     create_metadata_filenames = False
 
             if expand_replicates:
-                for replicate_index, replicate in enumerate(experiment.datasets):
+                for replicate_index, replicate in enumerate(experiment.datasets):  # noqa: B007 - read by create_output_filepath
                     for dataset in replicate:
-
-                        output_filepath = create_output_filepath(create_metadata_filenames,
-                                                                 filename_conditions,
-                                                                 suppress_condition_names,
-                                                                 suppress_replicate_index,
-                                                                 output_directory)
+                        output_filepath = create_output_filepath(
+                            create_metadata_filenames,
+                            filename_conditions,
+                            suppress_condition_names,
+                            suppress_replicate_index,
+                            output_directory,
+                        )
 
                         dataset.to_csv(output_filepath)
 

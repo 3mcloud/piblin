@@ -1,8 +1,11 @@
 import pytest
-from piblin.data.data_collections.consistent_measurement_set import ConsistentMeasurementSet, InconsistentMeasurementsError
-from piblin.data.datasets.abc.split_datasets.zero_dimensional_dataset import ZeroDimensionalDataset
+
+from piblin.data.data_collections.consistent_measurement_set import (
+    ConsistentMeasurementSet,
+)
 from piblin.data.data_collections.measurement import Measurement
 from piblin.data.data_collections.measurement_set import MeasurementSet
+from piblin.data.datasets.abc.split_datasets.zero_dimensional_dataset import ZeroDimensionalDataset
 
 
 def test_forced_consistency():
@@ -23,46 +26,57 @@ def test_forced_consistency():
 
 def test_from_default_measurement_set(default_measurement_set):
     """Ensure that the from_measurement_set method is present."""
-    assert ConsistentMeasurementSet.from_measurement_set(default_measurement_set).num_measurements == 0
+    assert (
+        ConsistentMeasurementSet.from_measurement_set(default_measurement_set).num_measurements == 0
+    )
     assert ConsistentMeasurementSet.from_measurement_set(default_measurement_set).num_datasets == 0
 
 
-def test_from_measurement_set(zerod_dataset_true_default_name_and_unit, zerod_dataset_false_default_name_and_unit):
+def test_from_measurement_set(
+    zerod_dataset_true_default_name_and_unit, zerod_dataset_false_default_name_and_unit
+):
     """"""
     measurement_true = Measurement.from_single_dataset(zerod_dataset_true_default_name_and_unit)
     measurement_false = Measurement.from_single_dataset(zerod_dataset_false_default_name_and_unit)
-    scalar_measurement_set = MeasurementSet([measurement_true,
-                                             measurement_false])
+    scalar_measurement_set = MeasurementSet([measurement_true, measurement_false])
 
     consistent_set = ConsistentMeasurementSet.from_measurement_set(scalar_measurement_set)
     assert consistent_set.num_measurements == 1
     assert consistent_set.num_datasets == 2
 
 
-def test_delete_dataset_of_measurement_at_index(measurement_zerod_dataset_true_default_name_and_unit_no_metadata,
-                                                measurement_zerod_dataset_false_default_name_and_unit):
+def test_delete_dataset_of_measurement_at_index(
+    measurement_zerod_dataset_true_default_name_and_unit_no_metadata,
+    measurement_zerod_dataset_false_default_name_and_unit,
+):
 
-    measurement_set = ConsistentMeasurementSet([measurement_zerod_dataset_true_default_name_and_unit_no_metadata])
+    measurement_set = ConsistentMeasurementSet(
+        [measurement_zerod_dataset_true_default_name_and_unit_no_metadata]
+    )
 
     assert measurement_set.num_measurements == 1
     assert measurement_set.num_datasets == 1
 
-    measurement_set.remove_dataset_of_measurement_at_index(measurement_index=0,
-                                                           dataset_index=0)
+    measurement_set.remove_dataset_of_measurement_at_index(measurement_index=0, dataset_index=0)
     assert measurement_set.num_measurements == 1
     assert measurement_set.num_datasets == 0
 
 
 @pytest.mark.xfail
-def test_delete_dataset_not_implemented(measurement_zerod_dataset_true_default_name_and_unit_no_metadata,
-                                        measurement_zerod_dataset_false_default_name_and_unit):
+def test_delete_dataset_not_implemented(
+    measurement_zerod_dataset_true_default_name_and_unit_no_metadata,
+    measurement_zerod_dataset_false_default_name_and_unit,
+):
 
-    measurement_set = ConsistentMeasurementSet([measurement_zerod_dataset_true_default_name_and_unit_no_metadata,
-                                                measurement_zerod_dataset_false_default_name_and_unit])
+    measurement_set = ConsistentMeasurementSet(
+        [
+            measurement_zerod_dataset_true_default_name_and_unit_no_metadata,
+            measurement_zerod_dataset_false_default_name_and_unit,
+        ]
+    )
 
     with pytest.raises(NotImplementedError):
-        measurement_set.remove_dataset_of_measurement_at_index(measurement_index=0,
-                                                               dataset_index=0)
+        measurement_set.remove_dataset_of_measurement_at_index(measurement_index=0, dataset_index=0)
 
 
 def test_default_measurement(measurement_empty):
@@ -74,8 +88,12 @@ def test_default_measurement(measurement_empty):
     assert measurement_empty.dataset_lengths == []
 
 
-def test_measurement_single_true_scalar_dataset(measurement_zerod_dataset_true_default_name_and_unit_no_metadata):
-    measurement_set = ConsistentMeasurementSet.from_single_measurement(measurement_zerod_dataset_true_default_name_and_unit_no_metadata)
+def test_measurement_single_true_scalar_dataset(
+    measurement_zerod_dataset_true_default_name_and_unit_no_metadata,
+):
+    measurement_set = ConsistentMeasurementSet.from_single_measurement(
+        measurement_zerod_dataset_true_default_name_and_unit_no_metadata
+    )
     assert measurement_set.num_datasets == 1
     assert measurement_set.dataset_types == [ZeroDimensionalDataset]
     assert measurement_set.dataset_lengths == [[1]]

@@ -1,13 +1,11 @@
-from typing import List
-from piblin.transform.abc.region_transform.dataset_region_transform import DatasetRegionTransform
 import piblin.data.datasets.abc.split_datasets as split_dataset
+from piblin.transform.abc.region_transform.dataset_region_transform import DatasetRegionTransform
 
 
 class SplitByIndependentVariableRanges(DatasetRegionTransform):
-
     def _apply(
-            self, target: split_dataset.SplitDataset, **kwargs
-    ) -> List[split_dataset.SplitDataset]:
+        self, target: split_dataset.SplitDataset, **kwargs
+    ) -> list[split_dataset.SplitDataset]:
         """Split a dataset by independent variable regions.
 
         The compound region property of this class defines the datasets
@@ -26,11 +24,10 @@ class SplitByIndependentVariableRanges(DatasetRegionTransform):
         -------
 
         """
-        return target.split_by_independent_variable_regions(
-            self.compound_region
-        )
+        return target.split_by_independent_variable_regions(self.compound_region)
 
 
 class Truncate(SplitByIndependentVariableRanges):
     """Alias for SplitByIndependentVariableRanges."""
+
     ...

@@ -11,11 +11,13 @@ to be added to the datasets in question. Saving of experiment sets is currently 
 support for an experiment set and pipeline file format in future.
 
 """
+
+import csv
 import os.path
 import re
-import csv
-from piblin.dataio import read_file
+
 import piblin.data.data_collections.experiment_set as experiment_set
+from piblin.dataio import read_file
 
 
 # TODO - this should be a summary reader instead of its own isolated module.
@@ -47,9 +49,7 @@ def write_summary_json(filepath: str) -> None:
     raise NotImplementedError("Saving of summary json files is not implemented")
 
 
-def read_summary_csv(csv_filepath: str,
-                     num_filenames: int = 1,
-                     num_details: int = 0):
+def read_summary_csv(csv_filepath: str, num_filenames: int = 1, num_details: int = 0):
     """Read an experiment set from a summary .csv.
 
     Each line of the .csv must become a measurement, so must be parsed to filename(s), conditions and details.
@@ -65,9 +65,8 @@ def read_summary_csv(csv_filepath: str,
         The number of details for each measurement (row).
         The default is to place no detail metadata in the summary file.
     """
-    with open(csv_filepath, newline='') as csv_file:
-
-        reader = csv.reader(csv_file, delimiter=',')
+    with open(csv_filepath, newline="") as csv_file:
+        reader = csv.reader(csv_file, delimiter=",")
 
         metadata_names = next(reader)[num_filenames:]
         num_conditions = len(metadata_names) - num_details
@@ -79,24 +78,21 @@ def read_summary_csv(csv_filepath: str,
 
         all_measurements = []
         for row in reader:
-
             datafile_paths = []
             for datafile_name in row[0:num_filenames]:
-
                 file_dir, _ = os.path.split(datafile_name)
-                if file_dir == '':
+                if file_dir == "":
                     datafile_path = os.path.join(summary_dir, datafile_name)
                 else:
                     datafile_path = datafile_name
 
                 if not os.path.exists(datafile_path):
-
                     dir, name = os.path.split(datafile_path)
                     name = sanitize_filename_like_databricks(name)
                     datafile_path = os.path.join(dir, name)
 
                     if not os.path.exists(datafile_path):
-                        raise IOError("File path in summary .csv does not exist.", datafile_path)
+                        raise OSError("File path in summary .csv does not exist.", datafile_path)
 
                 datafile_paths.append(datafile_path)
 
@@ -104,7 +100,7 @@ def read_summary_csv(csv_filepath: str,
                 file_measurements = read_file(datafile_path).measurements
 
             metadata_values = row[num_filenames:]
-            condition_values = metadata_values[0:len(metadata_names) - num_details]
+            condition_values = metadata_values[0 : len(metadata_names) - num_details]
             detail_values = metadata_values[num_conditions:]
 
             conditions = {name: value for name, value in zip(condition_names, condition_values)}
@@ -146,4 +142,6 @@ def sanitize_filename_like_databricks(filename):
     str
         The sanitized filename.
     """
-    return re.sub('[^0-9a-zA-Z]+', '_', os.path.splitext(filename)[0]) + os.path.splitext(filename)[1]
+    return (
+        re.sub("[^0-9a-zA-Z]+", "_", os.path.splitext(filename)[0]) + os.path.splitext(filename)[1]
+    )

@@ -1,7 +1,7 @@
-from typing import List
 from abc import ABC
-import piblin.transform.abc.transform as transform
+
 import piblin.data.datasets.roi as roi
+import piblin.transform.abc.transform as transform
 
 
 class RegionTransform(transform.Transform, ABC):
@@ -39,22 +39,16 @@ class RegionTransform(transform.Transform, ABC):
     from_data
         Create a region transform from lists of ranges and names.
     """
+
     DEFAULT_RANGE_COLOR = "orange"
     DEFAULT_ALPHA = 0.5
 
-    def __init__(self,
-                 compound_region: roi.CompoundRegion = None,
-                 *args,
-                 **kwargs):
+    def __init__(self, compound_region: roi.CompoundRegion = None, *args, **kwargs):
 
         if compound_region is None:
             compound_region = roi.CompoundRegion()
 
-        super().__init__(
-            data_independent_parameters=[compound_region],
-            *args,
-            **kwargs
-        )
+        super().__init__(*args, data_independent_parameters=[compound_region], **kwargs)
 
         self._compound_region = compound_region
 
@@ -64,16 +58,15 @@ class RegionTransform(transform.Transform, ABC):
         return self._compound_region
 
     @property
-    def data_independent_parameters(self) -> List[float]:
+    def data_independent_parameters(self) -> list[float]:
         """Return the (flattened) data-independent linear region parameters of this region transform."""
         data_independent_parameters = []
         for linear_region in self.compound_region.linear_regions:
-            data_independent_parameters.extend([linear_region.region_min,
-                                                linear_region.region_max])
+            data_independent_parameters.extend([linear_region.region_min, linear_region.region_max])
         return data_independent_parameters
 
     @data_independent_parameters.setter
-    def data_independent_parameters(self, data_independent_parameters: List[float]) -> None:
+    def data_independent_parameters(self, data_independent_parameters: list[float]) -> None:
         """Set the data-independent linear region parameters of this region transform.
 
         Parameters
@@ -83,12 +76,18 @@ class RegionTransform(transform.Transform, ABC):
         """
 
         if len(data_independent_parameters) % 2 != 0:
-            raise ValueError(f"Number of parameters to region transform must be even: "
-                             f"received {len(data_independent_parameters)}")
+            raise ValueError(
+                f"Number of parameters to region transform must be even: "
+                f"received {len(data_independent_parameters)}"
+            )
 
         for region_index in range(0, len(data_independent_parameters), 2):
-            self.compound_region.linear_regions[region_index].min_value = data_independent_parameters[region_index]
-            self.compound_region.linear_regions[region_index].min_value = data_independent_parameters[region_index + 1]
+            self.compound_region.linear_regions[
+                region_index
+            ].min_value = data_independent_parameters[region_index]
+            self.compound_region.linear_regions[
+                region_index
+            ].min_value = data_independent_parameters[region_index + 1]
 
     @classmethod
     def from_linear_region(cls, linear_region: roi.LinearRegion) -> "RegionTransform":
@@ -107,10 +106,9 @@ class RegionTransform(transform.Transform, ABC):
         return cls(compound_region=roi.CompoundRegion([linear_region]))
 
     @classmethod
-    def from_data(cls,
-                  regions: list = None,
-                  names: list = None,
-                  name_base: str = "region") -> "RegionTransform":
+    def from_data(
+        cls, regions: list = None, names: list = None, name_base: str = "region"
+    ) -> "RegionTransform":
         """Create a region transform from lists of ranges and names.
 
         Parameters
@@ -127,9 +125,9 @@ class RegionTransform(transform.Transform, ABC):
         RegionTransform
             A region transform constructed from the supplied regions and names.
         """
-        compound_region = roi.CompoundRegion.from_data(regions=regions,
-                                                       names=names,
-                                                       name_base=name_base)
+        compound_region = roi.CompoundRegion.from_data(
+            regions=regions, names=names, name_base=name_base
+        )
         return cls(compound_region)
 
     def visualize_transform_parameters(self, axes):
@@ -141,10 +139,12 @@ class RegionTransform(transform.Transform, ABC):
             The axes on which to visualize this region transform's parameters.
         """
         for linear_region in self.compound_region:
-            axes.axvspan(linear_region.region_min,
-                         linear_region.region_max,
-                         alpha=self.DEFAULT_ALPHA,
-                         facecolor=self.DEFAULT_RANGE_COLOR)
+            axes.axvspan(
+                linear_region.region_min,
+                linear_region.region_max,
+                alpha=self.DEFAULT_ALPHA,
+                facecolor=self.DEFAULT_RANGE_COLOR,
+            )
 
     def __repr__(self):
         """Create an eval-able representation of this transform."""
