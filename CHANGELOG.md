@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- `file_reader` argument for `read_file`, `read_files`, `read_directory`,
+  `read_directories` and the matching `DataCollectionReader` methods. Pass a
+  `FileReader` subclass, or a list tried in order, to read files with readers
+  from other packages or to choose one reader for a shared extension. Readers
+  are otherwise still selected from the file extension.
+
 ### Fixed
 
 - Package metadata declared the licence as "Proprietary" while the LICENSE

@@ -19,7 +19,7 @@ read_directory - Create a data collection from files in a given directory.
 read_directories - Create a data collection from files in a given set of directories.
 read_tabular_data - Create a data collection from tabular data in the file at the given path.
 """
-from typing import List, Union
+from typing import List, Type, Union
 from .fileio.read.file_reader import FileReader
 from .fileio.read.generic.generic_file_reader import GenericFileReader
 from .fileio.read.multifile.multifile_reader import MultifileReader
@@ -40,6 +40,7 @@ def read_file(filepath: str,
               to_experiments: bool = True,
               minimize_hierarchy: bool = False,
               merge_redundant: bool = True,
+              file_reader: Union[Type[FileReader], List[Type[FileReader]]] = None,
               **read_kwargs) -> \
         Union[dataset_.Dataset,
               measurement_.Measurement,
@@ -65,6 +66,10 @@ def read_file(filepath: str,
         Default is to always return the most structured data collection.
     merge_redundant : bool
         Whether to merge measurements that are redundant based on conditions.
+    file_reader : FileReader subclass or list thereof, optional
+        Reader class, or classes tried in order, to use instead of selecting
+        readers from the file extension. Use this for readers that are not
+        registered with piblin or to pick one reader for a shared extension.
 
     Returns
     -------
@@ -77,6 +82,7 @@ def read_file(filepath: str,
                                                                     to_experiments=to_experiments,
                                                                     minimize_hierarchy=minimize_hierarchy,
                                                                     merge_redundant=merge_redundant,
+                                                                    file_reader=file_reader,
                                                                     **read_kwargs)
 
     return data_collection
@@ -87,6 +93,7 @@ def read_files(file_paths: List[str],
                to_experiments: bool = True,
                minimize_hierarchy: bool = False,
                merge_redundant: bool = True,
+               file_reader: Union[Type[FileReader], List[Type[FileReader]]] = None,
                **read_kwargs) -> \
         Union[dataset_.Dataset,
               measurement_.Measurement,
@@ -109,6 +116,10 @@ def read_files(file_paths: List[str],
         Whether to remove as much hierarchy as possible from the data collection.
     merge_redundant : bool
         Whether to merge measurements that are redundant based on conditions.
+    file_reader : FileReader subclass or list thereof, optional
+        Reader class, or classes tried in order, to use instead of selecting
+        readers from the file extension. Use this for readers that are not
+        registered with piblin or to pick one reader for a shared extension.
 
     Returns
     -------
@@ -121,6 +132,7 @@ def read_files(file_paths: List[str],
                                                                         to_experiments=to_experiments,
                                                                         minimize_hierarchy=minimize_hierarchy,
                                                                         merge_redundant=merge_redundant,
+                                                                        file_reader=file_reader,
                                                                         **read_kwargs)
 
 
@@ -132,6 +144,7 @@ def read_directory(directory: str,
                    to_experiments: bool = True,
                    minimize_hierarchy: bool = False,
                    merge_redundant: bool = True,
+                   file_reader: Union[Type[FileReader], List[Type[FileReader]]] = None,
                    **read_kwargs) -> \
         Union[dataset_.Dataset,
               measurement_.Measurement,
@@ -161,6 +174,10 @@ def read_directory(directory: str,
         Whether to remove as much hierarchy as possible from the data collection.
     merge_redundant : bool
         Whether to merge measurements that are redundant based on conditions.
+    file_reader : FileReader subclass or list thereof, optional
+        Reader class, or classes tried in order, to use instead of selecting
+        readers from the file extension. Use this for readers that are not
+        registered with piblin or to pick one reader for a shared extension.
 
     Returns
     -------
@@ -178,6 +195,7 @@ def read_directory(directory: str,
             to_experiments=to_experiments,
             minimize_hierarchy=minimize_hierarchy,
             merge_redundant=merge_redundant,
+            file_reader=file_reader,
             **read_kwargs
         )
     else:
@@ -188,6 +206,7 @@ def read_directory(directory: str,
             to_experiments=to_experiments,
             minimize_hierarchy=minimize_hierarchy,
             merge_redundant=merge_redundant,
+            file_reader=file_reader,
             **read_kwargs
         )
 
@@ -200,6 +219,7 @@ def read_directories(directories: List[str],
                      to_experiments: bool = True,
                      minimize_hierarchy: bool = False,
                      merge_redundant: bool = True,
+                     file_reader: Union[Type[FileReader], List[Type[FileReader]]] = None,
                      **read_kwargs) -> \
         Union[dataset_.Dataset,
               measurement_.Measurement,
@@ -229,6 +249,10 @@ def read_directories(directories: List[str],
         Whether to remove as much hierarchy as possible from the data collection.
     merge_redundant : bool
         Whether to merge measurements that are redundant based on conditions.
+    file_reader : FileReader subclass or list thereof, optional
+        Reader class, or classes tried in order, to use instead of selecting
+        readers from the file extension. Use this for readers that are not
+        registered with piblin or to pick one reader for a shared extension.
 
     Returns
     -------
@@ -245,6 +269,7 @@ def read_directories(directories: List[str],
         to_experiments=to_experiments,
         minimize_hierarchy=minimize_hierarchy,
         merge_redundant=merge_redundant,
+        file_reader=file_reader,
         **read_kwargs
     )
 
