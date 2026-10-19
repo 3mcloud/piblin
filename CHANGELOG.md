@@ -10,6 +10,12 @@
   from other packages or to choose one reader for a shared extension. Readers
   are otherwise still selected from the file extension.
 
+### Fixed
+
+- Package metadata declared the licence as "Proprietary" while the LICENSE
+  file is MIT. The licence is now the SPDX expression `MIT` with
+  `license-files = ["LICENSE"]`.
+
 ### Changed
 
 - v0.0.0a2
